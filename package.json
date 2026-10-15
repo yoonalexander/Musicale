@@ -9,7 +9,7 @@
     "start": "next start",
     "test": "tsx tests/run-tests.ts",
     "typecheck": "tsc --noEmit",
-    "test:db": "node tests/database.mjs",
+    "test:db": "node tests/database.mjs && node tests/integrity.mjs && node tests/recovery.mjs && node tests/migrations.mjs",
     "test:ui": "node tests/build-local.mjs && playwright test",
     "local:start": "supabase start",
     "local:stop": "supabase stop",
