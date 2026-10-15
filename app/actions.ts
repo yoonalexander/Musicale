@@ -37,15 +37,21 @@ export async function requestMagicLinkAction(fd: FormData) {
   if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     go("/login", "message", "Enter a valid email address.");
   const db = await getSupabaseServerClient();
-  const { error } = await db!.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: `${getSiteUrl()}/api/auth/callback` },
-  });
+  let failed = false;
+  try {
+    const { error } = await db!.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${getSiteUrl()}/api/auth/callback` },
+    });
+    failed = Boolean(error);
+  } catch {
+    failed = true;
+  }
   go(
     "/login",
     "message",
-    error
-      ? "Could not send a sign-in link. Try again shortly."
+    failed
+      ? "Could not send a sign-in link. Wait a minute, then request a new link."
       : "Magic link sent. Check your inbox.",
   );
 }
@@ -58,7 +64,12 @@ export async function submitDailyVote(fd: FormData) {
   if (!isSupabaseConfigured())
     go("/today", "error", "Connect Supabase to record votes.");
   const viewer = await getViewerState();
-  if (!viewer.user) go("/login", "message", "Sign in before voting.");
+  if (!viewer.user)
+    go(
+      "/login",
+      "message",
+      "Sign in again to vote. Your saved votes are safe.",
+    );
   const matchupId = String(fd.get("matchupId") ?? "");
   const selectedSongId = String(fd.get("selectedSongId") ?? "");
   if (

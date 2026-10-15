@@ -14,8 +14,19 @@ export default async function Today({
   if (!m)
     return (
       <section className="empty">
-        <h1>Today’s matchup is being tuned.</h1>
-        <p>Check back shortly.</p>
+        <h1>No matchup is available today.</h1>
+        <p>A new pair hasn’t been scheduled, or its songs are unavailable.</p>
+        <p>
+          Daily voting follows midnight UTC. Explore the music while you wait.
+        </p>
+        <div className="actions">
+          <Link className="button" href="/leaderboard">
+            Browse the catalog
+          </Link>
+          <Link className="button secondary" href="/archive">
+            View past matchups
+          </Link>
+        </div>
       </section>
     );
   return (

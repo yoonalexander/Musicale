@@ -1,4 +1,9 @@
-import { test, expect } from "@playwright/test";
+import {
+  test,
+  expect,
+  type Page,
+  type APIRequestContext,
+} from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import AxeBuilder from "@axe-core/playwright";
 // @ts-expect-error Node-only local test helper.
@@ -25,28 +30,7 @@ const runSql = (text: string) =>
     { input: text, encoding: "utf8" },
   ).trim();
 
-test("daily vote: magic link, keyboard vote, result, sharing and persistence", async ({
-  page,
-  request,
-}, testInfo) => {
-  test.setTimeout(90000);
-  const email = `musicale-${Date.now()}-${testInfo.project.name}@example.test`;
-  await page.goto("/today");
-  await expect(
-    page.getByRole("heading", { name: "Which song stays with you?" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Vote for Respect" }),
-  ).toBeDisabled();
-  await expect(page.locator(".result")).toHaveCount(0);
-  const provider = page
-    .getByRole("link", { name: "Listen on YouTube" })
-    .first();
-  await expect(provider).toHaveAttribute(
-    "href",
-    "https://www.youtube.com/watch?v=JzqGZjFnYnA",
-  );
-  await expect(page.locator("iframe")).toHaveCount(0);
+async function signIn(page: Page, request: APIRequestContext, email: string) {
   await page.goto("/login");
   await page.getByLabel("Email address").fill(email);
   await page.getByRole("button", { name: "Send magic link" }).click();
@@ -77,6 +61,37 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   expect(href, "Local sign-in email contains a verification link").toBeTruthy();
   await page.goto(href!.replaceAll("&amp;", "&"));
   await expect(page).toHaveURL(/\/today$/);
+  return href!.replaceAll("&amp;", "&");
+}
+
+test("daily vote: magic link, keyboard vote, result, sharing and persistence", async ({
+  page,
+  request,
+}, testInfo) => {
+  test.setTimeout(90000);
+  const email = `musicale-${Date.now()}-${testInfo.project.name}@example.test`;
+  await page.goto("/today");
+  await expect(
+    page.getByRole("heading", { name: "Which song stays with you?" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Vote for Respect" }),
+  ).toBeDisabled();
+  await expect(page.locator(".result")).toHaveCount(0);
+  const provider = page
+    .getByRole("link", { name: "Listen on YouTube" })
+    .first();
+  await expect(provider).toHaveAttribute(
+    "href",
+    "https://www.youtube.com/watch?v=JzqGZjFnYnA",
+  );
+  await expect(page.locator("iframe")).toHaveCount(0);
+  const link = await signIn(page, request, email);
+  await page.goto(link);
+  await expect(
+    page.getByText(/Sign-in link expired, was already used/),
+  ).toBeVisible();
+  await page.goto("/today");
   const vote = page.getByRole("button", { name: "Vote for Respect" });
   await expect(vote).toBeEnabled();
   await vote.focus();
@@ -344,6 +359,159 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   await page.goto("/today");
   await expect(page.locator(".result")).toHaveCount(0);
 });
+
+test("sign-in prevents repeated submission and invalid links offer recovery", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  let release!: () => void;
+  let posts = 0;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/login", async (route) => {
+    if (route.request().method() === "POST") {
+      posts++;
+      await gate;
+    }
+    await route.continue();
+  });
+  try {
+    await page
+      .getByLabel("Email address")
+      .fill(`pending-${Date.now()}@example.test`);
+    await page.getByRole("button", { name: "Send magic link" }).click();
+    const pending = page.getByRole("button", { name: "Sending link…" });
+    await expect(pending).toBeDisabled();
+    await expect(pending).toHaveAttribute("aria-busy", "true");
+    await page.getByLabel("Email address").press("Enter");
+    expect(posts).toBe(1);
+  } finally {
+    release();
+  }
+  await expect(
+    page.getByText("Magic link sent. Check your inbox."),
+  ).toBeVisible();
+  for (const path of [
+    "/api/auth/callback",
+    "/api/auth/callback?code=invalid-test-code",
+  ]) {
+    await page.goto(path);
+    await expect(
+      page.getByText(/Sign-in link expired, was already used/),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Send magic link" }),
+    ).toBeEnabled();
+  }
+});
+
+test("an expired session cannot record a vote and offers sign-in recovery", async ({
+  page,
+  request,
+  context,
+}, testInfo) => {
+  const email = `session-${Date.now()}-${testInfo.project.name}@example.test`;
+  await signIn(page, request, email);
+  await expect(
+    page.getByRole("button", { name: "Vote for Respect" }),
+  ).toBeEnabled();
+  await context.clearCookies();
+  await page.getByRole("button", { name: "Vote for Respect" }).click();
+  await expect(
+    page.getByText("Sign in again to vote. Your saved votes are safe."),
+  ).toBeVisible();
+  expect(
+    runSql(
+      `select count(*) from votes where user_id=(select id from auth.users where email='${email}')`,
+    ),
+  ).toBe("0");
+});
+
+for (const [mode, timezoneId] of [
+  ["timer", "Pacific/Honolulu"],
+  ["visibility", "Asia/Tokyo"],
+] as const) {
+  test.describe(`UTC rollover via ${mode}`, () => {
+    test.use({ timezoneId });
+    test("expires stale voting and refreshes the server's availability", async ({
+      page,
+      request,
+    }, testInfo) => {
+      const email = `rollover-${mode}-${Date.now()}-${testInfo.project.name}@example.test`;
+      await signIn(page, request, email);
+      const fixture = JSON.parse(
+        runSql(
+          "select json_build_object('id',matchup_id,'endsAt',ends_at) from get_today_matchup()",
+        ),
+      );
+      const status = runSql(
+        `select status from daily_matchups where id='${fixture.id}'`,
+      );
+      await page.clock.install({ time: new Date() });
+      await page.reload();
+      await expect(
+        page.getByRole("button", { name: "Vote for Respect" }),
+      ).toBeEnabled();
+      let release!: () => void;
+      let refreshes = 0;
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await page.route("**/today?*", async (route) => {
+        if (route.request().headers()["rsc"] === "1") {
+          refreshes++;
+          await gate;
+        }
+        await route.continue();
+      });
+      try {
+        // Only the local test fixture is unavailable; the browser simulates crossing UTC midnight.
+        runSql(
+          `update daily_matchups set status='cancelled' where id='${fixture.id}'`,
+        );
+        const end = new Date(fixture.endsAt).getTime();
+        if (mode === "timer") {
+          await page.clock.fastForward(end - Date.now() + 1000);
+        } else {
+          // A suspended tab misses timers; only its clock and visibility event advance.
+          await page.clock.setSystemTime(new Date(end + 1000));
+          await page.evaluate(() =>
+            document.dispatchEvent(new Event("visibilitychange")),
+          );
+        }
+        await expect.poll(() => refreshes).toBe(1);
+        await expect(page.getByText(/This matchup has ended/)).toBeVisible();
+        await expect(
+          page.getByRole("button", { name: "Vote for Respect" }),
+        ).toBeDisabled();
+        await expect(
+          page.getByRole("button", { name: "Vote for God Only Knows" }),
+        ).toBeDisabled();
+        release();
+        await expect(
+          page.getByRole("heading", { name: "No matchup is available today." }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("link", { name: "Browse the catalog" }),
+        ).toHaveAttribute("href", "/leaderboard");
+        await expect(
+          page.getByRole("link", { name: "View past matchups" }),
+        ).toHaveAttribute("href", "/archive");
+        expect(
+          runSql(
+            `select count(*) from votes where user_id=(select id from auth.users where email='${email}')`,
+          ),
+        ).toBe("0");
+      } finally {
+        release();
+        runSql(
+          `update daily_matchups set status='${status}' where id='${fixture.id}'`,
+        );
+      }
+    });
+  });
+}
 
 test("public pages stay usable at narrow widths and missing songs return 404", async ({
   page,

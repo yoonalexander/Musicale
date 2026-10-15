@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import { submitDailyVote } from "@/app/actions";
 import { providerLabels } from "@/lib/providers";
 import { resultMessage, shareResult } from "@/lib/share";
@@ -19,10 +20,12 @@ function Card({
   song,
   matchup,
   disabled,
+  onExpired,
 }: {
   song: Song;
   matchup: Matchup;
   disabled: boolean;
+  onExpired: () => void;
 }) {
   const chosen = matchup.selectedSongId === song.id;
   return (
@@ -77,7 +80,12 @@ function Card({
         )}
         <form
           action={submitDailyVote}
-          onSubmit={() => {
+          onSubmit={(event) => {
+            if (Date.now() >= Date.parse(matchup.endsAt)) {
+              event.preventDefault();
+              onExpired();
+              return;
+            }
             try {
               sessionStorage.setItem("musicale-vote-pending", matchup.id);
             } catch {}
@@ -100,7 +108,37 @@ export function DailyMatchup({
   canVote: boolean;
   streak?: number;
 }) {
+  const router = useRouter();
+  const [expired, setExpired] = useState(false);
   const voted = Boolean(matchup.selectedSongId);
+  useEffect(() => {
+    let refreshed = false;
+    function checkDay() {
+      const ended = Date.now() >= Date.parse(matchup.endsAt);
+      setExpired(ended);
+      if (ended && !refreshed) {
+        refreshed = true;
+        router.refresh();
+      }
+    }
+    function onVisible() {
+      if (document.visibilityState === "visible") checkDay();
+    }
+    checkDay();
+    const timer = window.setTimeout(
+      checkDay,
+      Math.max(0, Date.parse(matchup.endsAt) - Date.now()),
+    );
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [matchup.id, matchup.endsAt, router]);
+  function refreshExpiredDay() {
+    setExpired(true);
+    router.refresh();
+  }
   useEffect(() => {
     try {
       if (
@@ -128,11 +166,20 @@ export function DailyMatchup({
     : 0;
   return (
     <>
+      {expired ? (
+        <p className="notice" role="status">
+          This matchup has ended. Loading today’s choice…{" "}
+          <button className="text-button" onClick={() => router.refresh()}>
+            Refresh today
+          </button>
+        </p>
+      ) : null}
       <div className="matchup">
         <Card
           song={matchup.songA}
           matchup={matchup}
-          disabled={!canVote || voted}
+          disabled={!canVote || voted || expired}
+          onExpired={refreshExpiredDay}
         />
         <div className="versus" aria-hidden="true">
           VS
@@ -140,7 +187,8 @@ export function DailyMatchup({
         <Card
           song={matchup.songB}
           matchup={matchup}
-          disabled={!canVote || voted}
+          disabled={!canVote || voted || expired}
+          onExpired={refreshExpiredDay}
         />
       </div>
       {voted ? (
