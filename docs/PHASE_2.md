@@ -10,7 +10,7 @@ Code and verification use the isolated local Supabase backend. Preview deploymen
 
 ## Production prerequisites
 
-- Correct Musicale account access was restored by the owner. A read-only check confirmed migrations `0001`–`0006`, twenty songs/providers, zero users/votes, no matchup today and none in the next 30 days. Custom SMTP remains disabled.
+- Correct Musicale account access was restored by the owner. An initial read-only check confirmed migrations `0001`–`0006`, twenty songs/providers, zero users/votes, no matchup today and none in the next 30 days. Custom SMTP was disabled at that initial inspection.
 - The owner selected Resend, created its account and supplied the exact administrator email privately. Credentials and that email are excluded from Git/public documentation.
 - Sending domain `auth.musicale.alexyoon.com` is **verified** in Resend. The owner approved publishing its DKIM TXT and two sending CNAME records; Namecheap saved all three and public DNS resolves them. Existing website records and the root mail policy were preserved. Prepared a sending-only API-key form restricted to this domain and the non-secret Supabase SMTP fields; credential creation/entry/submission is handed to the owner.
 - Migration `0007` is **applied and tracked in production**. Before applying it, the exact previous function definition and baseline counts were saved in ignored local `tmp/` files. The transaction checked the six-migration/80-character starting state, replaced only the function and recorded `0007`. A separate read-only query confirmed one tracking record, the 60-character rule, twenty songs, zero users and zero votes. This was a targeted function backup, not a full database backup/restore rehearsal (Phase 6).
@@ -29,13 +29,21 @@ Code and verification use the isolated local Supabase backend. Preview deploymen
 - Restored the October 15 production matchup through trusted SQL setup: `respect-aretha` versus `god-only-knows`, from `2026-10-15T00:00:00Z` to `2026-10-16T00:00:00Z`. The insert preserved any existing day with `ON CONFLICT DO NOTHING`. A returned database row and the live Today page confirmed Musicale #12 and both provider links. No app owner existed yet, so this one-time bootstrap has no `created_by` account. It does not establish the next-thirty-day queue or authenticated Admin access.
 - New browser cases cover pending submission, reused/invalid links, session expiry and rollover through both a running timer (Honolulu) and a simulated suspended-tab resume (Tokyo). Refresh is held in the test to prove stale controls disable before the server response; an unavailable local matchup then verifies the fresh empty state. The test restores the local fixture afterward. This simulates client rollover; it is not evidence of an elapsed production midnight or a new production vote.
 
-Public delivery, administrator assignment, the next-thirty-day production queue and legitimate hosted persistence checks remain pending. The owner is a Supabase team recipient, so an additional real non-team email is requested for the ordinary-user delivery check. No Phase 2 acceptance gate is marked complete yet. The application changes remain on the stacked draft PR; the public website has not been promoted to this branch.
+Public email delivery is confirmed; production sign-in currently fails. Administrator assignment, the next-thirty-day production queue and legitimate hosted persistence checks remain pending. No Phase 2 acceptance gate is marked complete yet. The application changes remain on the stacked draft PR; the public website has not been promoted to this branch.
+
+## October 15 hosted sign-in investigation
+
+- The owner reported saving the Resend credential directly in Supabase SMTP. The connected inbox independently confirms Musicale confirmation and sign-in emails delivered to the owner's real non-team inbox between 22:29 and 22:34 UTC. No credential or personal email address is recorded here.
+- Inspection of the retry email, without following its one-time link, confirmed the expected Musicale Supabase `/auth/v1/verify` endpoint, `type=magiclink`, and exact canonical `/api/auth/callback` redirect. The email contains no tracking redirect.
+- The first attempt started in Safari and opened in Chrome, which is incompatible with this PKCE flow. However, the owner then requested and opened a fresh link in Chrome and still received production's generic "Sign-in link expired or invalid" message. Browser switching therefore does not fully explain the incident; the root cause remains unconfirmed.
+- The existing isolated local daily-flow test passed again on Chromium (`npx playwright test --project=desktop --grep daily.vote:`): sign-in, vote, reload and persistence. This does not reproduce or resolve the hosted failure.
+- Production's callback maps failed exchanges to the same generic message. The desktop browser connection timed out, and the local Supabase CLI has no management login. A direct Supabase connection was requested to inspect the specific auth error before changing the authentication implementation. No additional production links were consumed, no production votes were submitted and no speculative auth changes were deployed.
 
 ## Hosted completion checklist
 
 - [x] Apply and verify migration `0007`; verify sending-domain DNS and exact callback.
 - [x] Restore today's production matchup and inspect both provider links.
-- [ ] Owner creates the domain-restricted sending credential, enters it directly in Supabase SMTP and saves; confirm persisted settings without exposing the credential.
+- [x] Owner reports saving the sending credential directly in Supabase SMTP; actual non-team email delivery is independently confirmed. Direct inspection of the persisted masked SMTP settings remains unavailable.
 - [ ] Complete owner app sign-in, identify its exact account and grant the administrator role through trusted setup.
 - [ ] Use authenticated Admin scheduling to populate the next 30 UTC days while preserving today and existing scheduled days.
 - [ ] A real non-team account receives its sign-in email, completes sign-in and remains denied Admin access.

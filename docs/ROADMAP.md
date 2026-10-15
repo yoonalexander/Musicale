@@ -82,7 +82,7 @@ Execute in this order by default. Safe local work in Phase 3 can continue while 
 
 ### Tasks
 
-- [ ] **2.1 Complete public email delivery.** Verify or configure the email provider, sending domain and Supabase SMTP settings. Keep credentials in provider settings, not frontend variables or Git. Verify exact production callback URLs.
+- [x] **2.1 Complete public email delivery.** Verify or configure the email provider, sending domain and Supabase SMTP settings. Keep credentials in provider settings, not frontend variables or Git. Verify exact production callback URLs. Owner reports SMTP saved; actual non-team inbox delivery and the emailed callback are confirmed. Hosted sign-in still fails and is tracked separately in [the Phase 2 investigation](PHASE_2.md#october-15-hosted-sign-in-investigation).
 - [ ] **2.2 Establish the owner account.** Sign in as the owner and assign that exact account the admin role through the trusted setup path. Verify an ordinary account remains unable to use admin actions.
 - [ ] **2.3 Restore today's matchup.** Schedule an active pair with working provider links. Populate the next 30 UTC days using the existing scheduler; Phase 5 finishes the variety/content checks. October 15's production pair is restored and its links checked; the thirty-day queue shortcut is implemented/tested, with production scheduling pending owner setup.
 - [ ] **2.4 Verify hosted persistence.** With an ordinary non-team account, sign in, listen, vote, reload, revisit Today, open Profile and confirm the saved choice and first-day streak.
