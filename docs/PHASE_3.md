@@ -2,7 +2,7 @@
 
 Started October 15, 2026 on `phase-3-database-integrity`, from `phase-2-public-daily-loop` at `96ab7d7d1d46a911ee66b7007cd056b53ac74598`. The managed worktree is separate from the original chat's checkout. Phase 2 hosted sign-in remains unresolved in [its own record](PHASE_2.md).
 
-Status: implementation and full local verification complete; clean-checkout CI pending. No production changes were made during this phase.
+Status: **complete October 15, 2026**, with full local verification and clean-checkout CI passed. No production changes were made during this phase.
 
 ## Changes
 
@@ -29,13 +29,13 @@ Status: implementation and full local verification complete; clean-checkout CI p
 
 The three-day recovery fixture has independently specified changes: Respect beats God Only Knows at equal ratings (+12); Dreams beats Respect at K=32 (+17); God Only Knows beats Dreams at K=16 (+9). Final ratings are **1495, 1497 and 1508**, conserving 4500. Recovery uses the recorded historical changes, not the current K-factor.
 
-The fifty-account measurement includes local Docker/psql process overhead. Earlier runs accepted 50/50 with zero errors in approximately 4.7–6.0 seconds. It is a reproducible small concurrency workload, not an internet-scale capacity benchmark.
+The fifty-account measurement includes local Docker/psql process overhead. The full local verification accepted **50/50, zero errors, 6162 ms**; clean-checkout CI accepted **50/50, zero errors, 1511 ms**. Different hosts account for different timings. This is a reproducible small concurrency workload, not an internet-scale capacity benchmark.
 
 ## Verification
 
 - Before the fixes, targeted regressions reproduced unrestricted sixth profile edits, 31st admin RPC requests, editorial table writes after budget exhaustion, inconsistent audit acceptance and cancellation of an already active voted day.
-- Full `npm run verify` passed against the independent `musicale-phase3` backend: **18 unit checks; 22 existing + 14 integrity + 4 recovery + 5 migration cases = 45 database cases; production build; 21 browser cases on Chromium desktop/mobile and WebKit; TypeScript**. The final migration notification and browser assertion synchronization are also checked before the CI submission.
-- Clean-checkout CI, final formatting and audit evidence will be recorded before closing the phase.
+- Full `npm run verify` passed against the independent `musicale-phase3` backend: **18 unit checks; 22 existing + 14 integrity + 4 recovery + 5 migration cases = 45 database cases; production build; 21 browser cases on Chromium desktop/mobile and WebKit; TypeScript**. Targeted rechecks passed for the final migration notification and browser assertion synchronization.
+- [Clean-checkout CI](https://github.com/yoonalexander/musicale/actions/runs/38823261217) passed on implementation commit `e412ae84e3b08b1b0edab610ae8fa8514d104ed6`: **18 unit checks, 45 database cases, production build, 28 browser cases across Chromium/Firefox/WebKit/mobile, TypeScript and zero audit vulnerabilities**. Formatting and whitespace checks pass. [Draft PR #3](https://github.com/yoonalexander/musicale/pull/3) is stacked on Phase 2; the follow-up documentation commit only records this completed evidence.
 
 The disposable migration fixtures mirror the documented SQL-and-tracking setup with a minimal local `auth.users`/`auth.uid()` boundary. Fresh CLI startup of the separate backend also applied 0001–0008 and seeded through the real local Supabase runtime. SQL-role tests do not represent independent hosted JWT/login verification; Playwright exercises real local email/session/server-action behavior.
 
