@@ -149,7 +149,7 @@ Official upload availability is not a blanket license or assurance of regional p
 
 ## Remaining launch operations and future versions
 
-- Configure custom SMTP for public magic links, then validate hosted sign-in, voting and persistence. The fresh production database has migrations `0001`–`0006`, twenty songs and an initial eleven-day schedule.
+- Finish custom SMTP for public magic links, then validate hosted sign-in, voting and persistence. As of October 15, production has migrations `0001`–`0007`, twenty songs and a restored matchup for that UTC day. The sending domain is verified; SMTP credential entry, owner administration and the next-thirty-day production queue remain pending. See [Phase 2 evidence](docs/PHASE_2.md).
 - Continue editorial curation toward the brief's suggested 200–1,000 songs; the twenty-source starter catalog and bulk import tools are complete. Verify region-specific playback and artwork permissions before adding content.
 - Extend manual assistive-technology/device testing and configure the hosting monitor against `/api/health`.
 - Later: pairing strategies, personalized comparisons, friends and tournaments.

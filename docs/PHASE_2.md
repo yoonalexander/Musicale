@@ -24,11 +24,24 @@ Code and verification use the isolated local Supabase backend. Preview deploymen
 - Daily matchups expire at their UTC end timestamp, disable stale vote controls and refresh authoritative server data. Returning to a visible tab rechecks the day; form submission also checks expiry before sending. Database time/window checks remain authoritative.
 - Local validation: **18 unit checks, TypeScript, production build and 21 browser tests passed** on Chromium desktop/mobile and WebKit.
 - [Clean-checkout CI](https://github.com/yoonalexander/musicale/actions/runs/38789364761) passed on implementation commit `637b77273b989d2ea940b66cd42297b7f2c69909`: **18 unit checks, 22 database checks, production build, 28 browser tests including Firefox, TypeScript and zero audit vulnerabilities**. [Draft PR #2](https://github.com/yoonalexander/musicale/pull/2) is stacked on Phase 1.
-- Extended the Admin queue shortcut to the next **30 UTC days**, repeating the ten starter pairs and preserving occupied days through the existing batch RPC. Browser checks assert all thirty dates exist and a repeated click preserves their IDs and pairings. The eighteen unaffected browser cases passed, followed by all three expanded full-flow checks in a targeted rerun. TypeScript and formatting also pass. Final clean-checkout CI is pending for this addition.
+- Extended the Admin queue shortcut to the next **30 UTC days**, repeating the ten starter pairs and preserving occupied days through the existing batch RPC. Browser checks assert all thirty dates exist and a repeated click preserves their IDs and pairings. [Final clean-checkout CI](https://github.com/yoonalexander/musicale/actions/runs/38814328618) passed on implementation commit `72be9eae0dd1f20c24e6309f9f9dfb4c2663dd4a`: **18 unit checks, 22 database checks, production build, 28 browser tests across Chromium, Firefox, WebKit and mobile, TypeScript and zero audit vulnerabilities**.
 - Rechecked today's intended provider links in Chrome: the official Aretha Franklin audio and Beach Boys music video both resolved with active playback controls. Playback was stopped after inspection; this is availability evidence, not a claimed personal listening preference or production vote.
+- Restored the October 15 production matchup through trusted SQL setup: `respect-aretha` versus `god-only-knows`, from `2026-10-15T00:00:00Z` to `2026-10-16T00:00:00Z`. The insert preserved any existing day with `ON CONFLICT DO NOTHING`. A returned database row and the live Today page confirmed Musicale #12 and both provider links. No app owner existed yet, so this one-time bootstrap has no `created_by` account. It does not establish the next-thirty-day queue or authenticated Admin access.
 - New browser cases cover pending submission, reused/invalid links, session expiry and rollover through both a running timer (Honolulu) and a simulated suspended-tab resume (Tokyo). Refresh is held in the test to prove stale controls disable before the server response; an unavailable local matchup then verifies the fresh empty state. The test restores the local fixture afterward. This simulates client rollover; it is not evidence of an elapsed production midnight or a new production vote.
 
-Public delivery, administrator assignment, production scheduling and legitimate hosted persistence checks remain pending. The owner is a Supabase team recipient, so an additional real non-team email is requested for the ordinary-user delivery check. No Phase 2 acceptance gate is marked complete yet. The application changes remain on the stacked draft PR; the public website has not been promoted to this branch.
+Public delivery, administrator assignment, the next-thirty-day production queue and legitimate hosted persistence checks remain pending. The owner is a Supabase team recipient, so an additional real non-team email is requested for the ordinary-user delivery check. No Phase 2 acceptance gate is marked complete yet. The application changes remain on the stacked draft PR; the public website has not been promoted to this branch.
+
+## Hosted completion checklist
+
+- [x] Apply and verify migration `0007`; verify sending-domain DNS and exact callback.
+- [x] Restore today's production matchup and inspect both provider links.
+- [ ] Owner creates the domain-restricted sending credential, enters it directly in Supabase SMTP and saves; confirm persisted settings without exposing the credential.
+- [ ] Complete owner app sign-in, identify its exact account and grant the administrator role through trusted setup.
+- [ ] Use authenticated Admin scheduling to populate the next 30 UTC days while preserving today and existing scheduled days.
+- [ ] A real non-team account receives its sign-in email, completes sign-in and remains denied Admin access.
+- [ ] With that account and a legitimate listener's choice, verify a saved vote, reload/revisit behavior, duplicate rejection, Profile/history and first-day streak.
+
+Local browser tests cover time-zone and rollover behavior; production participation remains a separate check. Credentials, personal email addresses and local screenshots/backups are excluded from Git.
 
 ## References checked
 

@@ -8,6 +8,8 @@ Initial production setup: October 1, 2026. Preview environment scopes rechecked 
 - Applied and tracked migration `0007` after saving the exact previous function definition locally and checking the starting state. A separate read-only check confirmed the 60-character rule and unchanged song/user/vote counts. No production data reset was performed.
 - Resend sending domain `auth.musicale.alexyoon.com` is verified. With owner approval, added its DKIM TXT and two sending CNAME records in Namecheap. Existing website DNS and the root mail policy were preserved.
 - Auth Site URL and exact callback remain correct. Supabase SMTP has been prepared with sender `signin@auth.musicale.alexyoon.com`, sender name `Musicale`, host `smtp.resend.com`, TLS port `465` and username `resend`. The owner must create the domain-restricted sending credential, enter it directly in Supabase and save. Until that is verified, public email delivery remains unproven.
+- Restored October 15's UTC matchup, Respect versus God Only Knows, through a conflict-preserving trusted setup insert. The database row and live Today page confirm Musicale #12; both official provider links resolved. This bootstrap has no app administrator actor yet. The next 30 production days still need scheduling after owner account setup; today's restored pair expires at `2026-10-16T00:00:00Z`.
+- Phase 2 application changes passed [clean-checkout CI](https://github.com/yoonalexander/musicale/actions/runs/38814328618) and remain on draft PR #2, stacked on Phase 1. Production still runs `main`; neither application branch has been promoted.
 
 Current Phase 2 evidence and remaining hosted checks are in [PHASE_2.md](PHASE_2.md). The sections below preserve the original deployment record.
 
