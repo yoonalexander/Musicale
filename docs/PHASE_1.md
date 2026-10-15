@@ -1,6 +1,6 @@
 # Phase 1 — Reproducible, isolated baseline
 
-Working record for [roadmap Phase 1](ROADMAP.md#phase-1--establish-a-reproducible-isolated-baseline), started October 15, 2026.
+Completed October 15, 2026. Evidence for [roadmap Phase 1](ROADMAP.md#phase-1--establish-a-reproducible-isolated-baseline).
 
 ## Agreed decisions
 
@@ -35,9 +35,14 @@ Phase 2 production authentication setup and hosted application migrations are ou
 - Unit checks: **18 passed**, including preview configuration with neither, either and both credentials, plus production/development controls. Error messages do not disclose the supplied test key.
 - Database checks: **22 passed**, including actual 60-character acceptance, 61/null/empty/control-character rejection and preservation of the last valid name. A repeat run exposed an existing minute-rollover assumption in the rate-limit test; its batch now uses a stable transaction time and checks committed attempt counts afterward.
 - Production build passed with local backend settings; an explicit tracing root resolves the workspace-root warning.
-- The first browser run could not launch because Playwright's required binaries were missing. Chromium and WebKit were installed from Playwright's official distribution. The complete baseline is being rerun.
+- The first browser run could not launch because Playwright's required binaries were missing. Chromium and WebKit were installed from Playwright's official distribution. The subsequent full `npm run verify` exited successfully: **18 unit checks, 22 database checks, production build, 9 browser tests and TypeScript**. The corrected database test was then rerun separately: **22 passed**.
+- Browser verification passed on Chromium desktop/mobile and WebKit, including magic-link authentication, saved voting, 60-character profile edits, narrow layouts and automated accessibility checks. Linux CI also passed Firefox; Windows Firefox remains outside the documented default matrix.
+- Implementation commit: `52c911f31ca3ef0d3013a60455b287d19913686d`, branch `codex/phase-1-baseline`, [draft PR #1](https://github.com/yoonalexander/musicale/pull/1).
+- [Vercel preview deployment](https://vercel.com/yoonalexanders-projects/musicale/aCG3gpdkTQak7KjrwuXyFT2FHSLR) is Ready for that implementation commit. A live Chrome smoke check confirmed the preview notice on Home, Login and Today, disabled magic-link submission and both disabled vote buttons. [Read-only preview](https://musicale-9b0px47lb-yoonalexanders-projects.vercel.app).
 - Vercel variable scope changes were saved successfully. No credential rotation or hosted database migration was performed. Apply `0007` through the normal hosted upgrade process before promoting the new application to Production.
 
-## Remaining gate evidence
+## Clean-checkout CI gate
 
-Full browser/TypeScript results, a read-only preview smoke check and CI on the implementation commit are pending. Phase 1 remains open until those results are recorded. The GitHub Actions workflow uses a clean checkout, locked dependencies and isolated local Supabase, and retains browser traces on failure.
+[GitHub Actions verification](https://github.com/yoonalexander/musicale/actions/runs/38781870552) **passed** against implementation commit `52c911f31ca3ef0d3013a60455b287d19913686d`: locked install, browser engine installation, local Supabase startup, **18 unit checks, 22 database checks, production build, 12 browser tests, TypeScript and zero audit vulnerabilities**. The workflow uses a clean checkout and retains browser traces on failure. It stopped its disposable backend successfully afterward.
+
+All Phase 1 acceptance gates passed. Later documentation-only commits record this evidence without changing the tested application. Production SMTP, administrator setup, matchup scheduling and authenticated hosted smoke checks remain Phase 2. Apply migration `0007` before promoting this application change to Production; the PR remains a draft for review.

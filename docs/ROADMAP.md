@@ -41,7 +41,7 @@ The “real-time” claim is an explicit remaining feature: the current app has 
 
 | Phase | Outcome | Depends on | Initial state |
 | --- | --- | --- | --- |
-| 1 | Reproducible development, isolated testing and passing baseline checks | Nothing | Partial; database/browser checks were not rerun during the review |
+| 1 | Reproducible development, isolated testing and passing baseline checks | Nothing | Complete October 15; [verification evidence](PHASE_1.md) |
 | 2 | Working public sign-in and daily voting loop | 1 | Launch operations incomplete or unverified; Today was empty |
 | 3 | Proven transaction, authorization, migration and recovery guarantees | 1; use 2 for hosted smoke checks | Substantial implementation; further verification required |
 | 4 | Live rankings with consistent caching | 3 | Cache invalidation exists; cross-browser live behavior missing |
@@ -62,19 +62,19 @@ Execute in this order by default. Safe local work in Phase 3 can continue while 
 - [x] **1.3 Restore local verification.** Start Docker and the project-specific local Supabase stack. Confirm ports, local email catcher and the test scripts' protections against hosted databases.
 - [x] **1.4 Fix the dependency advisory.** Update the affected compatible transitive dependency in the lockfile; rerun the audit. Recheck current advisories at implementation time rather than treating the review's advisory list as permanent.
 - [x] **1.5 Align display-name limits.** Use 60 characters consistently in the form, server action and database RPC; add a forward migration for the RPC change. Keep applied historical migrations unchanged. Verify 60 succeeds and 61 fails clearly.
-- [ ] **1.6 Run the baseline.** Run the existing unit, database, production-build, browser and TypeScript checks. Resolve failures and verify the GitHub workflow on the same commit. Address the local workspace-root warning if it affects build tracing or reproducibility.
+- [x] **1.6 Run the baseline.** Run the existing unit, database, production-build, browser and TypeScript checks. Resolve failures and verify the GitHub workflow on the same commit. Address the local workspace-root warning if it affects build tracing or reproducibility.
 
 **Primary files:** [package.json](../package.json), [lockfile](../package-lock.json), [verification workflow](../.github/workflows/verify.yml), [Supabase configuration](../supabase/config.toml), [profile page](../app/profile/page.tsx), [actions](../app/actions.ts), [migrations](../supabase/migrations/), [deployment notes](DEPLOYMENT.md).
 
 ### Phase gate
 
-- [ ] A clean checkout can start the documented local backend and run `npm run verify` successfully.
+- [x] A clean checkout can start the documented local backend and run `npm run verify` successfully.
 - [x] `npm audit` passes the existing CI policy; any exception is explicitly documented and reviewed, never silently ignored.
-- [ ] CI passes on the tested commit, with failures retaining useful browser evidence.
-- [ ] Preview mutations cannot reach the production backend; read-only previews are visibly labeled.
+- [x] CI passes on the tested commit, with failures retaining useful browser evidence.
+- [x] Preview mutations cannot reach the production backend; read-only previews are visibly labeled.
 - [x] The display-name boundary is covered by an actual database/application check.
 
-**Evidence:** [Phase 1 working record](PHASE_1.md), with command results, environment decisions and outstanding gate checks. Retain the tested commit SHA and CI run link when complete.
+**Evidence:** [Phase 1 record](PHASE_1.md), including the tested commit SHA, passing CI run, preview smoke check, command results and environment decisions.
 
 ## Phase 2 — Complete the public daily loop
 
