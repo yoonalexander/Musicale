@@ -280,7 +280,7 @@ No calendar deadline is invented here: email/domain setup, environment access an
 
 ## Final release checklist
 
-- [ ] Phase 1 — Baseline and isolation passed: evidence link __________
+- [x] Phase 1 — Baseline and isolation passed: [October 15 verification evidence](PHASE_1.md)
 - [ ] Phase 2 — Public daily loop passed: evidence link __________
 - [ ] Phase 3 — Database guarantees passed: evidence link __________
 - [ ] Phase 4 — Live rankings and cache consistency passed: evidence link __________
