@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOutAction } from "@/app/actions";
 import type { ViewerState } from "@/types/domain";
+import { isDemoMode } from "@/lib/data";
 export function AppShell({
   children,
   viewer,
@@ -30,7 +31,14 @@ export function AppShell({
           </Link>
         )}
       </header>
-      <main>{children}</main>
+      <main>
+        {isDemoMode() ? (
+          <p className="notice" role="status">
+            Preview catalog — sign-in and persistent voting are disabled.
+          </p>
+        ) : null}
+        {children}
+      </main>
       <footer>
         <span>Musicale</span>
         <span>Music playback remains with its provider.</span>

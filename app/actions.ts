@@ -267,8 +267,8 @@ export async function updateDisplayName(fd: FormData) {
   if (!v.user) redirect("/login");
   await requestBudget("profile");
   const name = String(fd.get("displayName") ?? "").trim();
-  if (!name || name.length > 80 || /[\u0000-\u001f\u007f]/.test(name))
-    go("/profile", "message", "Use a name of 1 to 80 characters.");
+  if (!name || name.length > 60 || /[\u0000-\u001f\u007f]/.test(name))
+    go("/profile", "message", "Use a name of 1 to 60 characters.");
   const db = await getSupabaseServerClient();
   const { error } = await db!.rpc("update_my_display_name", { p_name: name });
   revalidatePath("/profile");

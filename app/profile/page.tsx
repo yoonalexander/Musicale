@@ -48,7 +48,7 @@ export default async function ProfilePage({
             <input
               name="displayName"
               required
-              maxLength={80}
+              maxLength={60}
               defaultValue={p?.displayName ?? ""}
               autoComplete="nickname"
             />

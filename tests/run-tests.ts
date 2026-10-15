@@ -10,10 +10,46 @@ import { shareResult, resultMessage } from "../lib/share.ts";
 import { validateSong, utcWindow, validDay } from "../lib/validation.ts";
 import { parseCatalog, parseCsv } from "../lib/import.ts";
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 const run = (name: string, fn: () => void) => {
   fn();
   console.log(`PASS ${name}`);
 };
+run(
+  "preview configuration rejects either backend credential without leaking values",
+  () => {
+    for (const [environment, url, key, rejected] of [
+      ["preview", "", "", false],
+      ["preview", "https://example.supabase.co", "", true],
+      ["preview", "", "private-test-key", true],
+      ["preview", "https://example.supabase.co", "private-test-key", true],
+      ["production", "https://example.supabase.co", "private-test-key", false],
+      ["development", "http://127.0.0.1:55321", "private-test-key", false],
+    ] as const) {
+      const result = spawnSync(
+        process.execPath,
+        ["--import", "tsx", "--eval", "import('./next.config.ts')"],
+        {
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            VERCEL_ENV: environment,
+            NEXT_PUBLIC_SUPABASE_URL: url,
+            NEXT_PUBLIC_SUPABASE_ANON_KEY: key,
+          },
+        },
+      );
+      assert.ifError(result.error);
+      assert.equal(result.status, rejected ? 1 : 0, result.stderr);
+      if (rejected)
+        assert.match(
+          result.stderr,
+          /Preview deployments must not have Supabase credentials/,
+        );
+      assert.ok(!result.stderr.includes("private-test-key"));
+    }
+  },
+);
 run("equal ratings move symmetrically", () => {
   const r = applyEloResult(1500, 1500);
   assert.equal(r.winnerDelta, 12);

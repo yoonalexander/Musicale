@@ -125,6 +125,15 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   ).toBeVisible();
   await expect(page.locator(".vote-history")).toContainText("Respect");
   await page.getByText("Edit display name", { exact: true }).click();
+  await expect(
+    page.getByLabel("Display name", { exact: true }),
+  ).toHaveAttribute("maxlength", "60");
+  await page.getByLabel("Display name", { exact: true }).fill("a".repeat(60));
+  await page.getByRole("button", { name: "Save display name" }).click();
+  await expect(
+    page.getByRole("heading", { name: "a".repeat(60), exact: true }),
+  ).toBeVisible();
+  await page.getByText("Edit display name", { exact: true }).click();
   await page.getByLabel("Display name", { exact: true }).fill("Test listener");
   await page.getByRole("button", { name: "Save display name" }).click();
   await expect(

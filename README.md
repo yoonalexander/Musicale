@@ -2,6 +2,8 @@
 
 **Every day. Two songs. One choice.** Everyone gets the same editorial matchup, listens on an official music provider, votes once, and helps build an auditable Elo leaderboard.
 
+See the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+
 ## Product and architecture
 
 This rebuild replaces the previous musical-theatre ranking / higher-lower game. The July 2026 product request called for a shared daily vote loop inspired by Wordle, with a monochrome editorial interface, one accent color, persistent accounts, and server-calculated ratings and streaks. The original unfinished changes were completed around that MVP; personalized modes and social features remain future work. See [the refactor notes](docs/REFACTOR.md).
@@ -14,7 +16,7 @@ This rebuild replaces the previous musical-theatre ranking / higher-lower game. 
 - Song providers are normalized separately. The launch UI opens official HTTPS provider links; it does not load third-party players or download audio.
 - Vercel-compatible: no separate application server, Redis or paid analytics service.
 
-Implemented pages: landing, Today, filtered/sortable leaderboard, song details, editable profile with paginated voting history and evidence-based listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. The launch feature set from phases 1–6 is implemented; the original brief's future social/personalized modes remain later work.
+Implemented pages: landing, Today, filtered/sortable leaderboard, song details, editable profile with paginated voting history and evidence-based listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. These screens exist, but the completion roadmap tracks remaining behavior, operations and release verification. The original brief's future social/personalized modes remain later work.
 
 Leaderboard filters cover genre, artist, year, decade and minimum votes. Sort by Elo, win percentage, total votes or seven-day rating movement. Only the public leaderboard is cached (30 seconds), with immediate invalidation after voting/editorial changes; private vote and profile state is never publicly cached.
 
@@ -26,7 +28,7 @@ Use Node.js 20.19+ and install locked dependencies:
 npm ci
 ```
 
-For preview mode, leave both Supabase variables empty. The twenty-song starter catalog remains browsable with external playback links; accounts and persistent voting stay disabled. Preview ratings are initial values, not fabricated community statistics. Primary catalog sources are documented in [CATALOG.md](docs/CATALOG.md).
+For preview mode, leave both Supabase variables empty. Vercel Preview builds fail if either Supabase variable is present; keep both scoped to Production only. Read-only pages display a preview notice. The twenty-song starter catalog remains browsable with external playback links; accounts and persistent voting stay disabled. Preview ratings are initial values, not fabricated community statistics. Primary catalog sources are documented in [CATALOG.md](docs/CATALOG.md).
 
 For a fully local backend, start Docker Desktop with its Linux engine and run:
 
@@ -50,14 +52,14 @@ To use a hosted Supabase project instead, apply the migrations as described belo
 
 `0001_initial.sql` is unchanged historical migration content. **Do not replace or reapply an already-applied migration.**
 
-- Fresh database: apply migrations `0001` through `0006` in order, followed by `seed.sql`.
-- Database running the original app: apply migrations `0002` through `0006` in order, then `seed.sql`.
-- Database already running the daily MVP through `0003`: apply `0004` through `0006`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
+- Fresh database: apply migrations `0001` through `0007` in order, followed by `seed.sql`.
+- Database running the original app: apply migrations `0002` through `0007` in order, then `seed.sql`.
+- Database already running the daily MVP through `0003`: apply `0004` through `0007`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
 - With Supabase CLI migration tracking, use normal ordered migration application; do not run a reset against hosted data.
 
 Migration 0002 moves the old songs, votes, profiles, game runs and quota records into the **private, unexposed `musicale_legacy` schema**. Existing account identities, join dates, display names and admin roles are copied into the new profiles. Old votes and ratings are preserved for reference, rather than mixed into the new catalog. The old public ranking RPC is removed. Migration 0003 completes access controls, result privacy, admin audit/import tools, configurable Elo, and history queries.
 
-Migration 0004 adds durable request limits, richer profiles/catalog metadata, analytics aggregates, featured archives and ranking recovery. Migration 0005 adds atomic batch scheduling and database provider-domain checks; migration 0006 indexes request cleanup. Provider checks preserve existing potentially stale data while enforcing new writes; inspect provider readiness before scheduling.
+Migration 0004 adds durable request limits, richer profiles/catalog metadata, analytics aggregates, featured archives and ranking recovery. Migration 0005 adds atomic batch scheduling and database provider-domain checks; migration 0006 indexes request cleanup. Migration 0007 aligns the display-name RPC with the form/server limit of 60 characters; it preserves existing names and rejects invalid future edits. Provider checks preserve existing potentially stale data while enforcing new writes; inspect provider readiness before scheduling.
 
 Before rollout, take a database backup, inspect the starting schema, and apply the upgrade to an isolated copy. If the unfinished July rewrite of `0001_initial.sql` was applied manually, that is a different starting schema: do not apply the legacy upgrade blindly; preserve/export that data and reconcile it first. The fresh Musicale production project was bootstrapped on October 1, 2026; see [deployment status](docs/DEPLOYMENT.md).
 
@@ -107,7 +109,7 @@ npm run typecheck
 
 Start local Supabase before the database/browser checks. `npm run verify` runs the complete sequence (unit tests, database tests, production build, desktop/mobile browser tests, and TypeScript).
 
-- Unit tests cover Elo including rounding ties, streak expiry/date boundaries, UTC windows, catalog/provider validation, and spoiler-free sharing.
+- Unit tests cover the preview credential guard, Elo including rounding ties, streak expiry/date boundaries, UTC windows, catalog/provider validation, and spoiler-free sharing.
 - Database tests create and remove a disposable database inside **only** `supabase_db_musicale`. They exercise migration preservation, actual PostgreSQL transactions/RLS, authentication requirements, invalid/time-window votes, concurrent requests/users, streaks, result privacy, admin scheduling/audits/settings, and atomic imports. They do not reset the application's database or accept a hosted URL.
 - Browser tests build with isolated local settings, then use actual local magic-link email and persisted voting on desktop/mobile. They cover keyboard voting, reload persistence, clipboard fallback, profiles/history, server admin checks, sign-out, 404s, 320px layouts and automated WCAG accessibility checks. Generated `example.test` accounts and sample votes remain only in the local test project. Screenshots go in ignored `output/`.
 - Browser checks never open the external music links. Listening availability and restrictions remain provider-dependent.
@@ -122,7 +124,7 @@ Production is configured at [musicale.alexyoon.com](https://musicale.alexyoon.co
 
 1. Prepare and apply the database upgrade before directing the new app at the hosted database.
 2. Import the repository into Vercel, using the standard Next.js build.
-3. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and the canonical HTTPS `NEXT_PUBLIC_SITE_URL`. Keep the service-role key out of frontend/application configuration; this app does not require it.
+3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` for **Production only**, and the canonical HTTPS `NEXT_PUBLIC_SITE_URL`. Leave both Supabase variables absent in Preview. Use local Supabase for authenticated tests; cloud staging is deferred. Keep the service-role key out of frontend/application configuration; this app does not require it.
 4. Configure Supabase Auth Site URL and the exact production `/api/auth/callback` redirect. Enable email confirmation, configure reliable email delivery, and retain Auth rate limits/cooldowns.
 5. Schedule upcoming daily matchups in Admin. When no valid matchup is scheduled, Today shows an explicit empty state; it does not choose a random pair.
 6. Verify sign-in, provider link, one vote, persisted result after reload, streak, leaderboard and admin authorization on the deployed environment.

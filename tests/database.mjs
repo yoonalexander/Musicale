@@ -375,14 +375,22 @@ try {
     );
   });
   await test("failed vote attempts persist, throttle per account, and cannot bypass the wrapper", async () => {
-    for (let i = 0; i < 24; i++)
-      await denied(
-        asUser(
-          19,
-          "select submit_daily_vote('11111111-1111-4111-8111-111111111111','respect-aretha')",
-        ),
-        i < 10 ? /not active/ : /Too many/,
-      );
+    // One transaction fixes now() so a UTC minute rollover cannot split the budget.
+    const attempts = await sql(
+      asUser(
+        19,
+        Array.from(
+          { length: 24 },
+          () =>
+            "select json_build_object('result',submit_daily_vote('11111111-1111-4111-8111-111111111111','respect-aretha'))",
+        ).join(";"),
+      ),
+    );
+    const results = attempts.split("\n").map((line) => JSON.parse(line).result);
+    assert.equal(results.length, 24);
+    results.forEach((result, i) =>
+      assert.match(result.error, i < 10 ? /not active/ : /Too many/),
+    );
     assert.equal(
       await sql(
         `select sum(attempts) from request_budgets where user_id='${user(19)}' and action='vote'`,
@@ -413,7 +421,22 @@ try {
       ),
       "A listener,user",
     );
-    await denied(asUser(2, "select update_my_display_name('')"), /1 to 80/);
+    await sql(asUser(2, "select update_my_display_name(repeat('a',60))"));
+    assert.equal(
+      await sql(
+        `select char_length(display_name) from profiles where user_id='${user(2)}'`,
+      ),
+      "60",
+    );
+    for (const name of ["''", "null", "repeat('a',61)", "E'bad\\nname'"])
+      await denied(
+        asUser(2, `select update_my_display_name(${name})`),
+        /1 to 60/,
+      );
+    assert.equal(
+      await sql(`select display_name from profiles where user_id='${user(2)}'`),
+      "a".repeat(60),
+    );
     const profile = JSON.parse(
       await sql(asUser(2, "select get_my_profile_data(0)")),
     );

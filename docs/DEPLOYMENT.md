@@ -1,6 +1,6 @@
 # Production deployment
 
-Configured October 1, 2026 through the signed-in Chrome dashboards.
+Initial production setup: October 1, 2026. Preview environment scopes rechecked and changed October 15, 2026 through the signed-in Chrome dashboard. Database/authentication observations below remain the October 1 record unless explicitly dated otherwise.
 
 ## Services and domain
 
@@ -10,7 +10,7 @@ Configured October 1, 2026 through the signed-in Chrome dashboards.
 - Supabase URL: https://geqddmynokawzojkteko.supabase.co
 - Namecheap CNAME: host `musicale`, target `8498f7b1a8a3bcb5.vercel-dns-017.com.`, automatic TTL. Vercel reports Valid Configuration and the site serves HTTPS.
 
-Vercel Production and Preview have `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. The latter contains the project's browser-safe publishable key. No service-role or privileged secret key is configured in the app. Preview currently uses the production backend; use a separate project before testing mutations in previews.
+On October 15, both Supabase variables were found attached to Production and Preview. Their scopes were changed and saved to **Production only**; `NEXT_PUBLIC_SITE_URL` remains in both environments. System environment variables are enabled, so the build guard can check `VERCEL_ENV`. New previews use the read-only starter catalog with a visible notice, disabled sign-in and disabled persistent voting. The build rejects either Supabase variable in Preview. Use local Supabase for authenticated testing; cloud staging is deferred. Environment changes apply to new deployments, not existing builds. The Preview deployment filter showed no retained previews on October 15. No credential value was rotated and no production database change was made.
 
 ## Database and authentication
 
