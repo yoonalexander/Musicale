@@ -114,6 +114,7 @@ export function DailyMatchup({
   useEffect(() => {
     let refreshed = false;
     function checkDay() {
+      // shortcut: an inaccurate browser clock may expire early; use a server offset if this becomes a reported issue.
       const ended = Date.now() >= Date.parse(matchup.endsAt);
       setExpired(ended);
       if (ended && !refreshed) {

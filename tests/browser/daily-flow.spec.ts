@@ -264,13 +264,40 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     runSql(`select title||','||status from songs where id='${importedId}'`),
   ).toBe("CSV test song,disabled");
   await page
-    .getByRole("button", { name: "Queue next ten days", exact: true })
+    .getByRole("button", { name: "Queue next 30 days", exact: true })
     .click();
   await expect(
     page.getByText(
       /\d+ editorial matchups added. Existing days were preserved./,
     ),
   ).toBeVisible();
+  expect(
+    runSql(
+      "select count(*) from daily_matchups where matchup_day>(now() at time zone 'UTC')::date and matchup_day<=(now() at time zone 'UTC')::date+30 and status in('scheduled','active')",
+    ),
+  ).toBe("30");
+  const scheduledPairs = runSql(
+    "select json_agg(json_build_object('id',id,'day',matchup_day,'a',song_a_id,'b',song_b_id) order by matchup_day) from daily_matchups where matchup_day>(now() at time zone 'UTC')::date and matchup_day<=(now() at time zone 'UTC')::date+30",
+  );
+  const repeatedQueue = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === "/admin",
+  );
+  await page
+    .getByRole("button", { name: "Queue next 30 days", exact: true })
+    .click();
+  await repeatedQueue;
+  await expect(page).toHaveURL(/\/admin\?message=0%20editorial/);
+  await page.reload();
+  await expect(
+    page.getByText("0 editorial matchups added. Existing days were preserved."),
+  ).toBeVisible();
+  expect(
+    runSql(
+      "select json_agg(json_build_object('id',id,'day',matchup_day,'a',song_a_id,'b',song_b_id) order by matchup_day) from daily_matchups where matchup_day>(now() at time zone 'UTC')::date and matchup_day<=(now() at time zone 'UTC')::date+30",
+    ),
+  ).toBe(scheduledPairs);
   const day = new Date();
   day.setUTCDate(
     day.getUTCDate() +

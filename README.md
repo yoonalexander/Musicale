@@ -67,7 +67,7 @@ To assign an administrator, use a trusted SQL session to set the selected authen
 
 ## Administration
 
-Admin supports a song editor, JSON/CSV paste or file imports, scheduling/replacing/cancelling future unvoted matchups, a ten-day curated queue, featured completed matchups, provider-readiness checks, participation counts, unusual voting request volume, opt-in event totals, availability changes, K-factor settings and ranking recovery. Editorial mutations are recorded in `admin_audit_log`. Importing an existing ID preserves its rating and record; a failed import rolls back the entire batch. Queuing starter pairs preserves occupied dates and rolls back completely if a new pair is invalid.
+Admin supports a song editor, JSON/CSV paste or file imports, scheduling/replacing/cancelling future unvoted matchups, a thirty-day queue repeating the ten curated starter pairs, featured completed matchups, provider-readiness checks, participation counts, unusual voting request volume, opt-in event totals, availability changes, K-factor settings and ranking recovery. Editorial mutations are recorded in `admin_audit_log`. Importing an existing ID preserves its rating and record; a failed import rolls back the entire batch. Queuing starter pairs preserves occupied dates and rolls back completely if a new pair is invalid.
 
 Ranking recovery restores ratings, win/loss records, matchup vote counts and chart snapshots from original recorded rating changes, starting each song at 1500. It preserves votes and historical K-factors, locks out concurrent writes while rebuilding, checks audit consistency before any changes, and records the operation. It does not rerun historical votes using today's K-factor.
 

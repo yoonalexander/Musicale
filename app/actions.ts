@@ -349,11 +349,11 @@ export async function rebuildRankings(fd: FormData) {
       : `Rankings rebuilt from ${data} recorded votes.`,
   );
 }
-export async function scheduleEditorialWeek() {
+export async function scheduleEditorialMonth() {
   await requireAdmin();
   await requestBudget("admin");
   const today = new Date().toISOString().slice(0, 10);
-  const matchups = editorialPairs.map((_, i) => {
+  const matchups = Array.from({ length: 30 }, (_, i) => {
     const date = new Date(`${today}T00:00:00Z`);
     date.setUTCDate(date.getUTCDate() + i + 1);
     const [songA, songB] = editorialPairs[(i + 1) % editorialPairs.length];

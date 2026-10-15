@@ -2,6 +2,15 @@
 
 Initial production setup: October 1, 2026. Preview environment scopes rechecked and changed October 15, 2026 through the signed-in Chrome dashboard. Database/authentication observations below remain the October 1 record unless explicitly dated otherwise.
 
+## October 15 Phase 2 update
+
+- Rechecked production before changes: migrations `0001`–`0006`, twenty songs and providers, zero users and votes, no matchup today and no next-thirty-day queue.
+- Applied and tracked migration `0007` after saving the exact previous function definition locally and checking the starting state. A separate read-only check confirmed the 60-character rule and unchanged song/user/vote counts. No production data reset was performed.
+- Resend sending domain `auth.musicale.alexyoon.com` is verified. With owner approval, added its DKIM TXT and two sending CNAME records in Namecheap. Existing website DNS and the root mail policy were preserved.
+- Auth Site URL and exact callback remain correct. Supabase SMTP has been prepared with sender `signin@auth.musicale.alexyoon.com`, sender name `Musicale`, host `smtp.resend.com`, TLS port `465` and username `resend`. The owner must create the domain-restricted sending credential, enter it directly in Supabase and save. Until that is verified, public email delivery remains unproven.
+
+Current Phase 2 evidence and remaining hosted checks are in [PHASE_2.md](PHASE_2.md). The sections below preserve the original deployment record.
+
 ## Services and domain
 
 - Canonical site: https://musicale.alexyoon.com
