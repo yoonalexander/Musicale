@@ -233,7 +233,7 @@ export async function getSongHistory(id: string) {
 }
 export async function getAdminData() {
   const db = await getSupabaseServerClient();
-  const [songs, matchups, settings, audit, overview, events] =
+  const [songs, matchups, settings, audit, overview, readiness, events] =
     await Promise.all([
       db!.from("song_catalog").select("*").order("title").limit(1000),
       db!
@@ -252,13 +252,14 @@ export async function getAdminData() {
         .order("created_at", { ascending: false })
         .limit(20),
       db!.rpc("get_admin_overview"),
+      db!.rpc("get_product_readiness"),
       db!
         .from("product_event_counts")
         .select("*")
         .order("event_day", { ascending: false })
         .limit(240),
     ]);
-  [songs, matchups, settings, audit, overview, events].forEach((r) =>
+  [songs, matchups, settings, audit, overview, readiness, events].forEach((r) =>
     check(r.error),
   );
   return {
@@ -267,6 +268,12 @@ export async function getAdminData() {
     kFactor: settings.data!.elo_k_factor,
     audit: audit.data ?? [],
     overview: overview.data as AdminOverview,
+    readiness: readiness.data as {
+      today_playable: boolean;
+      buffer_days: number;
+      scheduled_days: number;
+      utc_day: string;
+    },
     events: (events.data ?? []) as {
       event_day: string;
       event: string;
