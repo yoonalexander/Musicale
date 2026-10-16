@@ -58,7 +58,8 @@ export async function getRankPair(): Promise<RankPair | null> {
 }
 export async function getRankHistory(page = 1) {
   const viewer = await getViewerState();
-  if (!viewer.user) throw new Error("Sign in to view Rank history.");
+  if (!viewer.user || viewer.user.isAnonymous)
+    throw new Error("Sign in to view Rank history.");
   const db = await getSupabaseServerClient();
   const { data, error, count } = await db!
     .from("rank_votes")

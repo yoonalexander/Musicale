@@ -16,8 +16,9 @@ function Choice({ song }: { song: RankSong }) {
         value={song.id}
         disabled={pending}
         aria-busy={pending}
+        aria-label={`Higher: ${song.title}`}
       >
-        {pending ? "Checking…" : `Higher: ${song.title}`}
+        {pending ? "Checking…" : "Higher rated ↑"}
       </button>
     </SongChoice>
   );
@@ -46,7 +47,7 @@ export function PlayResult({
     heading.current?.focus();
   }, [answer.id]);
   return (
-    <section className="panel" aria-label="Saved answer">
+    <section className="panel play-result" aria-label="Saved answer">
       <h2 ref={heading} tabIndex={-1}>
         {earlier
           ? "Earlier saved answer"

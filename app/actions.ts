@@ -26,10 +26,29 @@ export async function requestMagicLinkAction(fd: FormData) {
   const db = await getSupabaseServerClient();
   let failed = false;
   try {
-    const { error } = await db!.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${getSiteUrl()}/api/auth/callback` },
-    });
+    const {
+      data: { user },
+    } = await db!.auth.getUser();
+    let result;
+    if (user?.is_anonymous) {
+      result = await db!.auth.updateUser(
+        { email },
+        { emailRedirectTo: `${getSiteUrl()}/api/auth/guest-confirm` },
+      );
+    }
+    if (
+      !result ||
+      (result.error &&
+        ["email_exists", "user_already_exists"].includes(
+          result.error.code ?? "",
+        ))
+    ) {
+      result = await db!.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${getSiteUrl()}/api/auth/callback` },
+      });
+    }
+    const { error } = result;
     failed = Boolean(error);
   } catch {
     failed = true;
@@ -258,7 +277,7 @@ export async function saveSong(fd: FormData) {
 }
 export async function updateDisplayName(fd: FormData) {
   const v = await getViewerState();
-  if (!v.user) redirect("/login");
+  if (!v.user || v.user.isAnonymous) redirect("/login");
   const name = String(fd.get("displayName") ?? "").trim();
   if (!name || name.length > 60 || /[\u0000-\u001f\u007f]/.test(name))
     go("/profile", "message", "Use a name of 1 to 60 characters.");

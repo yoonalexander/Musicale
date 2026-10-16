@@ -1,10 +1,10 @@
 # Musicale
 
-**Trust your music instinct.** Guess the higher-rated song in Play, compare favorites continuously in Rank, or join the shared Daily matchup. Play points, preference-driven Elo, and Daily streaks have separate rules.
+**Trust your music instinct.** Play, Rank and Daily work without signing up. Optional accounts add full history and profile details. Guess the higher-rated song in Play, compare favorites continuously in Rank, or join the shared Daily matchup. Play points, preference-driven Elo, and Daily streaks have separate rules.
 
 **Three-mode direction (October 16):** Rank continuously collects preferences to build shared Elo ratings, and Daily remains the shared UTC matchup. Rank and Play are implemented locally; see [Phase 5A](docs/PHASE_5A.md) and [Phase 5B](docs/PHASE_5B.md) for verification. Hosted rollout remains pending. See [the product contract](docs/PRODUCT_MODES.md).
 
-See [Phase 5B Play evidence](docs/PHASE_5B.md), [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+See [the game-first guest experience](docs/GUEST_EXPERIENCE.md), [Phase 5B Play evidence](docs/PHASE_5B.md), [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
 
 ## Product and architecture
 
@@ -20,7 +20,7 @@ This rebuild replaces the previous musical-theatre ranking / higher-lower game. 
 - Song providers are normalized separately. Official HTTPS listening links remain the fallback. Explicitly authorized direct audio sources can play through native controls; no third-party audio is downloaded, proxied or rehosted.
 - Vercel-compatible: no separate application server, Redis or paid analytics service.
 
-Implemented pages: landing, Play, Rank, Daily (`/today`), filtered/sortable leaderboard, song details, editable profile with a saved Play score and separate paginated Daily and Rank histories and evidence-based Daily listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. The completion roadmap tracks remaining behavior, operations and release verification.
+Implemented pages: landing, Play, Rank, Daily (`/today`), filtered/sortable leaderboard, song details, editable profile with a saved Play score and separate paginated Daily and Rank histories and evidence-based Daily listening statistics, optional email sign-in with guest-to-new-account history preservation, featured completed matchups, privacy/analytics preferences, and protected administration. The completion roadmap tracks remaining behavior, operations and release verification.
 
 Leaderboard filters cover genre, artist, year, decade and minimum votes. Sort by Elo, win percentage, total votes or seven-day rating movement. Public leaderboard page loads are cached for 30 seconds, with selective invalidation after voting/editorial actions. An open leaderboard receives Supabase song-change notifications and refetches through an uncached public endpoint, including after direct RPC votes. Reconnection and visible-tab recovery preserve filters/page and show stale-state feedback on failure. Private vote/profile state is never publicly cached. See [Phase 4](docs/PHASE_4.md) for the local verification and pending hosted rollout.
 

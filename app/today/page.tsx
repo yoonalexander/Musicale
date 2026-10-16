@@ -2,7 +2,7 @@ import { getSiteUrl } from "@/lib/env";
 export const metadata = {
   title: "Today’s matchup",
   description:
-    "Listen to today’s two songs, sign in and save one vote before midnight UTC.",
+    "Listen to today’s two songs and save one vote before midnight UTC. No sign-up needed.",
 };
 import Link from "next/link";
 import { DailyMatchup } from "@/components/daily-matchup";
@@ -36,8 +36,8 @@ export default async function Today({
       </section>
     );
   return (
-    <section className="today">
-      <header>
+    <section className="today game-stage daily-stage">
+      <header className="game-question">
         <p className="kicker">
           Musicale #{m.number} · {m.matchupDay}
         </p>
@@ -58,7 +58,8 @@ export default async function Today({
         ) : null}
         {!v.user ? (
           <p className="notice">
-            <Link href="/login">Sign in</Link> to record your vote.
+            Vote as a guest. <Link href="/login">Sign in</Link> for your
+            history.
           </p>
         ) : null}
         {isDemoMode() ? (
@@ -70,7 +71,8 @@ export default async function Today({
       <DailyMatchup
         siteUrl={getSiteUrl()}
         matchup={m}
-        canVote={Boolean(v.user) && !isDemoMode()}
+        canVote={!isDemoMode()}
+        guestEntry={!v.user}
         streak={v.profile?.currentStreak ?? 0}
       />
     </section>

@@ -23,13 +23,25 @@ export default function Privacy() {
           Daily streaks. Your profile and vote history are visible to you and
           authorized administrators.
         </p>
+        <h2>Guest play</h2>
+        <p>
+          Playing or voting without an email creates a private guest session
+          with Supabase. It uses essential session cookies and a player ID, so
+          votes and scores can be protected and resumed. Clearing browser data
+          or using another browser loses access to that guest session. A
+          verified new email can keep its activity on the same account; an
+          existing account keeps its own history. Guest votes remain part of the
+          ranking audit trail. We also store a local preference recording
+          whether you dismissed the tutorial.
+        </p>
         <h2>Play runs</h2>
         <p>
           Musicale saves your private game runs, issued song pairs, rating
           snapshots, guesses and scores. Pending answers are withheld until
           graded. Public song ratings can still be viewed elsewhere; Play is a
           casual game with no competitive scoreboard. Your run is available
-          through your own signed-in session and trusted database operations.
+          through your own guest or signed-in session and trusted database
+          operations.
         </p>
         <h2>Security and operations</h2>
         <p>

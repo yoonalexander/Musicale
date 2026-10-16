@@ -251,6 +251,10 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 **Evidence to retain:** deterministic round/score tests, concurrent-rating snapshots, privacy checks and recorded desktop/mobile runs. Passing existing Daily tests is not evidence that Play works.
 
+## Game-first guest experience — October 16 revision
+
+The owner approved a focused welcome screen, direct Play entry with a first-visit tutorial, and guest Play/Rank/Daily access. Play remains repeatable by explicit choice. Optional accounts provide full history/profile details. See [the implementation, verification and hosted prerequisites](GUEST_EXPERIENCE.md). Phase 6 must cover anonymous signup abuse controls, identity retention and backup/restore. Phase 7 must exercise guest play, account conversion and the new entry flow. Existing Phase 5B evidence records the earlier signed-in implementation and remains valid for its tested snapshot/scoring guarantees.
+
 ## Phase 6 — Make the product sustainable to operate
 
 **Outcome:** The website continues working after launch week and can recover from an operational failure.

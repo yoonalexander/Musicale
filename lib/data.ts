@@ -83,9 +83,13 @@ export const getViewerState = cache(async (): Promise<ViewerState> => {
       }
     : null;
   return {
-    user: { id: user.id, email: user.email },
+    user: {
+      id: user.id,
+      email: user.email,
+      isAnonymous: user.is_anonymous === true,
+    },
     profile,
-    isAdmin: profile?.role === "admin",
+    isAdmin: profile?.role === "admin" && !user.is_anonymous,
   };
 });
 

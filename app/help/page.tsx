@@ -16,6 +16,16 @@ export default function Help() {
         </p>
       </header>
       <section className="panel">
+        <h2>Play without signing up</h2>
+        <p>
+          Play, Rank and Daily work as a guest. Your browser keeps a private
+          session so you can return to your run and avoid repeating a Daily
+          vote. Clearing cookies or changing browsers loses access to that guest
+          session. Sign in for your full history and account details. A verified
+          new email keeps your guest activity; signing into an existing account
+          loads that account’s history without automatically merging guest
+          activity.
+        </p>
         <h2>Signing in</h2>
         <p>
           Request a fresh email link and open the newest link in the browser
@@ -37,12 +47,13 @@ export default function Help() {
           captured when the round was issued. A correct guess earns one point
           and randomly replaces either card with a different song. A wrong guess
           ends your run. Ties and songs without a recorded Daily or Rank
-          preference are excluded. Runs are saved to your account; refreshing
-          resumes your round. After thirty minutes, resume with the same songs
-          and fresh ratings. Expiry, unavailable listening, or too few eligible
-          songs pause your run and preserve points. Rank more songs to help make
-          new pairs available. Thirty Play requests per minute protect against
-          accidental repeats. Play never changes Elo or Daily streaks.
+          preference are excluded. Runs are saved to your guest session or
+          account; refreshing resumes your round. After thirty minutes, resume
+          with the same songs and fresh ratings. Expiry, unavailable listening,
+          or too few eligible songs pause your run and preserve points. Rank
+          more songs to help make new pairs available. Thirty Play requests per
+          minute protect against accidental repeats. Play never changes Elo or
+          Daily streaks.
         </p>
         <h2>Continuous Rank</h2>
         <p>

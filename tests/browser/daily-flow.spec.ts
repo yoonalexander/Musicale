@@ -15,7 +15,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Vote for Respect" }),
-  ).toBeDisabled();
+  ).toBeEnabled();
   await expect(page.locator(".result")).toHaveCount(0);
   const provider = page
     .getByRole("link", { name: "Listen on YouTube" })

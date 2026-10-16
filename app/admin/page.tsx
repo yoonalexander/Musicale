@@ -77,7 +77,7 @@ export default async function Admin({
         <h2>Participation overview</h2>
         <dl className="stats">
           <div>
-            <dt>Accounts</dt>
+            <dt>Player identities (including guests)</dt>
             <dd>{data.overview.accounts}</dd>
           </div>
           <div>

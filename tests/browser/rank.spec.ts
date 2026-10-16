@@ -14,7 +14,7 @@ test("Rank: repeated pairs, shared pending controls, live Elo, private paginated
   await expect(
     page.getByRole("heading", { name: "Which song do you prefer?" }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Get a pair" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Get a pair" })).toBeEnabled();
   await signIn(page, request, email);
   const uid = runSql(`select id from auth.users where email='${email}'`);
   await page.getByRole("link", { name: "Rank", exact: true }).click();
