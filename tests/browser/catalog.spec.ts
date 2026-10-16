@@ -264,16 +264,29 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
       .poll(() => events.includes("listening_link_clicked"))
       .toBe(true);
     await page.unroute("https://audio.example.test/preview.wav");
-    await page.route("https://audio.example.test/preview.wav", (route) =>
-      route.abort("failed"),
+    // A distinct source avoids Firefox's decoded media cache surviving a reload.
+    runSql(
+      "update song_audio_sources set url='https://audio.example.test/unavailable.wav' where song_id='respect-aretha'",
+    );
+    await page.route("https://audio.example.test/unavailable.wav", (route) =>
+      route.fulfill({ status: 404, body: "Preview unavailable" }),
     );
     await page.reload();
-    if (!unsupportedWav)
+    if (!unsupportedWav) {
+      await expect(audio).toHaveAttribute(
+        "src",
+        "https://audio.example.test/unavailable.wav",
+      );
       await audio.evaluate((el: HTMLAudioElement) => {
         void el.play().catch(() => {});
       });
+    }
     await expect(page.getByRole("status")).toContainText("Preview unavailable");
     await expect.poll(() => events.includes("preview_play_failed")).toBe(true);
+    if (!unsupportedWav)
+      expect(events.filter((e) => e === "preview_play_started")).toHaveLength(
+        1,
+      );
     await expect(
       page.getByRole("link", { name: "Listen on YouTube" }),
     ).toBeVisible();
