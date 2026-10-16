@@ -11,7 +11,8 @@ export default function Help() {
         <p className="kicker">A little help</p>
         <h1>Keep the music going.</h1>
         <p>
-          Musicale is a daily music voting project. Here’s how to get unstuck.
+          Musicale builds music rankings through Rank and Daily preferences.
+          Here’s how to get unstuck.
         </p>
       </header>
       <section className="panel">
@@ -24,17 +25,28 @@ export default function Help() {
         <Link className="button secondary" href="/login">
           Request a sign-in link
         </Link>
-        <h2>Votes and streaks</h2>
+        <h2>Daily votes and streaks</h2>
         <p>
           You can save one vote per account per UTC day. A saved choice cannot
           be changed. Voting on consecutive UTC days builds your streak; missing
           a day resets it. Your history stays saved.
         </p>
+        <h2>Continuous Rank</h2>
+        <p>
+          In <Link href="/rank">Rank</Link>, choose the song you prefer and both
+          cards change. Rank shares Daily’s Elo leaderboard, with its own
+          Profile history and no effect on Daily totals or streaks. A pending
+          pair resumes on refresh and expires after thirty minutes. The same
+          pair has a ten-minute cooldown; at least four playable songs are
+          needed. Thirty Rank requests per minute protect against accidental
+          repeats and automated voting.
+        </p>
         <h2>Listening and availability</h2>
         <p>
-          Music opens on its official provider in a new tab. Availability can
-          vary by region. Musicale does not host audio. If today has no playable
-          pair, browse the catalog or return after the next midnight UTC reset.
+          Official listening links open in a new tab. Reviewed, authorized audio
+          sources may also play here. Availability can vary by region. Musicale
+          does not host audio. If today has no playable pair, browse the catalog
+          or return after the next midnight UTC reset.
         </p>
       </section>
       <section className="panel">

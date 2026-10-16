@@ -18,8 +18,10 @@ export default function Privacy() {
           Supabase handles email sign-in and session cookies. Musicale stores
           your display name, account ID, vote history and participation streaks.
           Votes are permanent: their recorded rating changes form the
-          leaderboard’s audit trail. Your profile and vote history are visible
-          to you and authorized administrators.
+          leaderboard’s audit trail. Rank also stores your issued song pairs,
+          their expiry and saved preferences. Rank activity does not change
+          Daily streaks. Your profile and vote history are visible to you and
+          authorized administrators.
         </p>
         <h2>Security and operations</h2>
         <p>

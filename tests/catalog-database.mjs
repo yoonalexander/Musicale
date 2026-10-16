@@ -41,7 +41,7 @@ const core = () =>
   sql(`select jsonb_build_object(
   'ratings',(select jsonb_agg(r order by id) from(select id,elo_rating,wins,losses,matchup_count from songs where id not like 'mb-%') r),
   'votes',(select jsonb_agg(to_jsonb(v) order by id) from votes v),
-  'events',(select jsonb_agg(to_jsonb(e) order by id) from rating_events e),
+  'events',(select jsonb_agg(to_jsonb(e)-array['event_order','rank_vote_id'] order by id) from rating_events e),
   'activity',(select jsonb_agg(to_jsonb(a) order by vote_id) from user_daily_activity a),
   'days',(select jsonb_agg(to_jsonb(m) order by id) from daily_matchups m))`);
 try {

@@ -5,7 +5,11 @@ import { providerLabels } from "@/lib/providers";
 import { playablePreview } from "@/lib/audio";
 import { track } from "@/lib/analytics";
 
-export function SongListening({ song }: { song: Song }) {
+export function SongListening({
+  song,
+}: {
+  song: Pick<Song, "id" | "title" | "providers" | "audioPreview">;
+}) {
   const [failed, setFailed] = useState(false);
   const started = useRef(false);
   const preview = playablePreview(song.audioPreview);

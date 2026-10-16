@@ -60,6 +60,7 @@ export default async function Home() {
         </p>
       </section>
       <section className="strip">
+        <Link href="/rank">Keep comparing songs in Rank</Link>
         <span>One shared matchup</span>
         <span>Resets at midnight UTC</span>
         <span>Results hidden until you vote</span>

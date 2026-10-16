@@ -8,6 +8,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getViewerState, getProfileData } from "@/lib/data";
 import { updateDisplayName } from "@/app/actions";
+import { RankHistory } from "@/components/rank-history";
 
 export default async function ProfilePage({
   searchParams,
@@ -42,10 +43,17 @@ export default async function ProfilePage({
           <dd>{p?.longestStreak ?? 0}</dd>
         </div>
         <div>
-          <dt>Total votes</dt>
+          <dt>Daily votes</dt>
           <dd>{p?.totalVotes ?? 0}</dd>
         </div>
       </dl>
+      <RankHistory
+        page={Math.max(
+          1,
+          Math.min(10000, parseInt(params.rankPage ?? "1") || 1),
+        )}
+        dailyPage={page}
+      />
       <details className="panel">
         <summary>Edit display name</summary>
         <form action={updateDisplayName} className="admin-form">
@@ -64,6 +72,10 @@ export default async function ProfilePage({
       </details>
       <section className="panel">
         <h2>Your listening pattern</h2>
+        <p>
+          These patterns use Daily votes. Rank preferences have their own
+          history above.
+        </p>
         {total >= 5 ? (
           <>
             {stats.sample >= 5 ? (

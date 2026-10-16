@@ -40,7 +40,7 @@ const sourceState = (sql) =>
   'users',(select jsonb_agg(to_jsonb(r) order by id) from auth.users r),
   'profiles',(select jsonb_agg(to_jsonb(r) order by user_id) from profiles r),
   'votes',(select jsonb_agg(to_jsonb(r) order by id) from votes r),
-  'events',(select jsonb_agg(to_jsonb(r) order by id) from rating_events r),
+  'events',(select jsonb_agg(to_jsonb(r)-array['event_order','rank_vote_id'] order by id) from rating_events r),
   'activity',(select jsonb_agg(to_jsonb(r) order by vote_id) from user_daily_activity r),
   'ratings',(select jsonb_agg(r order by id) from(select id,elo_rating,wins,losses,matchup_count from songs) r),
   'days',(select jsonb_agg(r order by id) from(select id,matchup_day,song_a_id,song_b_id,song_a_votes,song_b_votes from daily_matchups) r))`);
