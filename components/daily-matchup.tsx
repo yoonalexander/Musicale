@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { submitDailyVote } from "@/app/actions";
@@ -9,10 +9,24 @@ import { resultMessage, shareResult } from "@/lib/share";
 import type { Matchup, Song } from "@/types/domain";
 import { track } from "@/lib/analytics";
 
-function VoteButton({ title, disabled }: { title: string; disabled: boolean }) {
+function VoteButton({
+  title,
+  id,
+  disabled,
+}: {
+  title: string;
+  id: string;
+  disabled: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
-    <button className="button" disabled={disabled || pending}>
+    <button
+      className="button"
+      name="selectedSongId"
+      value={id}
+      disabled={disabled || pending}
+      aria-busy={pending}
+    >
       {pending ? "Recording…" : `Vote for ${title}`}
     </button>
   );
@@ -21,12 +35,10 @@ function Card({
   song,
   matchup,
   disabled,
-  onExpired,
 }: {
   song: Song;
   matchup: Matchup;
   disabled: boolean;
-  onExpired: () => void;
 }) {
   const chosen = matchup.selectedSongId === song.id;
   return (
@@ -62,23 +74,7 @@ function Card({
       {chosen ? <p className="selected-label">Your pick ✓</p> : null}
       <div className="card-actions">
         <SongListening key={song.id} song={song} />
-        <form
-          action={submitDailyVote}
-          onSubmit={(event) => {
-            if (Date.now() >= Date.parse(matchup.endsAt)) {
-              event.preventDefault();
-              onExpired();
-              return;
-            }
-            try {
-              sessionStorage.setItem("musicale-vote-pending", matchup.id);
-            } catch {}
-          }}
-        >
-          <input type="hidden" name="matchupId" value={matchup.id} />
-          <input type="hidden" name="selectedSongId" value={song.id} />
-          <VoteButton title={song.title} disabled={disabled} />
-        </form>
+        <VoteButton title={song.title} id={song.id} disabled={disabled} />
       </div>
     </article>
   );
@@ -87,12 +83,15 @@ export function DailyMatchup({
   matchup,
   canVote,
   streak = 0,
+  siteUrl,
 }: {
   matchup: Matchup;
   canVote: boolean;
   streak?: number;
+  siteUrl: string;
 }) {
   const router = useRouter();
+  const resultHeading = useRef<HTMLHeadingElement>(null);
   const [expired, setExpired] = useState(false);
   const voted = Boolean(matchup.selectedSongId);
   useEffect(() => {
@@ -131,6 +130,7 @@ export function DailyMatchup({
         sessionStorage.getItem("musicale-vote-pending") === matchup.id
       ) {
         sessionStorage.removeItem("musicale-vote-pending");
+        resultHeading.current?.focus();
         track("vote_submitted");
         if (streak > 1) track("streak_continued");
       }
@@ -159,12 +159,25 @@ export function DailyMatchup({
           </button>
         </p>
       ) : null}
-      <div className="matchup">
+      <form
+        className="matchup"
+        action={submitDailyVote}
+        onSubmit={(event) => {
+          if (Date.now() >= Date.parse(matchup.endsAt)) {
+            event.preventDefault();
+            refreshExpiredDay();
+            return;
+          }
+          try {
+            sessionStorage.setItem("musicale-vote-pending", matchup.id);
+          } catch {}
+        }}
+      >
+        <input type="hidden" name="matchupId" value={matchup.id} />
         <Card
           song={matchup.songA}
           matchup={matchup}
           disabled={!canVote || voted || expired}
-          onExpired={refreshExpiredDay}
         />
         <div className="versus" aria-hidden="true">
           VS
@@ -173,13 +186,37 @@ export function DailyMatchup({
           song={matchup.songB}
           matchup={matchup}
           disabled={!canVote || voted || expired}
-          onExpired={refreshExpiredDay}
         />
-      </div>
+      </form>
+      <p>
+        Voting resets at 00:00 UTC on{" "}
+        <time dateTime={matchup.endsAt}>{matchup.endsAt.slice(0, 10)}</time>.
+      </p>
       {voted ? (
         <section className="result" aria-live="polite">
           <p className="kicker">Vote recorded</p>
-          <h2>{pct}% chose the same song.</h2>
+          <h2 ref={resultHeading} tabIndex={-1} aria-describedby="saved-choice">
+            {pct}% chose the same song.
+          </h2>
+          <p id="saved-choice">
+            Your saved pick:{" "}
+            <strong>
+              {matchup.selectedSongId === matchup.songA.id
+                ? matchup.songA.title
+                : matchup.songB.title}
+            </strong>
+            .
+          </p>
+          <dl className="result-counts">
+            <div>
+              <dt>{matchup.songA.title}</dt>
+              <dd>{matchup.songAVotes} votes</dd>
+            </div>
+            <div>
+              <dt>{matchup.songB.title}</dt>
+              <dd>{matchup.songBVotes} votes</dd>
+            </div>
+          </dl>
           <p>
             {resultMessage(
               matchup.totalVotes ? (100 * agreedVotes) / matchup.totalVotes : 0,
@@ -196,7 +233,12 @@ export function DailyMatchup({
             .
           </p>
           <p>Come back tomorrow for a new matchup.</p>
-          <Share matchup={matchup} percent={pct} streak={streak} />
+          <Share
+            matchup={matchup}
+            percent={pct}
+            streak={streak}
+            siteUrl={siteUrl}
+          />
         </section>
       ) : null}
     </>
@@ -206,14 +248,16 @@ function Share({
   matchup,
   percent,
   streak,
+  siteUrl,
 }: {
   matchup: Matchup;
   percent: number;
   streak: number;
+  siteUrl: string;
 }) {
   const [status, setStatus] = useState("");
   const [fallback, setFallback] = useState(false);
-  const text = shareResult(matchup.number, percent, streak);
+  const text = shareResult(matchup.number, percent, streak, siteUrl);
   async function copy() {
     try {
       await navigator.clipboard.writeText(text);

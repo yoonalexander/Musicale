@@ -290,6 +290,51 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
     await expect(
       page.getByRole("link", { name: "Listen on YouTube" }),
     ).toBeVisible();
+    const early = await context.newPage();
+    let releaseScripts!: () => void;
+    const scriptsHeld = new Promise<void>((resolve) => {
+      releaseScripts = resolve;
+    });
+    const earlyEvents: string[] = [];
+    early.on("request", (r) => {
+      if (new URL(r.url()).pathname === "/api/analytics" && r.postData())
+        earlyEvents.push(JSON.parse(r.postData()!).event);
+    });
+    try {
+      await early.route("**/_next/static/**", async (route) => {
+        await scriptsHeld;
+        await route.continue();
+      });
+      await early.route("https://audio.example.test/unavailable.wav", (route) =>
+        route.fulfill({ status: 404, body: "Unavailable synthetic audio" }),
+      );
+      await early.goto("/songs/respect-aretha", { waitUntil: "commit" });
+      const beforeHydration = early.getByLabel("Preview Respect", {
+        exact: true,
+      });
+      await beforeHydration.evaluate((el: HTMLAudioElement) => el.load());
+      await expect
+        .poll(() =>
+          beforeHydration.evaluate((el: HTMLAudioElement) => el.error?.code),
+        )
+        .toBe(4);
+      releaseScripts();
+      await expect(early.getByRole("status")).toContainText(
+        "Preview unavailable",
+      );
+      await expect
+        .poll(
+          () => earlyEvents.filter((e) => e === "preview_play_failed").length,
+        )
+        .toBe(1);
+      expect(earlyEvents).not.toContain("preview_play_started");
+      await expect(
+        early.getByRole("link", { name: "Listen on YouTube" }),
+      ).toBeVisible();
+    } finally {
+      releaseScripts();
+      await early.close();
+    }
     expect(events).not.toContain("preview_started");
     const legacyAnalytics = await page.request.post("/api/analytics", {
       headers: { Origin: "http://127.0.0.1:3100" },

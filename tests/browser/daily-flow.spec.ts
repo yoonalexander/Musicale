@@ -7,7 +7,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   page,
   request,
 }, testInfo) => {
-  test.setTimeout(120000);
+  test.setTimeout(150000);
   const email = `musicale-${Date.now()}-${testInfo.project.name}@example.test`;
   await page.goto("/today");
   await expect(
@@ -69,13 +69,29 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   const text = await share.inputValue();
   expect(text).toContain("Musicale #");
   expect(text).toContain("1-day streak");
+  expect(text).toContain("http://127.0.0.1:3100/today");
   expect(text).not.toContain("Respect");
   expect(text).not.toContain("God Only Knows");
+  await page.evaluate(() =>
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: (data: ShareData) => {
+        sessionStorage.setItem("native-share-test", JSON.stringify(data));
+        return Promise.resolve();
+      },
+    }),
+  );
+  await page.getByRole("button", { name: "Share result", exact: true }).click();
+  expect(
+    JSON.parse(
+      (await page.evaluate(() => sessionStorage.getItem("native-share-test")))!,
+    ).text,
+  ).toBe(text);
   await page.reload();
   await expect(page.getByText("Vote recorded", { exact: true })).toBeVisible();
   await page.goto("/profile");
   await expect(
-    page.getByRole("heading", { name: "Recent votes" }),
+    page.getByRole("heading", { name: "Recent Daily votes" }),
   ).toBeVisible();
   await expect(page.locator(".vote-history")).toContainText("Respect");
   await page.getByText("Edit display name", { exact: true }).click();
@@ -97,6 +113,17 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   await page.goto("/songs/respect-aretha");
   await expect(
     page.getByRole("img", { name: /Elo rating history/ }),
+  ).toBeVisible();
+  await page.getByText("View rating data", { exact: true }).click();
+  const snapshot = JSON.parse(
+    runSql(
+      "select row_to_json(s) from (select snapshot_date,rating from song_rating_snapshots where song_id='respect-aretha' order by snapshot_date desc limit 1) s",
+    ),
+  );
+  await expect(
+    page.getByText(`${snapshot.snapshot_date}: ${Number(snapshot.rating)}`, {
+      exact: true,
+    }),
   ).toBeVisible();
   await page.goto("/leaderboard");
   await expect(
@@ -534,6 +561,7 @@ test("public pages stay usable at narrow widths and missing songs return 404", a
     "/login",
     "/songs/respect-aretha",
     "/privacy",
+    "/help",
     "/archive",
   ]) {
     await page.goto(path);

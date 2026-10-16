@@ -11,11 +11,15 @@ export function AppShell({
 }) {
   return (
     <>
+      <a className="skip-link" href="#main-content" tabIndex={0}>
+        Skip to content
+      </a>
       <header className="site-header">
         <Link className="wordmark" href="/">
           Musicale
         </Link>
         <nav aria-label="Main navigation">
+          <Link href="/rank">Rank</Link>
           <Link href="/today">Today</Link>
           <Link href="/leaderboard">Leaderboard</Link>
           {viewer.user ? <Link href="/profile">Profile</Link> : null}
@@ -31,7 +35,7 @@ export function AppShell({
           </Link>
         )}
       </header>
-      <main>
+      <main id="main-content" tabIndex={-1}>
         {isDemoMode() ? (
           <p className="notice" role="status">
             Preview catalog — sign-in and persistent voting are disabled.
@@ -44,6 +48,7 @@ export function AppShell({
         <span>Music playback remains with its provider.</span>
         <Link href="/archive">Featured matchups</Link>
         <Link href="/privacy">Privacy & analytics</Link>
+        <Link href="/help">Help & contact</Link>
       </footer>
     </>
   );

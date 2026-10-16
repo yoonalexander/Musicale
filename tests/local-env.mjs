@@ -37,12 +37,15 @@ export function localSettings() {
   );
   const settings = JSON.parse(result);
   if (
-    !["http://127.0.0.1:55321", "http://127.0.0.1:56321"].includes(
-      settings.API_URL,
-    )
+    ![
+      "http://127.0.0.1:55321",
+      "http://127.0.0.1:56321",
+      "http://127.0.0.1:57321",
+      "http://127.0.0.1:58321",
+    ].includes(settings.API_URL)
   )
     throw new Error(
-      "UI tests require an isolated local Musicale backend on port 55321 or 56321.",
+      "UI tests require an isolated local Musicale backend on port 55321, 56321, 57321 or 58321.",
     );
   return settings;
 }

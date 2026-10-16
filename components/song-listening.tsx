@@ -5,10 +5,21 @@ import { providerLabels } from "@/lib/providers";
 import { playablePreview } from "@/lib/audio";
 import { track } from "@/lib/analytics";
 
-export function SongListening({ song }: { song: Song }) {
+export function SongListening({
+  song,
+}: {
+  song: Pick<Song, "id" | "title" | "providers" | "audioPreview">;
+}) {
   const [failed, setFailed] = useState(false);
   const started = useRef(false);
+  const failureReported = useRef(false);
   const preview = playablePreview(song.audioPreview);
+  function fail() {
+    if (failureReported.current) return;
+    failureReported.current = true;
+    setFailed(true);
+    track("preview_play_failed");
+  }
   return (
     <>
       {preview && !failed ? (
@@ -18,16 +29,17 @@ export function SongListening({ song }: { song: Song }) {
             preload="none"
             aria-label={`Preview ${song.title}`}
             src={preview.url!}
+            ref={(element) => {
+              // A browser can reject the source before hydration attaches onError.
+              if (element?.error) fail();
+            }}
             onPlaying={() => {
               if (!started.current) {
                 started.current = true;
                 track("preview_play_started");
               }
             }}
-            onError={() => {
-              setFailed(true);
-              track("preview_play_failed");
-            }}
+            onError={fail}
           />
           <p>
             {preview.attribution} ·{" "}

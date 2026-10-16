@@ -1,3 +1,9 @@
+import Link from "next/link";
+export const metadata = {
+  title: "Privacy and analytics",
+  description:
+    "How Musicale handles accounts, saved votes, optional analytics and external music providers.",
+};
 import { AnalyticsPreference } from "@/components/analytics";
 export default function Privacy() {
   return (
@@ -12,8 +18,10 @@ export default function Privacy() {
           Supabase handles email sign-in and session cookies. Musicale stores
           your display name, account ID, vote history and participation streaks.
           Votes are permanent: their recorded rating changes form the
-          leaderboard’s audit trail. Your profile and vote history are visible
-          to you and authorized administrators.
+          leaderboard’s audit trail. Rank also stores your issued song pairs,
+          their expiry and saved preferences. Rank activity does not change
+          Daily streaks. Your profile and vote history are visible to you and
+          authorized administrators.
         </p>
         <h2>Security and operations</h2>
         <p>
@@ -32,6 +40,14 @@ export default function Privacy() {
           If supplied by an editor, artwork loads from its source; that host
           receives the image request. We suppress the referrer on artwork
           requests.
+        </p>
+      </section>
+      <section className="panel">
+        <h2>Questions about your data?</h2>
+        <p>
+          <Link href="/help">Contact and help</Link> explains how to request
+          assistance. Public song rankings and aggregate counts do not include
+          your account identity.
         </p>
       </section>
       <AnalyticsPreference />

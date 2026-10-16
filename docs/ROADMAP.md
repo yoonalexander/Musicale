@@ -2,7 +2,7 @@
 
 Created October 15, 2026. Based on the [project status review](PROJECT_STATUS.md), the current implementation and the supplied résumé descriptions.
 
-Revised October 16: the owner approved Play and continuous Rank alongside Daily as a third mode. [The three-mode product contract](PRODUCT_MODES.md) defines the new scope. Play and Rank are planned, not implemented; new Phase 5A/5B gates are required before release.
+Revised October 16: the owner approved Play and continuous Rank alongside Daily as a third mode. [The three-mode product contract](PRODUCT_MODES.md) defines the new scope. Rank is implemented and passed Phase 5A local/CI checks; hosted rollout remains pending. Play remains planned for Phase 5B. See [Phase 5A evidence](PHASE_5A.md).
 
 ## Finish line
 
@@ -41,7 +41,7 @@ The finished release includes:
 
 Phase 3 proves the recovery guarantees locally and in CI. Phase 4 now implements push-based live rankings and an uncached public refresh path; [its evidence](PHASE_4.md) distinguishes local acceptance from the still-required hosted rollout and demonstration.
 
-Those completed records cover the implemented Daily/catalog workflows. Phase 5A must extend transaction, recovery and live-ranking evidence to Rank; Phase 5B must prove Play scoring and isolation. Existing sign-offs do not establish correctness of unimplemented modes.
+[Phase 5A](PHASE_5A.md) extends transaction, recovery and live-ranking evidence to continuous Rank, with all gates passed locally and in clean-checkout CI. Phase 5B must still prove Play scoring and isolation. Hosted acceptance and the remaining release gates stay open.
 
 An additional [catalog automation workstream](CATALOG_AUTOMATION.md) builds on Phase 4 with reviewed MusicBrainz discovery/imports, protected metadata refreshes and explicitly authorized previews. It does not complete or replace any remaining phase gate, and Phase 2's hosted sign-in issue remains separate.
 
@@ -177,29 +177,31 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 **Outcome:** All promised screens form a coherent, useful experience on desktop and mobile.
 
+**Current status:** implementation and local/clean-checkout CI checks complete; manual visitor, owner and screen-reader acceptance is pending. [Phase 5 evidence and checklist](PHASE_5.md) records the boundary.
+
 ### Tasks
 
 - [ ] **5.1 Finish Home and onboarding.** Explain Play, Rank and Daily with their distinct questions, scores and participation rules. Keep Daily's sign-in/reset policy clear. Use honest initial/provisional/tied ranking states instead of calling arbitrary starting order community preference. Explain Elo briefly in language a visitor understands. Introduce working mode links as 5A/5B land; do not advertise unavailable functionality as complete.
-- [ ] **5.2 Finish Today and results.** Make the two songs, provider links, voting state, saved selection, result and next-day action easy to understand. Prevent accidental repeated submissions and provide clear pending, failure and retry feedback.
-- [ ] **5.3 Finish leaderboard details.** Keep vote counts, win percentage and rating movement visible or directly accessible on narrow screens. Verify every sort/filter, empty results and pagination with a larger isolated fixture than the current twenty songs.
-- [ ] **5.4 Finish profiles and song history.** Verify display-name editing, empty and populated vote history, pagination, streaks, sample thresholds and rating-history data. Handle insufficient data honestly rather than fabricating insights.
-- [ ] **5.5 Finish sharing.** Include the canonical site URL in copied/native shared results, retain song-spoiler protection and keep the clipboard fallback usable.
-- [ ] **5.6 Finish catalog presentation.** Verify all launch songs' title, artist, release metadata and official playback links. Use permission-confirmed artwork where available or an intentional, polished fallback. A modest verified catalog is sufficient; a 200–1,000-song library is not a completion gate.
-- [ ] **5.7 Improve editorial variety.** Validate the proposed 30-day schedule: no duplicate unordered pair, every included song has at least two different opponents, and the scheduled comparisons connect the included catalog rather than forming isolated pairs. Add brief matchup context where it helps listeners discover the recordings.
-- [ ] **5.8 Finish the archive.** Feature genuine completed matchups through Admin, with accurate counts and useful song links. Until genuine completed content exists, provide a deliberate empty state and clear navigation; do not seed fake production votes or historical popularity.
-- [ ] **5.9 Complete admin usability.** Verify editing, CSV/JSON file and paste imports, scheduling, replacement, cancellation, featuring, availability, K-factor changes, audit review and recovery feedback. Routine editorial work must not require production SQL.
+- [x] **5.2 Finish Today and results.** Make the two songs, provider links, voting state, saved selection, result and next-day action easy to understand. Prevent accidental repeated submissions and provide clear pending, failure and retry feedback.
+- [x] **5.3 Finish leaderboard details.** Keep vote counts, win percentage and rating movement visible or directly accessible on narrow screens. Verify every sort/filter, empty results and pagination with a larger isolated fixture than the current twenty songs.
+- [x] **5.4 Finish profiles and song history.** Verify display-name editing, empty and populated vote history, pagination, streaks, sample thresholds and rating-history data. Handle insufficient data honestly rather than fabricating insights.
+- [x] **5.5 Finish sharing.** Include the canonical site URL in copied/native shared results, retain song-spoiler protection and keep the clipboard fallback usable.
+- [x] **5.6 Finish catalog presentation.** Verify all launch songs' title, artist, release metadata and official playback links. Use permission-confirmed artwork where available or an intentional, polished fallback. A modest verified catalog is sufficient; a 200–1,000-song library is not a completion gate.
+- [x] **5.7 Improve editorial variety.** Validate the proposed 30-day schedule: no duplicate unordered pair, every included song has at least two different opponents, and the scheduled comparisons connect the included catalog rather than forming isolated pairs. Add brief matchup context where it helps listeners discover the recordings.
+- [x] **5.8 Finish the archive.** Feature genuine completed matchups through Admin, with accurate counts and useful song links. Until genuine completed content exists, provide a deliberate empty state and clear navigation; do not seed fake production votes or historical popularity.
+- [x] **5.9 Complete admin usability.** Verify editing, CSV/JSON file and paste imports, scheduling, replacement, cancellation, featuring, availability, K-factor changes, audit review and recovery feedback. Routine editorial work must not require production SQL.
 - [ ] **5.10 Complete accessibility and device checks.** Test all public and authenticated routes at 320px, a typical phone size and desktop. Include keyboard-only voting/forms, focus, labels, readable errors, contrast, reduced motion and a manual screen-reader pass through sign-in, voting and results.
-- [ ] **5.11 Finish public presentation.** Add meaningful page titles/descriptions and share metadata; check missing-song/404 and service-failure states. Provide a clear support/contact path and ensure privacy text describes actual storage and provider behavior.
+- [x] **5.11 Finish public presentation.** Add meaningful page titles/descriptions and share metadata; check missing-song/404 and service-failure states. Provide a clear support/contact path and ensure privacy text describes actual storage and provider behavior.
 
 **Primary files:** [app routes](../app/), [components](../components/), [styles](../app/globals.css), [catalog](../data/songs.json), [editorial pairs](../data/editorial-pairs.json), [share formatter](../lib/share.ts), [browser tests](../tests/browser/daily-flow.spec.ts).
 
 ### Phase gate
 
 - [ ] A new visitor understands and completes the loop without developer guidance.
-- [ ] Every public/profile/admin route has usable empty, populated and failure states appropriate to its function.
-- [ ] Mobile visitors can inspect the values used by leaderboard sorts, with no blocked controls or horizontal overflow.
+- [x] Every public/profile/admin route has usable empty, populated and failure states appropriate to its function.
+- [x] Mobile visitors can inspect the values used by leaderboard sorts, with no blocked controls or horizontal overflow.
 - [ ] Automated accessibility checks pass and the manual core-flow checks have recorded results.
-- [ ] Catalog/schedule validation passes, and no production content implies fabricated participation.
+- [x] Catalog/schedule validation passes, and no production content implies fabricated participation.
 - [ ] The owner completes a representative editorial session entirely through the interface.
 
 **Evidence to retain:** route/device checklist, representative screenshots, accessibility results and catalog/schedule validation output.
@@ -210,20 +212,20 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 ### Tasks
 
-- [ ] **5A.1 Extend storage without losing history.** Add private issued comparisons and identifiable Rank votes through forward migrations. Preserve existing Daily constraints, song IDs, provider metadata, votes, events, profiles and streaks. Reconcile migration numbering with other active branches.
-- [ ] **5A.2 Issue eligible pairs.** Select two distinct active songs with usable listening sources. After a vote, replace both songs, excluding the previous pair's songs. Handle fewer than four eligible songs honestly. Reuse pending pairs on refresh and define expiry plus a time-bounded repeat-pair cooldown.
-- [ ] **5A.3 Implement the atomic vote.** Validate account ownership, pair membership, availability and expiry in PostgreSQL. Consume each issued comparison once; lock both songs consistently, apply equal-and-opposite Elo changes and record the historical K-factor/audit event together. Preserve request attempts on failed business writes and keep Rank budgets independent of Daily.
-- [ ] **5A.4 Extend replay recovery.** Give Daily and Rank a deterministic combined event order and compatible locking. Recover exact mixed-mode ratings, records and snapshots while retaining original votes/events/K-factors. Preserve Daily-specific totals. Test concurrency, corruption, invalid source history and idempotent repeated recovery.
-- [ ] **5A.5 Connect the product.** Add the Rank interface, listening controls, safe pending/retry states and separately labeled Profile history/counts. Reuse selective invalidation and live ranking refresh. Rank participation cannot increment Daily streaks or consume the daily vote.
-- [ ] **5A.6 Prove the boundaries.** Test duplicate/opposite-choice races, distinct-account workloads, late rollback, unauthorized/direct-RPC calls, budgets, cooldown/expiry transitions, unavailable songs, mixed Daily/Rank votes and cross-browser live updates.
+- [x] **5A.1 Extend storage without losing history.** Add private issued comparisons and identifiable Rank votes through forward migrations. Preserve existing Daily constraints, song IDs, provider metadata, votes, events, profiles and streaks. Reconcile migration numbering with other active branches.
+- [x] **5A.2 Issue eligible pairs.** Select two distinct active songs with usable listening sources. After a vote, replace both songs, excluding the previous pair's songs. Handle fewer than four eligible songs honestly. Reuse pending pairs on refresh and define expiry plus a time-bounded repeat-pair cooldown.
+- [x] **5A.3 Implement the atomic vote.** Validate account ownership, pair membership, availability and expiry in PostgreSQL. Consume each issued comparison once; lock both songs consistently, apply equal-and-opposite Elo changes and record the historical K-factor/audit event together. Preserve request attempts on failed business writes and keep Rank budgets independent of Daily.
+- [x] **5A.4 Extend replay recovery.** Give Daily and Rank a deterministic combined event order and compatible locking. Recover exact mixed-mode ratings, records and snapshots while retaining original votes/events/K-factors. Preserve Daily-specific totals. Test concurrency, corruption, invalid source history and idempotent repeated recovery.
+- [x] **5A.5 Connect the product.** Add the Rank interface, listening controls, safe pending/retry states and separately labeled Profile history/counts. Reuse selective invalidation and live ranking refresh. Rank participation cannot increment Daily streaks or consume the daily vote.
+- [x] **5A.6 Prove the boundaries.** Test duplicate/opposite-choice races, distinct-account workloads, late rollback, unauthorized/direct-RPC calls, budgets, cooldown/expiry transitions, unavailable songs, mixed Daily/Rank votes and cross-browser live updates.
 
 ### Phase gate
 
-- [ ] A signed-in listener completes repeated pairs; both cards change after each accepted vote and no daily quota is introduced.
-- [ ] One issued comparison creates at most one accepted preference and one complete set of Elo/audit changes, including retries and concurrency.
-- [ ] Daily remains usable after Rank activity, with its one-vote/day constraint, activity and streaks unchanged.
-- [ ] Mixed Daily/Rank replay exactly restores derived data and refuses inconsistent source records without partial writes.
-- [ ] New RLS, migration, database, browser and live-ranking checks pass on a recorded clean-checkout CI commit.
+- [x] A signed-in listener completes repeated pairs; both cards change after each accepted vote and no daily quota is introduced.
+- [x] One issued comparison creates at most one accepted preference and one complete set of Elo/audit changes, including retries and concurrency.
+- [x] Daily remains usable after Rank activity, with its one-vote/day constraint, activity and streaks unchanged.
+- [x] Mixed Daily/Rank replay exactly restores derived data and refuses inconsistent source records without partial writes.
+- [x] New RLS, migration, database, browser and live-ranking checks pass on a recorded clean-checkout CI commit.
 
 **Evidence to retain:** named transaction/recovery cases, old-data preservation checks, pair progression/history screenshots and cross-browser timing. This phase can be developed locally while hosted sign-in remains a separate Phase 2 blocker.
 
@@ -304,18 +306,18 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 | --- | --- | --- | --- |
 | Next.js, React, TypeScript, PostgreSQL, Supabase full-stack app | Implemented; build/type/unit checks passed in the status review | 1, 2, 5, 7 | Clean build, source architecture and hosted user flow |
 | Daily matchups, profiles, history and streaks | Implemented; live daily content missing at review | 2, 3, 5, 7 | Hosted vote persistence plus automated UTC/streak/history tests |
-| Continuous preference ranking | Approved October 16; not implemented | 5A, 6, 7 | Issued pairs, atomic votes, budgets/cooldowns, mixed-mode recovery and hosted loop |
+| Continuous preference ranking | Implemented and verified locally/in CI; hosted rollout pending | 5A, 6, 7 | Issued pairs, atomic votes, budgets/cooldowns, mixed-mode recovery and hosted loop |
 | Higher-rated guessing game | Approved October 16; not implemented | 5B, 6, 7 | Server-graded snapshot answers, exactly-once points, random single-card replacement and no Elo effects |
 | Elo-ranked leaderboard | Implemented; live catalog at starting ratings | 3–5, 7 | Audited rating changes, correct sorting/filtering and real user participation |
-| Real-time ranking platform | No cross-browser live delivery implemented | 4, 7 | Push subscription, two-browser test and hosted demonstration |
-| Atomic concurrent voting and Daily uniqueness | Existing Daily transaction/constraints; continuous Rank needs new guarantees | 3, 5A, 7 | Daily account/day uniqueness, Rank issued-comparison uniqueness, duplicate races, distinct-account workloads, rollback and consistency assertions |
+| Real-time ranking platform | Implemented and verified across four browser projects in CI; hosted verification pending | 4, 5A, 7 | Push subscription, two-browser test and hosted demonstration |
+| Atomic concurrent voting and Daily uniqueness | Daily and Rank guarantees verified locally/in CI | 3, 5A, 7 | Daily account/day uniqueness, Rank issued-comparison uniqueness, duplicate races, distinct-account workloads, rollback and consistency assertions |
 | Authentication and Row Level Security | Implemented; public delivery/setup unverified | 2, 3, 7 | Non-team hosted login and direct database authorization matrix |
 | Constraints, rate limiting and transactional catalog updates | Implemented across SQL and server actions; coverage must be checked at exposed boundaries | 3, 7 | Direct RPC/table tests, durable-budget cases and atomic import rollback |
 | Administrator catalog and scheduling workflows | Implemented; owner access unverified | 2, 5–7 | Owner workflow demonstration and ordinary-user denial tests |
-| Schema migrations | Six existing migrations and upgrade-oriented tests | 1, 3, 7 | Fresh/legacy/incremental fixture results and recorded deployment versions |
-| Replay-based ranking recovery | Daily recovery verified locally/in CI; mixed-mode extension pending | 3, 5A, 6, 7 | Mixed Daily/Rank corruption/rebuild comparison, historical K-factor and event-order preservation, idempotence and failure rollback |
+| Schema migrations | Ordered forward migrations through 0012, with 0011 reserved; fresh/legacy/incremental checks passed | 1, 3, 7 | Fresh/legacy/incremental fixture results and recorded deployment versions |
+| Replay-based ranking recovery | Mixed Daily/Rank recovery verified locally/in CI | 3, 5A, 6, 7 | Mixed Daily/Rank corruption/rebuild comparison, historical K-factor and event-order preservation, idempotence and failure rollback |
 | Selective cache invalidation | Tagged public cache and action invalidations exist | 3, 4, 7 | Warm-cache mutation tests, direct-RPC/live-path checks and private-state isolation |
-| Automated database and Playwright testing | Suites and CI exist; integration suites were not rerun during the status review | 1, 3–5, 7 | Current passing clean-checkout commands, named cases and CI link |
+| Automated database and Playwright testing | Current clean-checkout CI passed 26 unit, 65 database and 76 browser cases | 1, 3–5A, 7 | Current passing clean-checkout commands, named cases and CI link |
 | Reliable cloud database operations | Managed deployment exists; restore/monitoring unverified | 2, 6, 7 | Hosted smoke tests, availability alert and isolated restore rehearsal |
 
 ## External setup and ownership
@@ -344,7 +346,7 @@ No calendar deadline is invented here: email/domain setup, environment access an
 - [x] Phase 3 — Database guarantees passed: [October 15 local and CI evidence](PHASE_3.md)
 - [x] Phase 4 — Live rankings and cache consistency passed: [October 15 local and CI evidence; hosted rollout still required](PHASE_4.md)
 - [ ] Phase 5 — Consumer/admin experience passed: evidence link __________
-- [ ] Phase 5A — Continuous Rank and mixed-mode integrity/recovery passed: evidence link __________
+- [x] Phase 5A — Continuous Rank and mixed-mode integrity/recovery passed: [October 16 local and CI evidence](PHASE_5A.md)
 - [ ] Phase 5B — Higher-rated Play game and scoring isolation passed: evidence link __________
 - [ ] Phase 6 — Sustainable operations passed: evidence link __________
 - [ ] Phase 7 — Release and résumé evidence passed: evidence link __________

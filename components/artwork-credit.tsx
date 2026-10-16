@@ -1,5 +1,9 @@
 import type { Song } from "@/types/domain";
-export function ArtworkCredit({ song }: { song: Song }) {
+export function ArtworkCredit({
+  song,
+}: {
+  song: Pick<Song, "artworkUrl" | "artworkSourceUrl" | "artworkAttribution">;
+}) {
   if (!song.artworkUrl || (!song.artworkSourceUrl && !song.artworkAttribution))
     return null;
   return (

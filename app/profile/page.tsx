@@ -1,7 +1,14 @@
+import { SubmitButton } from "@/components/submit-button";
+export const metadata = {
+  title: "Your profile",
+  description:
+    "Your saved votes, UTC participation streak and listening history.",
+};
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getViewerState, getProfileData } from "@/lib/data";
 import { updateDisplayName } from "@/app/actions";
+import { RankHistory } from "@/components/rank-history";
 
 export default async function ProfilePage({
   searchParams,
@@ -36,10 +43,17 @@ export default async function ProfilePage({
           <dd>{p?.longestStreak ?? 0}</dd>
         </div>
         <div>
-          <dt>Total votes</dt>
+          <dt>Daily votes</dt>
           <dd>{p?.totalVotes ?? 0}</dd>
         </div>
       </dl>
+      <RankHistory
+        page={Math.max(
+          1,
+          Math.min(10000, parseInt(params.rankPage ?? "1") || 1),
+        )}
+        dailyPage={page}
+      />
       <details className="panel">
         <summary>Edit display name</summary>
         <form action={updateDisplayName} className="admin-form">
@@ -53,11 +67,15 @@ export default async function ProfilePage({
               autoComplete="nickname"
             />
           </label>
-          <button className="button">Save display name</button>
+          <SubmitButton>Save display name</SubmitButton>
         </form>
       </details>
       <section className="panel">
         <h2>Your listening pattern</h2>
+        <p>
+          These patterns use Daily votes. Rank preferences have their own
+          history above.
+        </p>
         {total >= 5 ? (
           <>
             {stats.sample >= 5 ? (
@@ -132,13 +150,14 @@ export default async function ProfilePage({
         )}
       </section>
       <section className="panel">
-        <h2>Recent votes</h2>
+        <h2>Recent Daily votes</h2>
         {history.length ? (
           <ul className="vote-history">
             {history.map((h) => (
               <li key={h.id}>
                 <strong>
-                  {h.matchup_day} · {h.title}
+                  {h.matchup_day} ·{" "}
+                  <Link href={`/songs/${h.selected_song_id}`}>{h.title}</Link>
                 </strong>
                 <p>
                   {h.artist_name} · Rating moved +{h.rating_delta} ·{" "}
@@ -154,7 +173,7 @@ export default async function ProfilePage({
               : "Vote in your first daily matchup to begin your history."}
           </p>
         )}
-        <nav className="pagination" aria-label="Voting history pages">
+        <nav className="pagination" aria-label="Daily history pages">
           {page > 1 ? (
             <Link
               className="button secondary"
@@ -164,7 +183,7 @@ export default async function ProfilePage({
             </Link>
           ) : null}
           <span>
-            Page {page} · {total} votes
+            Page {page} · {total} Daily votes
           </span>
           {page * 25 < total ? (
             <Link

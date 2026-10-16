@@ -1,3 +1,8 @@
+export const metadata = {
+  title: "Live leaderboard",
+  description:
+    "Explore public Elo rankings, vote counts and weekly movement. Filter by artist, genre and release year.",
+};
 import Link from "next/link";
 import { getLeaderboard, isDemoMode } from "@/lib/data";
 import { leaderboardQuery } from "@/lib/leaderboard-query";
@@ -25,7 +30,9 @@ export default async function Leaderboard({
         <h1>The leaderboard</h1>
         <p>
           Elo rewards proven performance. Songs under five votes are marked
-          provisional.
+          provisional. Equal ratings are tied; display ties use a stable catalog
+          order. Positions follow your selected sort, and unplayed songs have an
+          initial rating.
         </p>
       </header>
       {isDemoMode() ? (

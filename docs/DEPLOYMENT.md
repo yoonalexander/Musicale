@@ -10,6 +10,10 @@ Phase 4 adds local Realtime and migration `0009_live_rankings.sql`, scoped to pu
 
 The catalog addition builds on Phase 4 and adds `0010_catalog_discovery.sql`. Apply all unapplied migrations in order through 0010 before deploying its code. It introduces empty source/audio tables, protects editorial fields during discovery refreshes and corrects historical listening analytics without changing voting history or rankings. New discoveries remain unavailable until reviewed. No iTunes previews or artwork are automatically authorized, and no hosted change was made. See [catalog automation and verification](CATALOG_AUTOMATION.md).
 
+## Continuous Rank prepared rollout — October 16
+
+Phase 5A adds `0012_continuous_rank.sql` after the catalog migration. No hosted changes were made. Apply the migration before its application code, and verify private issued-comparison/vote RLS, mixed-mode replay, independent Daily participation and two-browser live delivery in the target environment. Version 0011 is reserved for the parallel operations migration; reconcile its duplicate 0010 before integrating those branches. Do not rewrite applied history or reset hosted data. See [Phase 5A evidence, migration order and limits](PHASE_5A.md). The hosted sign-in blocker remains open.
+
 ## October 15 Phase 2 update
 
 - Rechecked production before changes: migrations `0001`–`0006`, twenty songs and providers, zero users and votes, no matchup today and no next-thirty-day queue.

@@ -1,10 +1,10 @@
 # Musicale
 
-**Every day. Two songs. One choice.** Everyone gets the same editorial matchup, listens on an official music provider, votes once, and helps build an auditable Elo leaderboard.
+**Two songs. Your choice.** Compare songs continuously in Rank or join the shared Daily matchup. Listen, choose your favorite, and help build an auditable Elo leaderboard.
 
-**Approved next-release direction (October 16):** Play guesses the higher-rated song for run points, Rank continuously collects preferences to build Elo ratings, and Daily remains the shared UTC matchup. Play and continuous Rank are **planned, not implemented**. See [the three-mode product contract](docs/PRODUCT_MODES.md) and new roadmap gates 5A/5B.
+**Three-mode direction (October 16):** Rank continuously collects preferences to build shared Elo ratings, and Daily remains the shared UTC matchup. Rank is implemented locally with verification recorded in [Phase 5A](docs/PHASE_5A.md); hosted rollout remains pending. Play, the higher-rated guessing game for run points, remains planned for Phase 5B. See [the product contract](docs/PRODUCT_MODES.md).
 
-See [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+See [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
 
 ## Product and architecture
 
@@ -14,11 +14,12 @@ This rebuild replaces the previous musical-theatre ranking / higher-lower game. 
 - Supabase Auth with passwordless email magic links, PostgreSQL and row-level security.
 - One global day: midnight UTC inclusive through the next midnight exclusive. Browser dates never determine eligibility or streaks.
 - A transactional `submit_daily_vote` RPC locks the matchup and songs, validates membership/time/status, prevents duplicates, updates both ratings/records, records an audit event, updates participation, and saves daily rating snapshots.
+- Continuous Rank uses private issued comparisons and atomic `submit_rank_vote` transactions, an independent request budget, expiring/resumable pairs and a bounded repeat-pair cooldown. Mixed-mode replay restores the shared ranking without changing Daily participation.
 - Elo begins at 1500. Admin-configured K-factor (1–100, default 24) lives in `app_settings` and is recorded with each rating event. Rounded rating changes are equal and opposite.
 - Song providers are normalized separately. Official HTTPS listening links remain the fallback. Explicitly authorized direct audio sources can play through native controls; no third-party audio is downloaded, proxied or rehosted.
 - Vercel-compatible: no separate application server, Redis or paid analytics service.
 
-Implemented pages: landing, Today, filtered/sortable leaderboard, song details, editable profile with paginated voting history and evidence-based listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. These screens exist, but the completion roadmap tracks remaining behavior, operations and release verification. The original brief's future social/personalized modes remain later work.
+Implemented pages: landing, Rank, Today, filtered/sortable leaderboard, song details, editable profile with separate paginated Daily and Rank histories and evidence-based Daily listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. The completion roadmap tracks remaining behavior, operations and release verification.
 
 Leaderboard filters cover genre, artist, year, decade and minimum votes. Sort by Elo, win percentage, total votes or seven-day rating movement. Public leaderboard page loads are cached for 30 seconds, with selective invalidation after voting/editorial actions. An open leaderboard receives Supabase song-change notifications and refetches through an uncached public endpoint, including after direct RPC votes. Reconnection and visible-tab recovery preserve filters/page and show stale-state feedback on failure. Private vote/profile state is never publicly cached. See [Phase 4](docs/PHASE_4.md) for the local verification and pending hosted rollout.
 
@@ -40,6 +41,8 @@ For a fully local backend, start Docker Desktop with its Linux engine and run:
 npm run local:start
 ```
 
+Automated browser tests use app port **3100** (with an allowlisted auth callback). The development server below remains on 3000. The separate Phase 5 acceptance worktree uses 3200.
+
 This initializes the database, applies migrations in order, and seeds today's matchup. Musicale uses ports **55321** (API), **55322** (PostgreSQL), and **55324** (local email catcher), separate from other projects. Emails sent locally stay in the catcher.
 
 Create `.env.local` from `.env.example` without overwriting existing values. Get the local URL and anon key with `npx supabase status`; set `NEXT_PUBLIC_SITE_URL=http://localhost:3000`. Then run:
@@ -60,6 +63,8 @@ To use a hosted Supabase project instead, apply the migrations as described belo
 - Database running the original app: apply migrations `0002` through `0010` in order, then `seed.sql`.
 - Database already running the daily MVP through `0003`: apply `0004` through `0010`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
 - With Supabase CLI migration tracking, use normal ordered migration application; do not run a reset against hosted data.
+
+Then apply `0012_continuous_rank.sql` before deploying the Rank application changes. Version 0011 is reserved for the parallel operations migration; this branch intentionally has a gap. Its existing `0010_product_readiness.sql` must be reconciled with catalog's 0010 before branch integration. See [the migration integration instructions](docs/PHASE_5A.md#migration-integration-and-rollout). Never rewrite applied hosted migration history.
 
 Migration 0002 moves the old songs, votes, profiles, game runs and quota records into the **private, unexposed `musicale_legacy` schema**. Existing account identities, join dates, display names and admin roles are copied into the new profiles. Old votes and ratings are preserved for reference, rather than mixed into the new catalog. The old public ranking RPC is removed. Migration 0003 completes access controls, result privacy, admin audit/import tools, configurable Elo, and history queries.
 
@@ -133,7 +138,7 @@ Production is configured at [musicale.alexyoon.com](https://musicale.alexyoon.co
 5. Schedule upcoming daily matchups in Admin. When no valid matchup is scheduled, Today shows an explicit empty state; it does not choose a random pair.
 6. Verify sign-in, provider link, one vote, persisted result after reload, streak, leaderboard and admin authorization on the deployed environment.
 
-Supabase rate-limits authentication. Voting has a durable budget of ten attempts per account per UTC minute, including failed choices and duplicates. Admin mutation RPCs allow 30 attempts/minute, profile edits five attempts/minute, and analytics 30/minute. Direct authenticated editorial table writes reserve once per affected row from the same administrator budget; rejected table transactions roll their reservations back. RPC failures preserve their attempt while rolling back business writes. Limits live in PostgreSQL across application instances. The private transactional voting function cannot be called directly by API users; its wrapper commits the request count even when the vote fails, returning a safe `error` field in that case. The app handles both transport errors and this field. No IP addresses are stored. Counters older than seven days are removed on subsequent requests. Profile/catalog/scheduling/recovery RPC callers must check a returned `error` field as well as transport errors; their private processors are not API-callable.
+Supabase rate-limits authentication. Daily voting has a durable budget of ten attempts per account per UTC minute, including failed choices and duplicates. Rank has its own thirty-attempt budget per account per UTC minute, thirty-minute pending-pair expiry and ten-minute repeat-pair cooldown, independent of Daily. Admin mutation RPCs allow 30 attempts/minute, profile edits five attempts/minute, and analytics 30/minute. Direct authenticated editorial table writes reserve once per affected row from the same administrator budget; rejected table transactions roll their reservations back. RPC failures preserve their attempt while rolling back business writes. Limits live in PostgreSQL across application instances. The private transactional voting function cannot be called directly by API users; its wrapper commits the request count even when the vote fails, returning a safe `error` field in that case. The app handles both transport errors and this field. No IP addresses are stored. Counters older than seven days are removed on subsequent requests. Profile/catalog/scheduling/recovery RPC callers must check a returned `error` field as well as transport errors; their private processors are not API-callable.
 
 `GET /api/health` reports public database connectivity (`ready`, `unavailable`, or `preview`) without secrets, account data or daily results. Use it with your existing hosting monitor. It does not verify external playback, email delivery or the editorial queue; inspect the Admin participation/queue screens for those.
 
@@ -158,6 +163,6 @@ Official upload availability is not a blanket license or assurance of regional p
 ## Remaining launch operations and future versions
 
 - Resolve the hosted sign-in failure, then validate voting and persistence. As of October 15, production has migrations `0001`–`0007`, twenty songs and a restored matchup for that UTC day. The sending domain and public email delivery are verified; owner administration and the next-thirty-day production queue remain pending. See [Phase 2 evidence](docs/PHASE_2.md).
-- Continue editorial curation toward the brief's suggested 200–1,000 songs; the twenty-source starter catalog and bulk import tools are complete. Verify region-specific playback and artwork permissions before adding content.
+- Maintain the verified twenty-song launch catalog and thirty distinct starter pairs; a larger collection is optional. Verify region-specific playback and artwork permissions before adding content.
 - Extend manual assistive-technology/device testing and configure the hosting monitor against `/api/health`.
 - Later: pairing strategies, personalized comparisons, friends and tournaments.

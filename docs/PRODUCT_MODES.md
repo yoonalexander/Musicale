@@ -1,12 +1,12 @@
 # Musicale: Play, Rank and Daily
 
-Product direction recorded October 16, 2026. The owner described the Play and Rank loops and confirmed that Daily remains a third mode. This document defines the next release; it does not claim that Play or Rank is implemented.
+Product direction recorded October 16, 2026. The owner described the Play and Rank loops and confirmed that Daily remains a third mode. Rank implementation and its verification boundary are recorded in [Phase 5A](PHASE_5A.md). Play remains planned; the full hosted release is pending.
 
 ## Purpose and current implementation
 
 Musicale lets listeners build a community music ranking and play a guessing game using that ranking. Daily adds a shared comparison and a reason to return each day.
 
-The current implementation supports Daily, accounts, profiles, vote history, streaks, Elo rankings, administration and reviewed catalog discovery. Play and continuous Rank require new application and database workflows. Reuse the catalog, authentication, authorization, Elo calculation, audit/recovery infrastructure, listening controls and live leaderboard.
+The current implementation supports continuous Rank, Daily, accounts, separate preference histories, Daily streaks, shared Elo rankings/recovery, administration and reviewed catalog discovery. Play still requires its application and database workflows. Reuse the catalog, authentication, authorization, Elo calculation, audit/recovery infrastructure, listening controls and live leaderboard.
 
 | Mode  | Question                                  | Progression                                                                             | Effect on song Elo                                     |
 | ----- | ----------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
@@ -37,7 +37,7 @@ If there are too few eligible songs or no distinct untied replacement, show an h
 - Allow further pairs without a daily quota. A finite catalog can produce repeated comparisons over time. Rate limits and a documented, time-bounded repeat-pair cooldown protect integrity without imposing a permanent one-vote-per-pair limit.
 - The server records an issued comparison only once. Refreshing/retrying returns the saved result or the pending pair. Validate ownership, pair membership, song availability and expiry at submission; do not trust browser-supplied opponents or ratings.
 - Atomically record the preference, both Elo/counter changes and the rating audit event. Calculate from current locked song ratings and record the applicable K-factor. A failed vote leaves all business records unchanged while retaining the request attempt under the established budget pattern.
-- Define and test the cooldown and expiry values during implementation. Keep Rank request budgets separate from Daily so a Rank limit cannot consume the account's Daily allowance.
+- Rank uses a ten-minute repeat-pair cooldown, thirty-minute expiry and thirty attempts per account per UTC minute. Keep Rank request budgets separate from Daily so a Rank limit cannot consume the account's Daily allowance.
 
 Rank contributes to cumulative song comparison counts and rating history. Keep Rank history/counts identifiable in Profile; Daily vote totals, daily activity and UTC streaks retain their existing meaning. Do not turn multiple Rank votes into multiple days of participation.
 
