@@ -28,7 +28,7 @@ Daily side counts, totals and the saved selection are withheld by `get_today_mat
 
 ## Local setup
 
-Use Node.js 20.19+ and install locked dependencies:
+Use Node.js 22+ and install locked dependencies:
 
 ```sh
 npm ci

@@ -59,6 +59,9 @@ test("guest welcome: first-visit tutorial, compact cards, keyboard, scoring, per
   const dialog = page.getByRole("dialog", { name: "How to play" });
   await expect(dialog).toBeVisible();
   await expect(
+    dialog.getByRole("button", { name: "Let’s play", exact: true }),
+  ).toBeInViewport({ ratio: 1 });
+  await expect(
     dialog.getByRole("button", { name: "Close how to play", exact: true }),
   ).toBeFocused();
   expect(
