@@ -1,6 +1,8 @@
 # Starter catalog sources
 
-Twenty curated entries span the 1960s–2020s, multiple languages, genres and regions. This is a starter collection, not the suggested eventual 200–1,000-song launch library. Admin can import up to 100 entries per atomic batch and queue ten curated daily pairs from `data/editorial-pairs.json`. Editors should keep adding verified recordings for their audience.
+Twenty curated entries span the 1960s–2020s, multiple languages, genres and regions. This is the modest verified launch catalog; a larger library is optional ongoing curation. Admin can import up to 100 entries per atomic batch and queue thirty distinct curated daily pairs from `data/editorial-pairs.json`. Editors should keep adding verified recordings for their audience.
+
+[October 16, 2026 verification](CATALOG_VERIFICATION.md) records the current twenty-link and release-year review.
 
 The following external playback destinations were checked against primary artist, label or provider pages on October 1, 2026. Links open the provider; Musicale copies no audio or artwork. Provider availability can change and can differ by territory. Check playback before scheduling; this source review does not imply universal rights clearance.
 

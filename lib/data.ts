@@ -184,7 +184,7 @@ export const getLeaderboard = unstable_cache(
   ["public-leaderboard", env.supabaseUrl ?? "preview"],
   { revalidate: 30, tags: ["leaderboard"] },
 );
-export async function getSong(id: string) {
+export const getSong = cache(async (id: string) => {
   if (!isSupabaseConfigured()) {
     const song = demoSongs.find((s) => s.id === id);
     return song ? { song, rank: demoSongs.indexOf(song) + 1 } : null;
@@ -200,7 +200,7 @@ export async function getSong(id: string) {
   return data
     ? { song: mapSong(data), rank: data.global_rank as number | null }
     : null;
-}
+});
 export async function getVoteHistory(): Promise<VoteHistory[]> {
   if (!isSupabaseConfigured()) return [];
   const db = await getSupabaseServerClient();

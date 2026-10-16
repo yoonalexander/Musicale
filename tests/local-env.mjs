@@ -37,12 +37,14 @@ export function localSettings() {
   );
   const settings = JSON.parse(result);
   if (
-    !["http://127.0.0.1:55321", "http://127.0.0.1:56321"].includes(
-      settings.API_URL,
-    )
+    ![
+      "http://127.0.0.1:55321",
+      "http://127.0.0.1:56321",
+      "http://127.0.0.1:57321",
+    ].includes(settings.API_URL)
   )
     throw new Error(
-      "UI tests require an isolated local Musicale backend on port 55321 or 56321.",
+      "UI tests require an isolated local Musicale backend on port 55321, 56321 or 57321.",
     );
   return settings;
 }
@@ -52,7 +54,7 @@ export function localAppEnv() {
     ...process.env,
     NEXT_PUBLIC_SUPABASE_URL: settings.API_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: settings.ANON_KEY,
-    NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3100",
+    NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3200",
     MUSICALE_TIMEZONE: "UTC",
   };
 }

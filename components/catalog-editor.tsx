@@ -1,17 +1,9 @@
 "use client";
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
+import { SubmitButton } from "@/components/submit-button";
 import { saveSong } from "@/app/actions";
 import type { Song } from "@/types/domain";
 import { providerLabels } from "@/lib/providers";
-function Save() {
-  const { pending } = useFormStatus();
-  return (
-    <button className="button" disabled={pending}>
-      {pending ? "Saving…" : "Save song"}
-    </button>
-  );
-}
 export function CatalogEditor({ songs }: { songs: Song[] }) {
   const [id, setId] = useState("");
   const song = songs.find((s) => s.id === id);
@@ -153,7 +145,7 @@ export function CatalogEditor({ songs }: { songs: Song[] }) {
               );
             },
           )}
-          <Save />
+          <SubmitButton>Save song</SubmitButton>
         </form>
       </details>
     </section>

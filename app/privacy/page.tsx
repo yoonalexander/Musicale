@@ -1,3 +1,9 @@
+import Link from "next/link";
+export const metadata = {
+  title: "Privacy and analytics",
+  description:
+    "How Musicale handles accounts, saved votes, optional analytics and external music providers.",
+};
 import { AnalyticsPreference } from "@/components/analytics";
 export default function Privacy() {
   return (
@@ -30,6 +36,14 @@ export default function Privacy() {
           If supplied by an editor, artwork loads from its source; that host
           receives the image request. We suppress the referrer on artwork
           requests.
+        </p>
+      </section>
+      <section className="panel">
+        <h2>Questions about your data?</h2>
+        <p>
+          <Link href="/help">Contact and help</Link> explains how to request
+          assistance. Public song rankings and aggregate counts do not include
+          your account identity.
         </p>
       </section>
       <AnalyticsPreference />

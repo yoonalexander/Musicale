@@ -1,3 +1,4 @@
+import { scheduleReview } from "../lib/editorial.ts";
 import { leaderboardQuery } from "../lib/leaderboard-query.ts";
 import assert from "node:assert/strict";
 import {
@@ -159,10 +160,11 @@ run(
   },
 );
 run("share text includes streak and result without song spoilers", () => {
-  const text = shareResult(128, 38, 12);
+  const text = shareResult(128, 38, 12, "https://musicale.alexyoon.com");
   assert.ok(text.includes("Musicale #128"));
   assert.ok(text.includes("38%"));
   assert.ok(text.includes("12-day streak"));
+  assert.ok(text.endsWith("https://musicale.alexyoon.com/today"));
   assert.ok(!text.includes("Respect"));
   assert.ok(!text.includes("God Only Knows"));
   assert.equal(resultMessage(50), "An even split. Your vote counts.");
@@ -239,3 +241,85 @@ run("leaderboard queries share bounded public filters", () => {
     10000,
   );
 });
+
+run(
+  "thirty-day editorial plan has unique connected pairs and three opponents each",
+  () => {
+    const pairs = JSON.parse(readFileSync("data/editorial-pairs.json", "utf8"));
+    const songs = JSON.parse(readFileSync("data/songs.json", "utf8"));
+    assert.equal(pairs.length, 30);
+    assert.deepEqual(scheduleReview(pairs), {
+      duplicates: 0,
+      fewOpponents: 0,
+      groups: 1,
+      songs: 20,
+    });
+    for (const song of songs) {
+      const opponents = new Set(
+        pairs
+          .filter((p: string[]) => p.includes(song.id))
+          .map((p: string[]) => p.find((id) => id !== song.id)),
+      );
+      assert.equal(opponents.size, 3);
+    }
+    for (const [a, b] of pairs) {
+      assert.notEqual(a, b);
+      assert.ok(songs.some((s: { id: string }) => s.id === a));
+      assert.ok(songs.some((s: { id: string }) => s.id === b));
+    }
+  },
+);
+run(
+  "editorial review detects repeated pairs, sparse opponents and disconnected groups",
+  () => {
+    assert.deepEqual(scheduleReview([]), {
+      duplicates: 0,
+      fewOpponents: 0,
+      groups: 0,
+      songs: 0,
+    });
+    assert.deepEqual(
+      scheduleReview([
+        ["a", "b"],
+        ["b", "a"],
+        ["c", "d"],
+      ]),
+      { duplicates: 1, fewOpponents: 4, groups: 2, songs: 4 },
+    );
+    assert.deepEqual(
+      scheduleReview([
+        ["a", "b"],
+        ["b", "c"],
+        ["c", "a"],
+      ]),
+      { duplicates: 0, fewOpponents: 0, groups: 1, songs: 3 },
+    );
+  },
+);
+run(
+  "launch catalog and downloadable import retain identical verified metadata",
+  () => {
+    const songs = JSON.parse(readFileSync("data/songs.json", "utf8"));
+    const download = JSON.parse(
+      readFileSync("public/starter-catalog.json", "utf8"),
+    );
+    assert.equal(songs.length, 20);
+    assert.equal(new Set(songs.map((s: { id: string }) => s.id)).size, 20);
+    for (const song of songs) {
+      const validated = validateSong({ ...song, status: "active" });
+      assert.ok(validated.providers.some((p) => p.provider !== "musicbrainz"));
+      const copy = download.find((s: { id: string }) => s.id === song.id);
+      assert.ok(copy);
+      for (const field of [
+        "id",
+        "title",
+        "artistName",
+        "releaseYear",
+        "albumName",
+        "genre",
+        "providers",
+      ])
+        assert.deepEqual(copy[field], song[field]);
+    }
+  },
+);
