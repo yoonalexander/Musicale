@@ -2,7 +2,7 @@
 
 Started October 15, 2026 (America/Toronto), on `phase-4-live-rankings` from Phase 3 commit `6bc6dd756a16763fb1ab0fd995a595718112e9ce`. Worktree: a separate managed `phase-4-live-rankings` checkout. Phase 2's hosted sign-in issue remains in [its own record](PHASE_2.md).
 
-Status: **local implementation and acceptance complete October 15, 2026; clean-checkout CI pending**. Hosted rollout/smoke verification remains a release requirement. Production and the original worktree's local database are unchanged.
+Status: **implementation and local/CI acceptance complete October 15, 2026**. Hosted rollout/smoke verification remains a release requirement. Production and the original worktree's local database are unchanged.
 
 ## Behavior and boundaries
 
@@ -32,7 +32,9 @@ LIVE LATENCY webkit: app=1520ms RPC=1173ms
 LIVE LATENCY mobile: app=971ms RPC=678ms
 ```
 
-The direct-RPC test demonstrates that the ordinary server-rendered cache still contains the older result while the subscribed browser shows the committed current ranking. The publication/privacy, filtered pagination, controlled recovery, reconnection and cleanup cases all pass. Generated unedited recordings and screenshots remain in the local ignored output directory. CI, including Firefox, is pending and will be recorded after its run.
+Clean-checkout CI also accepted **50/50 concurrent accounts, zero errors, 2296 ms**. Its conservative live measurements were desktop app/RPC **877/1072 ms**, Firefox **976/1100 ms**, WebKit **951/1105 ms**, and mobile **865/1056 ms**, all below the five-second target.
+
+The direct-RPC test demonstrates that the ordinary server-rendered cache still contains the older result while the subscribed browser shows the committed current ranking. The publication/privacy, filtered pagination, controlled recovery, reconnection and cleanup cases all pass. Generated unedited recordings and screenshots remain in the local ignored output directory. [Clean-checkout CI](https://github.com/yoonalexander/musicale/actions/runs/38842901034) passed on implementation commit `013149e3d0248b2755532d98e3011d86913da843`: **19 unit checks, 45 database cases, production build, 40 browser cases across Chromium/Firefox/WebKit/mobile, TypeScript, zero audit vulnerabilities and backend cleanup**. [Draft PR #4](https://github.com/yoonalexander/musicale/pull/4) is stacked on Phase 3. The follow-up documentation commit only records this completed evidence.
 
 Focused Playwright cases in [live-rankings.spec.ts](../tests/browser/live-rankings.spec.ts):
 
