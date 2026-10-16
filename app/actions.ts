@@ -197,6 +197,7 @@ export async function updateSongStatus(fd: FormData) {
   revalidatePath("/today");
   revalidatePath("/leaderboard");
   revalidateTag("leaderboard");
+  revalidatePath("/songs/[id]", "page");
   go(
     "/admin",
     "message",

@@ -18,6 +18,8 @@ async function test(name, run) {
 }
 // Filled from Git commit 96ab7d7, normalized to LF for Windows/Linux parity.
 const historicalHashes = {
+  "0008_transactional_boundaries.sql":
+    "d47b6aa8c184cd4f4964f91c3ea4cf88520a08d8c0d117a070a1f20dfb7fbb19",
   "0001_initial.sql":
     "0e20da248ad4279e08f04c9356d30daa295e8c0640132efc09d9ce5ddc8f0d45",
   "0002_daily_musicale.sql":
@@ -47,7 +49,9 @@ async function tracked(sql) {
     await sql(
       "select string_agg(version,',' order by version) from supabase_migrations.schema_migrations",
     ),
-    "0001,0002,0003,0004,0005,0006,0007,0008",
+    migrations()
+      .map((file) => file.slice(0, 4))
+      .join(","),
   );
   await assert.rejects(
     sql(
@@ -191,6 +195,22 @@ for (const cutoff of [3, 7])
         tracking,
       );
       await tracked(sql);
+      assert.equal(
+        await sql(
+          "select string_agg(schemaname||'.'||tablename,',' order by schemaname,tablename) from pg_publication_tables where pubname='supabase_realtime'",
+        ),
+        "public.songs",
+      );
+      assert.equal(
+        await sql(
+          "select bool_and(relrowsecurity) from pg_class where oid='public.songs'::regclass",
+        ),
+        "t",
+      );
+      assert.equal(
+        await sql("select has_table_privilege('anon','public.songs','select')"),
+        "t",
+      );
       await sql(seed);
       assert.equal(await sourceState(sql), before);
       await assert.rejects(

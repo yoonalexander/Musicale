@@ -1,3 +1,8 @@
+import {
+  pageSize,
+  type LeaderSort,
+  type LeaderFilters,
+} from "@/lib/leaderboard-query";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
@@ -102,15 +107,7 @@ export async function getTodayMatchup(): Promise<Matchup | null> {
   };
 }
 
-export const pageSize = 25;
-export type LeaderSort = "rating" | "wins" | "votes" | "movement";
-export type LeaderFilters = {
-  genre?: string;
-  artist?: string;
-  year?: number;
-  decade?: number;
-};
-async function fetchLeaderboard(
+export async function fetchLeaderboard(
   page = 1,
   sort: LeaderSort = "rating",
   minimum = 0,
@@ -143,6 +140,9 @@ async function fetchLeaderboard(
   // This cache contains only public catalog data; never use cookies or a viewer session here.
   const db = createClient(env.supabaseUrl!, env.supabaseAnonKey!, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
+    },
   });
   const column = {
     rating: "elo_rating",
@@ -170,6 +170,12 @@ async function fetchLeaderboard(
     .order(column, { ascending: false })
     .order("id")
     .range((page - 1) * pageSize, page * pageSize - 1);
+  if (error?.code === "PGRST103") {
+    // A live removal can leave the requested page beyond the filtered catalog.
+    const first = await query.range(0, 0);
+    check(first.error);
+    return { songs: [], total: first.count ?? 0 };
+  }
   check(error);
   return { songs: (data ?? []).map(mapSong), total: count ?? 0 };
 }
