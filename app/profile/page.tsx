@@ -150,7 +150,7 @@ export default async function ProfilePage({
         )}
       </section>
       <section className="panel">
-        <h2>Recent votes</h2>
+        <h2>Recent Daily votes</h2>
         {history.length ? (
           <ul className="vote-history">
             {history.map((h) => (
@@ -173,7 +173,7 @@ export default async function ProfilePage({
               : "Vote in your first daily matchup to begin your history."}
           </p>
         )}
-        <nav className="pagination" aria-label="Voting history pages">
+        <nav className="pagination" aria-label="Daily history pages">
           {page > 1 ? (
             <Link
               className="button secondary"
@@ -183,7 +183,7 @@ export default async function ProfilePage({
             </Link>
           ) : null}
           <span>
-            Page {page} · {total} votes
+            Page {page} · {total} Daily votes
           </span>
           {page * 25 < total ? (
             <Link
