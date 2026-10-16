@@ -2,7 +2,7 @@
 
 Created October 15, 2026. Based on the [project status review](PROJECT_STATUS.md), the current implementation and the supplied résumé descriptions.
 
-Revised October 16: the owner approved Play and continuous Rank alongside Daily as a third mode. [The three-mode product contract](PRODUCT_MODES.md) defines the new scope. Rank is implemented and passed Phase 5A local/CI checks; hosted rollout remains pending. Play remains planned for Phase 5B. See [Phase 5A evidence](PHASE_5A.md).
+Revised October 16: the owner approved Play and continuous Rank alongside Daily as a third mode. [The three-mode product contract](PRODUCT_MODES.md) defines the new scope. Rank is implemented and passed Phase 5A local/CI checks; hosted rollout remains pending. Play is implemented for Phase 5B with final regression checks in progress. See [Phase 5A](PHASE_5A.md) and [Phase 5B evidence](PHASE_5B.md).
 
 ## Finish line
 
@@ -41,7 +41,7 @@ The finished release includes:
 
 Phase 3 proves the recovery guarantees locally and in CI. Phase 4 now implements push-based live rankings and an uncached public refresh path; [its evidence](PHASE_4.md) distinguishes local acceptance from the still-required hosted rollout and demonstration.
 
-[Phase 5A](PHASE_5A.md) extends transaction, recovery and live-ranking evidence to continuous Rank, with all gates passed locally and in clean-checkout CI. Phase 5B must still prove Play scoring and isolation. Hosted acceptance and the remaining release gates stay open.
+[Phase 5A](PHASE_5A.md) extends transaction, recovery and live-ranking evidence to continuous Rank, with all gates passed locally and in clean-checkout CI. Phase 5B adds Play scoring and isolation checks; its final verification status is in [the evidence](PHASE_5B.md). Hosted acceptance and the remaining release gates stay open.
 
 An additional [catalog automation workstream](CATALOG_AUTOMATION.md) builds on Phase 4 with reviewed MusicBrainz discovery/imports, protected metadata refreshes and explicitly authorized previews. It does not complete or replace any remaining phase gate, and Phase 2's hosted sign-in issue remains separate.
 
@@ -55,7 +55,7 @@ An additional [catalog automation workstream](CATALOG_AUTOMATION.md) builds on P
 | 4 | Live rankings with consistent caching | 3 | Complete October 15; [local and CI evidence](PHASE_4.md); hosted rollout pending |
 | 5 | Complete consumer and administrator experience | 2–4 | Core screens exist; usability and content gaps remain |
 | 5A | Continuous Rank with shared Elo and mixed-mode recovery | 3–5 and catalog integration | New required scope; not implemented |
-| 5B | Higher-rated Play game with server-graded run points | 5A | New required scope; not implemented |
+| 5B | Higher-rated Play game with server-graded run points | 5A | Implemented locally; final regression evidence in progress |
 | 6 | Sustainable content, monitoring and recovery operations | 2–5, 5A, 5B | Incomplete or unverified; extend coverage to all three modes |
 | 7 | Release acceptance and résumé evidence | 1–6 | Not complete |
 
@@ -307,7 +307,7 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 | Next.js, React, TypeScript, PostgreSQL, Supabase full-stack app | Implemented; build/type/unit checks passed in the status review | 1, 2, 5, 7 | Clean build, source architecture and hosted user flow |
 | Daily matchups, profiles, history and streaks | Implemented; live daily content missing at review | 2, 3, 5, 7 | Hosted vote persistence plus automated UTC/streak/history tests |
 | Continuous preference ranking | Implemented and verified locally/in CI; hosted rollout pending | 5A, 6, 7 | Issued pairs, atomic votes, budgets/cooldowns, mixed-mode recovery and hosted loop |
-| Higher-rated guessing game | Approved October 16; not implemented | 5B, 6, 7 | Server-graded snapshot answers, exactly-once points, random single-card replacement and no Elo effects |
+| Higher-rated guessing game | Implemented locally; verification in progress | 5B, 6, 7 | Server-graded snapshot answers, exactly-once points, random single-card replacement and no Elo effects |
 | Elo-ranked leaderboard | Implemented; live catalog at starting ratings | 3–5, 7 | Audited rating changes, correct sorting/filtering and real user participation |
 | Real-time ranking platform | Implemented and verified across four browser projects in CI; hosted verification pending | 4, 5A, 7 | Push subscription, two-browser test and hosted demonstration |
 | Atomic concurrent voting and Daily uniqueness | Daily and Rank guarantees verified locally/in CI | 3, 5A, 7 | Daily account/day uniqueness, Rank issued-comparison uniqueness, duplicate races, distinct-account workloads, rollback and consistency assertions |

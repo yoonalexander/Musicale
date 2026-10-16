@@ -23,6 +23,14 @@ export default function Privacy() {
           Daily streaks. Your profile and vote history are visible to you and
           authorized administrators.
         </p>
+        <h2>Play runs</h2>
+        <p>
+          Musicale saves your private game runs, issued song pairs, rating
+          snapshots, guesses and scores. Pending answers are withheld until
+          graded. Public song ratings can still be viewed elsewhere; Play is a
+          casual game with no competitive scoreboard. Your run is available
+          through your own signed-in session and trusted database operations.
+        </p>
         <h2>Security and operations</h2>
         <p>
           Authenticated request counters protect sensitive actions and let

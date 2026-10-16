@@ -14,6 +14,10 @@ The catalog addition builds on Phase 4 and adds `0010_catalog_discovery.sql`. Ap
 
 Phase 5A adds `0012_continuous_rank.sql` after the catalog migration. No hosted changes were made. Apply the migration before its application code, and verify private issued-comparison/vote RLS, mixed-mode replay, independent Daily participation and two-browser live delivery in the target environment. Version 0011 is reserved for the parallel operations migration; reconcile its duplicate 0010 before integrating those branches. Do not rewrite applied history or reset hosted data. See [Phase 5A evidence, migration order and limits](PHASE_5A.md). The hosted sign-in blocker remains open.
 
+## October 16 Phase 5B update
+
+Play is implemented on `phase-5b-higher-rated-game` with additive migration `0013_play.sql`. Apply it before deploying the new Play/Profile code, after catalog `0010` and Rank `0012`; preserve `0011` for the parallel operations migration when integrated. Do not rewrite applied history or reset hosted data. Direct reads of Play tables are denied even to owners, and only graded own answers are exposed by the state RPC. Public Realtime remains songs only. No production changes were made for this phase. See [Phase 5B evidence and remaining hosted acceptance](PHASE_5B.md).
+
 ## October 15 Phase 2 update
 
 - Rechecked production before changes: migrations `0001`–`0006`, twenty songs and providers, zero users and votes, no matchup today and no next-thirty-day queue.

@@ -8,6 +8,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getViewerState, getProfileData } from "@/lib/data";
 import { updateDisplayName } from "@/app/actions";
+import { getPlayState } from "@/lib/play";
 import { RankHistory } from "@/components/rank-history";
 
 export default async function ProfilePage({
@@ -21,6 +22,7 @@ export default async function ProfilePage({
     page = Math.max(1, Math.min(10000, parseInt(params.page ?? "1") || 1));
   const { history, total, stats } = await getProfileData(page),
     p = v.profile;
+  const play = await getPlayState();
   return (
     <section className="page">
       <header className="page-title">
@@ -47,6 +49,20 @@ export default async function ProfilePage({
           <dd>{p?.totalVotes ?? 0}</dd>
         </div>
       </dl>
+      <section className="panel" aria-label="Play run">
+        <h2>Your Play run</h2>
+        <p>
+          {play
+            ? `Latest run: ${play.run.score} points · ${play.run.status}.`
+            : "No saved Play run yet."}{" "}
+          Play points are separate from Elo and Daily streaks.
+        </p>
+        <Link className="button secondary" href="/play">
+          {play && play.run.status !== "ended"
+            ? "Resume Play"
+            : "Play higher rated"}
+        </Link>
+      </section>
       <RankHistory
         page={Math.max(
           1,

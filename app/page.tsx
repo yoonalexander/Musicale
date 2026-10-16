@@ -6,49 +6,50 @@ export default async function Home() {
   return (
     <>
       <section className="hero">
-        <p className="kicker">The daily music vote</p>
+        <p className="kicker">Three ways to follow your music instinct</p>
         <h1>
-          Every day.
+          Know music.
           <br />
-          Two songs.
+          Trust your ears.
           <br />
-          <em>One choice.</em>
+          <em>Beat your score.</em>
         </h1>
         <p>
-          Listen to today’s matchup, vote for your favorite, and help build the
-          global song leaderboard.
+          Guess which song is higher rated, rank your favorites, or return for
+          the daily vote.
         </p>
         <div className="actions">
-          <Link className="button" href="/today">
-            Play today
+          <Link className="button" href="/play">
+            Play higher rated
           </Link>
-          <Link className="button secondary" href="/leaderboard">
-            View leaderboard
+          <Link className="button secondary" href="/rank">
+            Rank music
           </Link>
         </div>
       </section>
       <section className="page onboarding" aria-labelledby="how-it-works">
-        <h2 id="how-it-works">One daily listening habit.</h2>
+        <h2 id="how-it-works">Three ways to play.</h2>
         <ol>
           <li>
-            <strong>Listen</strong>
+            <strong>Play</strong>
             <p>
-              Everyone gets the same two songs. Open their official provider
-              links and listen at your own pace.
+              Guess the higher Elo rating. Correct answers earn a point and
+              randomly replace one song. A wrong guess ends your saved run.
             </p>
           </li>
           <li>
-            <strong>Choose</strong>
+            <strong>Rank</strong>
             <p>
-              Sign in with an email link and vote once. Your saved choice cannot
-              be changed that day.
+              Choose the song you prefer. Two new songs follow each saved
+              preference, building the shared Elo leaderboard.
             </p>
           </li>
           <li>
-            <strong>Return</strong>
+            <strong>Daily</strong>
             <p>
-              See community results and build your streak on consecutive UTC
-              days. The next day starts at midnight UTC.
+              Sign in with an email link and vote once in the shared matchup.
+              Return on consecutive UTC days to build your streak. The next day
+              starts at midnight UTC.
             </p>
           </li>
         </ol>
@@ -60,7 +61,7 @@ export default async function Home() {
         </p>
       </section>
       <section className="strip">
-        <Link href="/rank">Keep comparing songs in Rank</Link>
+        <Link href="/today">Visit Daily</Link>
         <span>One shared matchup</span>
         <span>Resets at midnight UTC</span>
         <span>Results hidden until you vote</span>

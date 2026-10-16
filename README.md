@@ -1,25 +1,26 @@
 # Musicale
 
-**Two songs. Your choice.** Compare songs continuously in Rank or join the shared Daily matchup. Listen, choose your favorite, and help build an auditable Elo leaderboard.
+**Trust your music instinct.** Guess the higher-rated song in Play, compare favorites continuously in Rank, or join the shared Daily matchup. Play points, preference-driven Elo, and Daily streaks have separate rules.
 
-**Three-mode direction (October 16):** Rank continuously collects preferences to build shared Elo ratings, and Daily remains the shared UTC matchup. Rank is implemented locally with verification recorded in [Phase 5A](docs/PHASE_5A.md); hosted rollout remains pending. Play, the higher-rated guessing game for run points, remains planned for Phase 5B. See [the product contract](docs/PRODUCT_MODES.md).
+**Three-mode direction (October 16):** Rank continuously collects preferences to build shared Elo ratings, and Daily remains the shared UTC matchup. Rank and Play are implemented locally; see [Phase 5A](docs/PHASE_5A.md) and [Phase 5B](docs/PHASE_5B.md) for verification. Hosted rollout remains pending. See [the product contract](docs/PRODUCT_MODES.md).
 
-See [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+See [Phase 5B Play evidence](docs/PHASE_5B.md), [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
 
 ## Product and architecture
 
-This rebuild replaces the previous musical-theatre ranking / higher-lower game. The July 2026 product request called for a shared daily vote loop inspired by Wordle, with a monochrome editorial interface, one accent color, persistent accounts, and server-calculated ratings and streaks. The original unfinished changes were completed around that MVP; personalized modes and social features remain future work. See [the refactor notes](docs/REFACTOR.md).
+This rebuild replaces the previous musical-theatre ranking / higher-lower game. The July 2026 product request called for a shared daily vote loop inspired by Wordle, with a monochrome editorial interface, one accent color, persistent accounts, and server-calculated ratings and streaks. The original unfinished changes were completed around that MVP; the October three-mode product contract now adds continuous Rank and the higher-rated Play game. See [the refactor notes](docs/REFACTOR.md).
 
 - Next.js 15 App Router, React 19, TypeScript, server-rendered pages and server actions.
 - Supabase Auth with passwordless email magic links, PostgreSQL and row-level security.
 - One global day: midnight UTC inclusive through the next midnight exclusive. Browser dates never determine eligibility or streaks.
 - A transactional `submit_daily_vote` RPC locks the matchup and songs, validates membership/time/status, prevents duplicates, updates both ratings/records, records an audit event, updates participation, and saves daily rating snapshots.
+- Play captures immutable per-round Elo snapshots and atomically grades private, persisted runs. Correct guesses earn one point and replace exactly one randomly chosen card. Wrong guesses end the run; expiry and missing replacements preserve points. Play never changes Elo or Daily participation.
 - Continuous Rank uses private issued comparisons and atomic `submit_rank_vote` transactions, an independent request budget, expiring/resumable pairs and a bounded repeat-pair cooldown. Mixed-mode replay restores the shared ranking without changing Daily participation.
 - Elo begins at 1500. Admin-configured K-factor (1–100, default 24) lives in `app_settings` and is recorded with each rating event. Rounded rating changes are equal and opposite.
 - Song providers are normalized separately. Official HTTPS listening links remain the fallback. Explicitly authorized direct audio sources can play through native controls; no third-party audio is downloaded, proxied or rehosted.
 - Vercel-compatible: no separate application server, Redis or paid analytics service.
 
-Implemented pages: landing, Rank, Today, filtered/sortable leaderboard, song details, editable profile with separate paginated Daily and Rank histories and evidence-based Daily listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. The completion roadmap tracks remaining behavior, operations and release verification.
+Implemented pages: landing, Play, Rank, Daily (`/today`), filtered/sortable leaderboard, song details, editable profile with a saved Play score and separate paginated Daily and Rank histories and evidence-based Daily listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. The completion roadmap tracks remaining behavior, operations and release verification.
 
 Leaderboard filters cover genre, artist, year, decade and minimum votes. Sort by Elo, win percentage, total votes or seven-day rating movement. Public leaderboard page loads are cached for 30 seconds, with selective invalidation after voting/editorial actions. An open leaderboard receives Supabase song-change notifications and refetches through an uncached public endpoint, including after direct RPC votes. Reconnection and visible-tab recovery preserve filters/page and show stale-state feedback on failure. Private vote/profile state is never publicly cached. See [Phase 4](docs/PHASE_4.md) for the local verification and pending hosted rollout.
 

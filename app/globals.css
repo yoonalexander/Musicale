@@ -351,6 +351,7 @@ footer {
   .site-header nav {
     grid-row: 2;
     grid-column: 1/-1;
+    flex-wrap: wrap;
     justify-content: space-between;
     gap: 12px;
   }

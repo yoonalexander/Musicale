@@ -31,6 +31,19 @@ export default function Help() {
           be changed. Voting on consecutive UTC days builds your streak; missing
           a day resets it. Your history stays saved.
         </p>
+        <h2>Play higher rated</h2>
+        <p>
+          In <Link href="/play">Play</Link>, guess the higher Elo rating
+          captured when the round was issued. A correct guess earns one point
+          and randomly replaces either card with a different song. A wrong guess
+          ends your run. Ties and songs without a recorded Daily or Rank
+          preference are excluded. Runs are saved to your account; refreshing
+          resumes your round. After thirty minutes, resume with the same songs
+          and fresh ratings. Expiry, unavailable listening, or too few eligible
+          songs pause your run and preserve points. Rank more songs to help make
+          new pairs available. Thirty Play requests per minute protect against
+          accidental repeats. Play never changes Elo or Daily streaks.
+        </p>
         <h2>Continuous Rank</h2>
         <p>
           In <Link href="/rank">Rank</Link>, choose the song you prefer and both
@@ -76,7 +89,7 @@ export default function Help() {
         </p>
       </section>
       <Link className="button" href="/today">
-        Play today
+        Visit Daily
       </Link>
     </section>
   );

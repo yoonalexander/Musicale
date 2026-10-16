@@ -93,7 +93,8 @@ export default async function Rank({
         </section>
       )}
       <p>
-        <Link href="/today">Visit Daily</Link> for the shared UTC matchup, or{" "}
+        <Link href="/play">Play higher rated</Link>, or{" "}
+        <Link href="/today">visit Daily</Link> for the shared UTC matchup, or{" "}
         <Link href="/leaderboard">view the leaderboard</Link>.
       </p>
     </section>
