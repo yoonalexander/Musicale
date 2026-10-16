@@ -228,11 +228,11 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 **Outcome:** A recruiter can try the site, and an interviewer can inspect reproducible support for every résumé claim.
 
-**Current status:** release/demo/claim evidence and the real beta checklist are prepared. Hosted daily availability, sign-in, human acceptance, operational activation and seven actual UTC days remain blockers. [Phase 7 evidence](PHASE_7.md) records the observed public state and the withheld release.
+**Current status:** release/demo/claim evidence, the real beta checklist and exact-candidate clean-checkout CI are complete. Hosted daily availability, sign-in, human acceptance, operational activation and seven actual UTC days remain blockers. [Phase 7 evidence](PHASE_7.md) records the observed public state and the withheld release.
 
 ### Tasks
 
-- [ ] **7.1 Freeze and verify a release candidate.** Run the complete test suite and dependency audit on a clean checkout. Confirm Linux CI exercises Chromium, Firefox and WebKit; explicitly record any platform exclusions. Include the new day-boundary, live-update, authorization and recovery cases.
+- [x] **7.1 Freeze and verify a release candidate.** Run the complete test suite and dependency audit on a clean checkout. Confirm Linux CI exercises Chromium, Firefox and WebKit; explicitly record any platform exclusions. Include the new day-boundary, live-update, authorization and recovery cases.
 - [ ] **7.2 Verify staging then production.** Apply only unapplied ordered migrations after the documented backup step. Repeat the hosted non-team sign-in/vote/reload/profile smoke check on the deployed release; record exactly which commit and migration versions it uses.
 - [ ] **7.3 Run a small real-user beta.** Have at least three people independently try the product. Observe at least seven consecutive UTC matchup days, including legitimate consecutive-day and missed-day participation. Keep accelerated edge-case fixtures in local/staging.
 - [ ] **7.4 Resolve release blockers.** Close reproducible issues in sign-in, voting, authorization, consistency, recovery and core usability. A missing essential check is a blocker, not a passing result. Minor cosmetic issues may remain in a named backlog.

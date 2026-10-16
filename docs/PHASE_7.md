@@ -2,7 +2,7 @@
 
 Started October 16, 2026 on `phase-7-release-evidence`, from Phase 6 commit `30db9adbb91b3373c5db6d061cb34184904e7291`, in a separate managed worktree.
 
-Status: **release artifacts prepared; candidate CI and hosted/human acceptance pending; not released**. The candidate implements the promised product and reliability workflows locally. Human acceptance, hosted setup and seven actual UTC days remain required; they cannot be marked complete while the owner is asleep or replaced with fixtures. Release acceptance gates are unmet; no release tag or production deployment was made.
+Status: **release artifacts and candidate CI complete; hosted/human acceptance pending; not released**. The candidate implements the promised product and reliability workflows locally. Human acceptance, hosted setup and seven actual UTC days remain required; they cannot be marked complete while the owner is asleep or replaced with fixtures. Release acceptance gates are unmet; no release tag or production deployment was made.
 
 ## Candidate and deliverables
 
@@ -16,7 +16,7 @@ Status: **release artifacts prepared; candidate CI and hosted/human acceptance p
 
 - [Phase 5 CI](https://github.com/yoonalexander/musicale/actions/runs/38875051774) passed **22 unit checks, 45 database cases, production build, 64 Chromium/Firefox/WebKit/mobile browser cases, TypeScript and audit** on `b4dfa7e`.
 - Phase 6 local verification passed **29 unit checks, 52 database cases, production build, 51 Windows Chromium/WebKit/mobile browser cases, TypeScript, zero audit vulnerabilities and a real private logical restore**. The restore compares all 41 selected tables, owners/grants/RLS/constraints/functions/triggers/views/sequences, retained Auth rows and migration history, restored identity isolation and duplicate-vote rejection. [Phase 6 CI](https://github.com/yoonalexander/musicale/actions/runs/38878641061) passed the complete **29 unit/52 database/68 browser** Linux matrix, build, TypeScript, audit and real backup/restore on `30db9ad`. Its fifty-account burst accepted 50/50, zero errors, in 2,278 ms.
-- Phase 7's isolated production build passed, and public screenshot pages were checked in a fresh anonymous browser. This prose/screenshot-only change does not alter database/application behavior. Its exact clean-checkout CI result will be recorded once available.
+- Phase 7's isolated production build passed, and public screenshot pages were checked in a fresh anonymous browser. This prose/screenshot-only change does not alter database/application behavior. [Exact candidate clean-checkout CI](https://github.com/yoonalexander/musicale/actions/runs/38881020854) passed on `d08a77fcf587eb822d3753d0edc8a26848cb786f`: **29 unit checks, 52 database cases, production build, 68 Chromium/Firefox/WebKit/mobile browser cases, actual private logical restore, TypeScript and zero audit vulnerabilities**. [Draft PR #8](https://github.com/yoonalexander/musicale/pull/8) is stacked on Phase 6. The follow-up documentation commit records this completed result; product code remains unchanged.
 
 ## Read-only public observation
 
