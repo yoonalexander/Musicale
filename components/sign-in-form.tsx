@@ -1,9 +1,17 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { requestMagicLinkAction } from "@/app/actions";
+import { confirmEmailSignIn, requestMagicLinkAction } from "@/app/actions";
 
-function SendLinkButton({ disabled }: { disabled: boolean }) {
+function SubmitButton({
+  disabled = false,
+  label,
+  pendingLabel,
+}: {
+  disabled?: boolean;
+  label: string;
+  pendingLabel: string;
+}) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -11,7 +19,7 @@ function SendLinkButton({ disabled }: { disabled: boolean }) {
       disabled={disabled || pending}
       aria-busy={pending}
     >
-      {pending ? "Sending link…" : "Send magic link"}
+      {pending ? pendingLabel : label}
     </button>
   );
 }
@@ -30,7 +38,20 @@ export function SignInForm({ disabled }: { disabled: boolean }) {
           placeholder="you@example.com"
         />
       </label>
-      <SendLinkButton disabled={disabled} />
+      <SubmitButton
+        disabled={disabled}
+        label="Send magic link"
+        pendingLabel="Sending link…"
+      />
+    </form>
+  );
+}
+
+export function ConfirmSignInForm({ tokenHash }: { tokenHash: string }) {
+  return (
+    <form action={confirmEmailSignIn}>
+      <input type="hidden" name="tokenHash" value={tokenHash} />
+      <SubmitButton label="Confirm sign-in" pendingLabel="Signing in…" />
     </form>
   );
 }

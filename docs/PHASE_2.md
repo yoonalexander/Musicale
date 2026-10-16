@@ -18,7 +18,7 @@ Code and verification use the isolated local Supabase backend. Preview deploymen
 
 ## Work and evidence
 
-- Sign-in submission shows a pending state and disables repeated submissions. Help text explains the newest link/same-browser requirement and spam-folder recovery. Provider/network failures return safe retry feedback; missing/used/invalid links offer a new sign-in request.
+- Sign-in submission shows a pending state and disables repeated submissions. Help text explains the newest email link, explicit confirmation and spam-folder recovery. Provider/network failures return safe retry feedback; missing/used/invalid links offer a new sign-in request. Previously sent PKCE links retain their same-browser requirement.
 - A vote after session expiry redirects to sign-in without writing a vote.
 - Unavailable Today states explain missing scheduling or unavailable songs and offer catalog/archive navigation.
 - Daily matchups expire at their UTC end timestamp, disable stale vote controls and refresh authoritative server data. Returning to a visible tab rechecks the day; form submission also checks expiry before sending. Database time/window checks remain authoritative.
@@ -39,11 +39,32 @@ Public email delivery is confirmed; production sign-in currently fails. Administ
 - The existing isolated local daily-flow test passed again on Chromium (`npx playwright test --project=desktop --grep daily.vote:`): sign-in, vote, reload and persistence. This does not reproduce or resolve the hosted failure.
 - Production's callback maps failed exchanges to the same generic message. The desktop browser connection timed out, and the local Supabase CLI has no management login. A direct Supabase connection was requested to inspect the specific auth error before changing the authentication implementation. No additional production links were consumed, no production votes were submitted and no speculative auth changes were deployed.
 
+## October 16 diagnosis and prepared confirmation flow
+
+The connected Supabase project is the expected healthy Musicale project. Read-only auth and edge logs for October 15, 22:28–22:36 UTC show fresh email tokens accepted by `/verify`, followed by repeated verification failures (`One-time token not found`). For the last retry, the same link was first verified by a Safari-style iPhone user agent and later requested by Chrome, where it was already consumed. No `/token` exchange was recorded in that window. Read-only database checks found one confirmed account, one app profile, no signed-in account/session, no administrator and three unexchanged PKCE flows. Tokens, account identifiers, email addresses and IP addresses were not retained in this document.
+
+This establishes premature consumption before the final Chrome request, rather than five-second expiry. The logs do not identify the exact email app or preview responsible for the first request, nor prove why the first callback lacked a successful exchange. A local regression reproduced the same sequence: an isolated email/preview client opens the original link before the listener, who then reaches the expired-link error.
+
+The prepared fix changes new email links to open a confirmation page without consuming the token. Only pressing **Confirm sign-in** submits a same-origin server action that calls Supabase `verifyOtp` with an email token hash and sets the session in the browser that confirms. The page is dynamic, excluded from indexing, and suppresses referrers; the callback redirect is non-cacheable and also suppresses referrers. Invalid, expired and used tokens receive safe recovery messages. The confirmation button disables while pending. Existing PKCE callbacks remain supported for previously sent links.
+
+Both signup and returning-user local email templates use [the checked-in template](../supabase/templates/sign-in.html). The existing canonical `/api/auth/callback` allowlist and sender stay the same. No new dependency, migration, production vote or production authentication change is part of this patch. Production still uses the old application and templates; hosted acceptance remains open.
+
+Local verification passed: **19 unit checks, TypeScript, production build and focused auth checks across Chromium desktop, WebKit and mobile**. The checks verify that preview GETs create no session, explicit confirmation works without a PKCE cookie for both signup and returning accounts, old signup links still exchange in their original browser, and malformed/used links recover safely. WebKit's returning-account test waits for logout to complete before the second request. A temporary port-3000 configuration avoided another phase's port-3100 preview server; it did not alter that server. Complete clean-checkout CI is pending for the patch.
+
+### Required rollout order
+
+1. Incorporate this patch into the reviewed release candidate and deploy the application containing `/auth/confirm`, the token-hash callback redirect and the confirmation server action. Coordinate with the later phase branches; do not replace their work with this older Phase 2 branch.
+2. Preserve the current hosted **Confirm signup** and **Magic Link** template bodies for rollback. Replace both bodies with `supabase/templates/sign-in.html` in Supabase Authentication email settings. Keep the existing Site URL, exact callback allowlist, SMTP sender, credentials and email rate limits. The template's `RedirectTo` comes from Musicale's server action and points to its exact allowlisted callback.
+3. Request a fresh production email. Opening the link should only display the confirmation page; pressing **Confirm sign-in** should create the session in that browser. Recheck a non-team inbox, an email-app/browser handoff, a reused link and the legitimate vote/history/streak flow. Old emails still use the legacy PKCE behavior; use a newly requested email to test the new flow.
+
+Application deployment must precede the template change, because the existing production callback cannot process the new token-hash links. Rolling back the app also requires restoring the old templates before requesting more links. The authenticated owner, thirty-day production queue and genuine hosted vote remain separate unfinished checks.
+
 ## Hosted completion checklist
 
 - [x] Apply and verify migration `0007`; verify sending-domain DNS and exact callback.
-- [x] Restore today's production matchup and inspect both provider links.
+- [x] Restore October 15's production matchup and inspect both provider links. It has since expired; the current-day/future production queue remains pending.
 - [x] Owner reports saving the sending credential directly in Supabase SMTP; actual non-team email delivery is independently confirmed. Direct inspection of the persisted masked SMTP settings remains unavailable.
+- [ ] Deploy and verify the new confirmation flow and both hosted email templates in the order above.
 - [ ] Complete owner app sign-in, identify its exact account and grant the administrator role through trusted setup.
 - [ ] Use authenticated Admin scheduling to populate the next 30 UTC days while preserving today and existing scheduled days.
 - [ ] A real non-team account receives its sign-in email, completes sign-in and remains denied Admin access.
@@ -54,5 +75,6 @@ Local browser tests cover time-zone and rollover behavior; production participat
 ## References checked
 
 - [Supabase PKCE flow](https://supabase.com/docs/guides/auth/sessions/pkce-flow): code exchange requires the browser/device that began sign-in.
+- [Supabase passwordless email](https://supabase.com/docs/guides/auth/auth-email-passwordless) and [email-template limitations](https://supabase.com/docs/guides/auth/auth-email-templates#email-prefetching): token-hash verification and an explicit confirmation page avoid consuming links on a preview GET.
 - [Supabase SMTP](https://supabase.com/docs/guides/auth/auth-smtp) and [Resend integration](https://supabase.com/partners/resend): custom SMTP enables public auth delivery.
 - [Playwright clock](https://playwright.dev/docs/clock): `fastForward` models missed timers, while `setSystemTime` changes the clock without firing timers.

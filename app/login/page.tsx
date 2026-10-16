@@ -12,7 +12,8 @@ export default async function Login({
       <h1>Keep your vote and your streak.</h1>
       <p>We’ll email you a secure, one-time sign-in link.</p>
       <p>
-        Open the newest link in this browser. Check spam if it doesn’t arrive.
+        Open the newest email link, then press Confirm sign-in. Check spam if it
+        doesn’t arrive.
       </p>
       {p.message ? (
         <div className="notice" role="status">

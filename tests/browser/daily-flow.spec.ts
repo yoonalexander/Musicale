@@ -30,7 +30,11 @@ const runSql = (text: string) =>
     { input: text, encoding: "utf8" },
   ).trim();
 
-async function signIn(page: Page, request: APIRequestContext, email: string) {
+async function requestSignInLink(
+  page: Page,
+  request: APIRequestContext,
+  email: string,
+) {
   await page.goto("/login");
   await page.getByLabel("Email address").fill(email);
   await page.getByRole("button", { name: "Send magic link" }).click();
@@ -56,13 +60,91 @@ async function signIn(page: Page, request: APIRequestContext, email: string) {
     await request.get(`http://127.0.0.1:55324/api/v1/message/${messageId}`)
   ).json();
   const href = String(message.HTML).match(
-    /href="([^"]*\/auth\/v1\/verify[^"]*)"/,
+    /href="([^"]*\/api\/auth\/callback\?token_hash=[^"]*)"/,
   )?.[1];
   expect(href, "Local sign-in email contains a verification link").toBeTruthy();
-  await page.goto(href!.replaceAll("&amp;", "&"));
-  await expect(page).toHaveURL(/\/today$/);
   return href!.replaceAll("&amp;", "&");
 }
+
+async function signIn(page: Page, request: APIRequestContext, email: string) {
+  const link = await requestSignInLink(page, request, email);
+  await page.goto(link);
+  await page.getByRole("button", { name: "Confirm sign-in" }).click();
+  await expect(page).toHaveURL(/\/today$/);
+  return link;
+}
+
+test("an email preview cannot consume sign-in before the listener confirms", async ({
+  page,
+  request,
+  context,
+}, testInfo) => {
+  const email = `preview-${Date.now()}-${testInfo.project.name}@example.test`;
+  // Check both the signup-confirmation and returning-user magic-link templates.
+  for (const returning of [false, true]) {
+    const link = await requestSignInLink(page, request, email);
+    expect(new URL(link).pathname).toBe("/api/auth/callback");
+    expect(new URL(link).searchParams.has("token_hash")).toBe(true);
+    const callback = await request.get(link, { maxRedirects: 0 });
+    expect(callback.status()).toBe(307);
+    expect(callback.headers()["referrer-policy"]).toBe("no-referrer");
+    // A separate email/preview client opens the link before the listener's browser.
+    const preview = await request.get(link);
+    expect(preview.url()).toContain("/auth/confirm?");
+    expect(preview.headers()["cache-control"]).toContain("no-store");
+    expect(
+      runSql(
+        `select count(*) from auth.sessions where user_id=(select id from auth.users where email='${email}')`,
+      ),
+    ).toBe("0");
+    await context.clearCookies(); // The destination browser has no PKCE verifier.
+    await page.goto(link);
+    await expect(page.locator('meta[name="referrer"]')).toHaveAttribute(
+      "content",
+      "no-referrer",
+    );
+    await expect(
+      page.getByRole("button", { name: "Vote for Respect" }),
+    ).toHaveCount(0);
+    const confirm = page.getByRole("button", { name: "Confirm sign-in" });
+    await expect(confirm).toBeEnabled();
+    await page.screenshot({
+      path: `output/${testInfo.project.name}-confirm-sign-in.png`,
+      fullPage: true,
+    });
+    await confirm.click();
+    await expect(page).toHaveURL(/\/today$/);
+    await expect(page.getByRole("button", { name: "Sign out" })).toBeEnabled();
+    expect(
+      runSql(
+        `select count(*) from auth.sessions where user_id=(select id from auth.users where email='${email}')`,
+      ),
+    ).toBe("1");
+    await expect(page).not.toHaveURL(/token_hash/);
+    if (!returning) {
+      await page.getByRole("button", { name: "Sign out" }).click();
+      await expect(page).toHaveURL("/");
+      await expect(
+        page.getByRole("link", { name: "Sign in", exact: true }),
+      ).toBeVisible();
+    }
+  }
+});
+
+test("previously sent PKCE email links still work in their requesting browser", async ({
+  page,
+  request,
+}, testInfo) => {
+  const email = `legacy-${Date.now()}-${testInfo.project.name}@example.test`;
+  const link = new URL(await requestSignInLink(page, request, email));
+  const legacy = new URL("/auth/v1/verify", localSettings().API_URL);
+  legacy.searchParams.set("token", link.searchParams.get("token_hash")!);
+  legacy.searchParams.set("type", "signup");
+  link.search = "";
+  legacy.searchParams.set("redirect_to", link.toString());
+  await page.goto(legacy.toString());
+  await expect(page).toHaveURL(/\/today$/);
+});
 
 test("daily vote: magic link, keyboard vote, result, sharing and persistence", async ({
   page,
@@ -88,8 +170,9 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   await expect(page.locator("iframe")).toHaveCount(0);
   const link = await signIn(page, request, email);
   await page.goto(link);
+  await page.getByRole("button", { name: "Confirm sign-in" }).click();
   await expect(
-    page.getByText(/Sign-in link expired, was already used/),
+    page.getByText(/Sign-in link expired or was already used/),
   ).toBeVisible();
   await page.goto("/today");
   const vote = page.getByRole("button", { name: "Vote for Respect" });
@@ -430,6 +513,24 @@ test("sign-in prevents repeated submission and invalid links offer recovery", as
     await expect(
       page.getByRole("button", { name: "Send magic link" }),
     ).toBeEnabled();
+  }
+  await page.goto("/auth/confirm?token_hash=invalid-test-token");
+  await page.getByRole("button", { name: "Confirm sign-in" }).click();
+  await expect(
+    page.getByText(/Sign-in link expired or was already used/),
+  ).toBeVisible();
+  for (const path of [
+    "/auth/confirm",
+    "/auth/confirm?token_hash=bad%20token",
+    "/auth/confirm?token_hash=one&token_hash=two",
+  ]) {
+    await page.goto(path);
+    await expect(
+      page.getByText("This sign-in link is unavailable."),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Confirm sign-in" }),
+    ).toHaveCount(0);
   }
 });
 

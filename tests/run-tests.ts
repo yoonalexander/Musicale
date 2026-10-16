@@ -7,7 +7,12 @@ import {
 } from "../lib/elo.ts";
 import { safeProviderUrl, mapProviders } from "../lib/providers.ts";
 import { shareResult, resultMessage } from "../lib/share.ts";
-import { validateSong, utcWindow, validDay } from "../lib/validation.ts";
+import {
+  validateSong,
+  utcWindow,
+  validDay,
+  validEmailTokenHash,
+} from "../lib/validation.ts";
 import { parseCatalog, parseCsv } from "../lib/import.ts";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -15,6 +20,22 @@ const run = (name: string, fn: () => void) => {
   fn();
   console.log(`PASS ${name}`);
 };
+run("email token hashes reject malformed and oversized form inputs", () => {
+  for (const value of [
+    null,
+    undefined,
+    "",
+    "a b",
+    "a\n",
+    "a?next=evil",
+    "a".repeat(513),
+    ["hash"],
+    {},
+  ])
+    assert.equal(validEmailTokenHash(value), false);
+  assert.equal(validEmailTokenHash("pkce_" + "a".repeat(64)), true);
+  assert.equal(validEmailTokenHash("b".repeat(64)), true);
+});
 run(
   "preview configuration rejects either backend credential without leaking values",
   () => {

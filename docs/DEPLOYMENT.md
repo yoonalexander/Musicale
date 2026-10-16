@@ -14,6 +14,10 @@ Initial production setup: October 1, 2026. Preview environment scopes rechecked 
 
 Current Phase 2 evidence and remaining hosted checks are in [PHASE_2.md](PHASE_2.md). The sections below preserve the original deployment record.
 
+## October 16 sign-in diagnosis
+
+Read-only Supabase logs show the retry link verified by a Safari-style request before Chrome received an already-used-token error; no successful application session was created. A local test reproduces premature link consumption. Phase 2 now prepares an explicit confirmation page and token-hash POST verification for new emails. It has not been deployed, and production email templates have not changed. Follow [the required app-before-template rollout order](PHASE_2.md#required-rollout-order), including both signup and magic-link templates and the real hosted acceptance checks. Later phase branches must retain their changes when incorporating this fix.
+
 ## Services and domain
 
 - Canonical site: https://musicale.alexyoon.com
