@@ -49,7 +49,9 @@ The prepared fix changes new email links to open a confirmation page without con
 
 Both signup and returning-user local email templates use [the checked-in template](../supabase/templates/sign-in.html). The existing canonical `/api/auth/callback` allowlist and sender stay the same. No new dependency, migration, production vote or production authentication change is part of this patch. Production still uses the old application and templates; hosted acceptance remains open.
 
-Local verification passed: **19 unit checks, TypeScript, production build and focused auth checks across Chromium desktop, WebKit and mobile**. The checks verify that preview GETs create no session, explicit confirmation works without a PKCE cookie for both signup and returning accounts, old signup links still exchange in their original browser, and malformed/used links recover safely. WebKit's returning-account test waits for logout to complete before the second request. A temporary port-3000 configuration avoided another phase's port-3100 preview server; it did not alter that server. Complete clean-checkout CI is pending for the patch.
+Local verification passed: **19 unit checks, TypeScript, production build and focused auth checks across Chromium desktop, WebKit and mobile**. The checks verify that preview GETs create no session, explicit confirmation works without a PKCE cookie for both signup and returning accounts, old signup links still exchange in their original browser, and malformed/used links recover safely. A temporary port-3000 configuration avoided another phase's port-3100 preview server; it did not alter that server.
+
+[Clean-checkout CI for fix commit `166287ad7fc403a2f4a6c8392ebaee6c9b644fe8`](https://github.com/yoonalexander/musicale/actions/runs/38973893040) passed: **19 unit checks, 22 database checks, 36 browser tests across Chromium, Firefox, WebKit and mobile, production build, TypeScript and zero audit vulnerabilities**. The hosted rollout and real-device retry remain pending; passing local/CI tests does not establish production acceptance.
 
 ### Required rollout order
 
