@@ -2,6 +2,10 @@
 
 Initial production setup: October 1, 2026. Preview environment scopes rechecked and changed October 15, 2026 through the signed-in Chrome dashboard. Database/authentication observations below remain the October 1 record unless explicitly dated otherwise.
 
+## Phase 6 prepared rollout
+
+Migration `0010_product_readiness.sql` and `/api/readiness` are prepared locally. Apply only unapplied 0008, 0009 and 0010 before the compatible application deployment. The monitor is disabled until its private configuration, actual staging failure notification and release approval are recorded. No new production backup or deployment was made. [Operations](OPERATIONS.md), [capacity](CAPACITY.md) and [Phase 6 evidence](PHASE_6.md) distinguish prepared steps from hosted facts. The following Phase 2/initial observations are historical, not a fresh production inspection.
+
 ## Phase 4 prepared rollout
 
 Phase 4 adds local Realtime and migration `0009_live_rankings.sql`, scoped to public songs only. No hosted changes were made. Apply unapplied 0008 and 0009 before their corresponding app deployment, verify the publication/Realtime connection, and repeat the two-browser hosted smoke check in [PHASE_4.md](PHASE_4.md#hosted-rollout-still-required). The Phase 2 hosted sign-in blocker remains open; the historical production observations below have not been refreshed by Phase 4.

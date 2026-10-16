@@ -2,7 +2,7 @@
 
 **Every day. Two songs. One choice.** Everyone gets the same editorial matchup, listens on an official music provider, votes once, and helps build an auditable Elo leaderboard.
 
-See [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+See [Phase 6 operations evidence](docs/PHASE_6.md), [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
 
 ## Product and architecture
 
@@ -142,6 +142,12 @@ Supabase rate-limits authentication. Voting has a durable budget of ten attempts
 Profile history paginates 25 votes at a time. Listening patterns require at least five votes. Favorite artists/genres need three picks and repeated songs need two. Majority agreement and underdog picks use only completed matchups with at least five listeners and appear after five qualifying matchups. Majority uses exact counts, so a rounded 50% display cannot turn a narrow majority into a tie. Every profile query is restricted to the authenticated owner.
 
 Analytics is off by default and enabled per browser on `/privacy`. Do Not Track disables collection. The isolated adapter sends only allowlisted event names; the collector requires same-origin requests and authentication. Anonymous visitors are not collected. Storage contains only UTC day/event counts (not unique visitor measurements); counts older than 90 days are removed on subsequent analytics activity. Request budgets briefly retain account IDs for rate limiting, as disclosed separately in the privacy page. No external analytics account or paid service is needed.
+
+## Operations and recovery
+
+`/api/health` checks database connectivity; `/api/readiness` checks today and the consecutive playable future buffer without exposing future choices. Admin reports a gap before later scheduled dates can hide it. The hourly alert workflow is prepared but disabled until its Resend destination and real staging delivery are verified. See [operations](docs/OPERATIONS.md), [capacity assumptions](docs/CAPACITY.md), and [Phase 6 evidence](docs/PHASE_6.md).
+
+`npm run verify` also restores a private local logical export into a disposable database after browser voting. It verifies Auth/application rows, RLS, grants, constraints, object definitions and duplicate protection. This local rehearsal is separate from a hosted restore and an encrypted off-site production backup, both still release requirements.
 
 ## Music providers and rights
 

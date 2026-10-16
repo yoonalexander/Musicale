@@ -200,21 +200,23 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 **Outcome:** The website continues working after launch week and can recover from an operational failure.
 
+**Current status:** readiness, monitoring implementation, isolated restore and runbooks pass locally and in clean-checkout CI; hosted activation, alert receipt and private backup destination/export remain pending. [Phase 6 evidence](PHASE_6.md) records the boundary.
+
 ### Tasks
 
 - [ ] **6.1 Establish editorial ownership.** Maintain a 30-day scheduled buffer and a weekly replenishment routine. Assign an owner and document how to replace unavailable recordings and recover a cancelled/missing day.
 - [ ] **6.2 Monitor actual product availability.** Keep database health separate from “today is playable” and schedule coverage. Alert the owner when today's valid pair is missing or future coverage falls below 14 days. Do not expose future song choices through a public readiness endpoint.
 - [ ] **6.3 Verify failure notifications.** Deliberately trigger a safe staging failure and confirm the monitor delivers an actionable alert. Record the response steps; a configured monitor without a delivery test is incomplete.
 - [ ] **6.4 Exercise backup and restore.** Document the actual backup/export mechanism available on the chosen hosting plan. Restore a backup into an isolated database and verify schema, votes, rating events and constraints. Document how auth identities and grants are preserved or reconciled; ranking reconstruction alone does not restore deleted source records or accounts.
-- [ ] **6.5 Write recovery and deployment runbooks.** Cover missing matchup, email delivery failure, unavailable provider link, inconsistent rankings, failed migration and failed deployment. State when to use ranking rebuild versus database restore, and how to stop/retry writes safely.
-- [ ] **6.6 Record capacity and service limits.** Capture the small load-test results, expected beta use, relevant hosting/email/realtime limits and what would trigger a later capacity review. No paid upgrade is a default requirement; choose only what the verified release needs.
-- [ ] **6.7 Update operational documentation.** Replace stale deployment status with dated verified facts, owner actions and known limits. Keep secrets and personal account data out of logs and public evidence.
+- [x] **6.5 Write recovery and deployment runbooks.** Cover missing matchup, email delivery failure, unavailable provider link, inconsistent rankings, failed migration and failed deployment. State when to use ranking rebuild versus database restore, and how to stop/retry writes safely.
+- [x] **6.6 Record capacity and service limits.** Capture the small load-test results, expected beta use, relevant hosting/email/realtime limits and what would trigger a later capacity review. No paid upgrade is a default requirement; choose only what the verified release needs.
+- [x] **6.7 Update operational documentation.** Replace stale deployment status with dated verified facts, owner actions and known limits. Keep secrets and personal account data out of logs and public evidence.
 
 **Primary files:** [health endpoint](../app/api/health/route.ts), [Admin](../app/admin/page.tsx), [admin data](../lib/data.ts), [deployment notes](DEPLOYMENT.md), [README](../README.md), and a concise operational runbook.
 
 ### Phase gate
 
-- [ ] Database connectivity and daily-product availability are independently observable.
+- [x] Database connectivity and daily-product availability are independently observable.
 - [ ] Missing-day/low-queue alerts reach the designated owner.
 - [ ] A recorded isolated restore succeeds and the owner can follow the recovery instructions.
 - [ ] Content has enough forward coverage to survive a missed weekly maintenance session.
