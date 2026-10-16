@@ -2,6 +2,10 @@
 
 Product direction recorded October 16, 2026. The owner described the Play and Rank loops and confirmed that Daily remains a third mode. Rank implementation and its verification boundary are recorded in [Phase 5A](PHASE_5A.md). Play implementation and verification are recorded in [Phase 5B](PHASE_5B.md); the full hosted release is pending.
 
+## October 16 guest-first revision
+
+The owner approved a Wordle-inspired welcome → Play → first-visit tutorial flow and guest access to Play, Rank and Daily. They explicitly retained repeatable Play runs; the main game is not a shared once-per-day challenge. Optional email accounts add the full history/profile interface. A verified new email retains its guest identity; existing accounts load their own history without merging guest activity. This supersedes the earlier signed-in-only first-version default below. See [implementation and rollout boundaries](GUEST_EXPERIENCE.md).
+
 ## Purpose and current implementation
 
 Musicale lets listeners build a community music ranking and play a guessing game using that ranking. Daily adds a shared comparison and a reason to return each day.

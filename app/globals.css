@@ -698,3 +698,535 @@ footer a {
 audio {
   max-width: 100%;
 }
+/* Game-first entry and compact Play surface. */
+body:has(.game-welcome) .site-header {
+  grid-template-columns: 1fr auto;
+  background: #edf1e9;
+  border-bottom: 0;
+}
+body:has(.game-welcome) .site-header nav {
+  display: none;
+}
+body:has(.game-welcome) footer {
+  background: #edf1e9;
+  border-color: #d6ded1;
+}
+.game-welcome {
+  min-height: calc(100svh - 76px);
+  display: grid;
+  place-items: center;
+  background: #edf1e9;
+  padding: 38px 20px 48px;
+  text-align: center;
+}
+.welcome-inner {
+  width: min(100%, 540px);
+}
+.music-mark {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 24px;
+  border-radius: 22px;
+  background: #254d3d;
+  color: #edf1e9;
+  box-shadow: 0 8px 0 #d7dfd0;
+  transform: rotate(-5deg);
+}
+.music-mark svg {
+  width: 100%;
+  height: 100%;
+}
+.game-welcome .kicker {
+  font-size: 0.65rem;
+  color: #405744;
+  margin: 0 0 12px;
+}
+.game-welcome h1 {
+  font: 700 clamp(4rem, 12vw, 6.3rem)/1 var(--serif);
+  letter-spacing: -0.065em;
+  margin: 0 0 22px;
+}
+.game-welcome h1 span {
+  color: #b94332;
+}
+.welcome-promise {
+  font: 500 clamp(1.7rem, 5vw, 2.35rem)/1.2 var(--serif);
+  letter-spacing: -0.025em;
+  margin: 0 0 16px;
+}
+.welcome-description {
+  line-height: 1.6;
+  font-size: 0.95rem;
+  color: #555e51;
+  margin: 0;
+}
+.welcome-start {
+  margin: 26px auto 0;
+  max-width: 250px;
+}
+.welcome-start .button {
+  width: 100%;
+  min-height: 54px;
+  border-radius: 999px;
+  background: #254d3d;
+  border-color: #254d3d;
+  font-weight: 650;
+  gap: 45px;
+}
+.welcome-start .button:hover {
+  background: #173c2c;
+}
+.welcome-reassurance {
+  font-size: 0.73rem;
+  color: #555e51;
+  margin: 13px 0 28px;
+}
+.welcome-alternatives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+.welcome-alternatives a {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px solid #a6b29e;
+}
+.welcome-date {
+  font-size: 0.76rem;
+  line-height: 1.7;
+  margin: 30px 0 0;
+}
+.welcome-date time {
+  display: block;
+  font-weight: 650;
+}
+.welcome-date span {
+  color: #555e51;
+}
+.welcome-daily {
+  color: #555e51;
+  font-size: 0.73rem;
+  margin: 16px 0 0;
+}
+.welcome-daily a,
+.guest-note a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.game-stage {
+  max-width: 870px;
+  padding: 25px 24px 45px;
+}
+.play-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.play-toolbar .kicker {
+  margin: 0;
+  color: #254d3d;
+}
+.play-toolbar .kicker span {
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 12px;
+}
+.tutorial-trigger {
+  background: none;
+  border: 0;
+  padding: 10px 0 10px 8px;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.tutorial-trigger > span {
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-weight: 700;
+}
+.game-question {
+  text-align: center;
+}
+.game-stage .game-question h1 {
+  font-size: clamp(1.75rem, 4.5vw, 3rem);
+  line-height: 1.05;
+  margin: 8px 0;
+  letter-spacing: -0.04em;
+}
+.game-question p {
+  margin: 10px 0 20px;
+  font-size: 0.9rem;
+}
+.play-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  margin: 0 0 18px;
+}
+.play-score strong {
+  font: 700 1.4rem var(--serif);
+  color: #254d3d;
+}
+.play-score > .play-round-number {
+  border-left: 1px solid var(--line);
+  margin-left: 8px;
+  padding-left: 16px;
+  color: var(--muted);
+}
+.game-stage .matchup {
+  margin-top: 18px;
+  gap: 36px;
+}
+.game-stage .song-choice {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fffefa;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.game-stage .art {
+  border-radius: 7px;
+  max-height: 220px;
+  width: 100%;
+  background: #e3e9dc;
+  font-size: 5rem;
+}
+.game-stage .song-choice:nth-of-type(2) .art {
+  background: #ede3d6;
+}
+.game-stage .song-choice > .kicker {
+  display: none;
+}
+.game-stage .song-choice h2 {
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  line-height: 1.1;
+  margin: 14px 0 5px;
+  overflow-wrap: anywhere;
+}
+.game-stage .song-choice > p:not(.kicker) {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 0 0 8px;
+}
+.game-stage .card-actions {
+  margin-top: auto;
+  padding-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+.game-stage .card-actions > .button {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 6px;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  background: #254d3d;
+  border-color: #254d3d;
+}
+.game-stage .card-actions a.button {
+  min-height: 36px;
+  padding: 7px 5px;
+  font-size: 0.75rem;
+  border: 0;
+  background: none;
+  color: var(--ink);
+}
+.game-stage .versus {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  width: 34px;
+  height: 34px;
+  font-size: 0.65rem;
+  top: 34%;
+  z-index: 1;
+}
+.round-expiry {
+  color: var(--muted);
+  font-size: 0.71rem;
+  text-align: center;
+  line-height: 1.5;
+  margin: 15px 0;
+}
+.guest-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.game-stage .guest-note {
+  text-align: center;
+  margin: 22px 0 12px;
+}
+.mode-switch {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  font-size: 0.78rem;
+  margin: 14px 0 0;
+}
+.mode-switch a {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+}
+.mode-switch span {
+  align-self: center;
+  color: var(--muted);
+}
+.game-stage .play-result {
+  padding: 12px 16px;
+  margin: 15px 0;
+  border-radius: 10px;
+  background: #edf1e9;
+  border-color: #d6ded1;
+}
+.play-result h2 {
+  font-size: 1.1rem;
+  margin: 0 0 6px;
+}
+.play-result p {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin: 5px 0;
+}
+.play-ready {
+  text-align: center;
+  border-radius: 14px;
+  padding: 28px;
+}
+.play-ready .actions {
+  justify-content: center;
+  margin-top: 20px;
+}
+.play-ready h2 {
+  font: 500 1.7rem var(--serif);
+  margin: 0 0 10px;
+}
+.play-ready p {
+  line-height: 1.6;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.tutorial-dialog {
+  border: 0;
+  border-radius: 20px;
+  width: min(520px, calc(100% - 28px));
+  max-height: calc(100svh - 40px);
+  padding: 34px;
+  color: var(--ink);
+  background: #fffefa;
+  box-shadow: 0 24px 90px #17241733;
+}
+.tutorial-dialog::backdrop {
+  background: #17241755;
+  backdrop-filter: blur(4px);
+}
+.dialog-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+.tutorial-dialog .kicker {
+  font-size: 0.6rem;
+  color: #405744;
+  margin: 12px 0;
+}
+.tutorial-dialog h2 {
+  font: 600 2.5rem var(--serif);
+  letter-spacing: -0.04em;
+  margin: 0 0 10px;
+}
+.tutorial-body > p {
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+.tutorial-example {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0 0;
+}
+.tutorial-example > div {
+  padding: 15px;
+  border-radius: 10px;
+  background: #e3e9dc;
+  display: grid;
+  grid-template-columns: 35px 1fr;
+  gap: 4px 8px;
+  align-items: center;
+  font-size: 0.8rem;
+}
+.tutorial-example > div:nth-child(2) {
+  background: #ede3d6;
+}
+.tutorial-example span {
+  grid-row: span 2;
+  font: 600 2.3rem var(--serif);
+}
+.tutorial-example b {
+  font-variant-numeric: tabular-nums;
+  color: #405744;
+}
+.tutorial-dialog .tutorial-answer {
+  font-size: 0.73rem;
+  color: var(--muted);
+  margin: 9px 0 20px;
+}
+.tutorial-steps {
+  counter-reset: tutorial;
+}
+.tutorial-steps li {
+  display: block;
+  padding: 11px 0 11px 34px;
+  position: relative;
+}
+.tutorial-steps li::before {
+  counter-increment: tutorial;
+  content: counter(tutorial);
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 23px;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  background: #edf1e9;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  color: #254d3d;
+}
+.tutorial-steps strong {
+  font-size: 0.87rem;
+}
+.tutorial-steps p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 6px 0 0;
+}
+.tutorial-dialog .tutorial-footnote {
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin: 18px 0;
+}
+.tutorial-dialog > .button {
+  width: 100%;
+  border-radius: 999px;
+  background: #254d3d;
+  border-color: #254d3d;
+}
+.welcome-alternatives a:hover,
+.mode-switch a:hover {
+  text-decoration: underline;
+}
+@media (max-width: 760px) {
+  body:has(.game-welcome) .site-header {
+    padding-bottom: 8px;
+  }
+  .game-welcome {
+    min-height: calc(100svh - 68px);
+    padding-top: 28px;
+  }
+  .game-stage {
+    padding: 15px 16px 32px;
+  }
+  .game-stage .matchup {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .game-stage .art {
+    font-size: 3.8rem;
+    max-height: 180px;
+  }
+  .game-stage .song-choice {
+    padding: 8px;
+    border-radius: 10px;
+  }
+  .game-stage .song-choice h2 {
+    font-size: 1.3rem;
+  }
+  .game-stage .song-choice > p:not(.kicker) {
+    font-size: 0.73rem;
+  }
+  .game-stage .versus {
+    left: 50%;
+    top: 28%;
+    width: 28px;
+    height: 28px;
+  }
+  .play-toolbar .kicker span {
+    display: none;
+  }
+  .tutorial-dialog {
+    padding: 25px;
+  }
+  .tutorial-dialog h2 {
+    font-size: 2.1rem;
+  }
+  .tutorial-example > div {
+    padding: 12px;
+    grid-template-columns: 25px 1fr;
+  }
+}
+
+.game-stage .song-choice.chosen {
+  border-color: #254d3d;
+  background: #edf1e9;
+}
+
+body:has(.game-stage) .site-header {
+  height: 64px;
+  gap: 16px;
+}
+.tutorial-dialog {
+  overflow: hidden;
+}
+.tutorial-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.tutorial-body {
+  overflow: auto;
+  min-height: 0;
+}
+.tutorial-dialog > .button {
+  flex-shrink: 0;
+  margin-top: 16px;
+}
+@media (max-width: 760px) {
+  body:has(.game-stage) .site-header {
+    height: auto;
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  .game-stage .art {
+    max-height: 132px;
+  }
+}

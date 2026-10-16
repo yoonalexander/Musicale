@@ -59,3 +59,19 @@ export async function signIn(
   await expect(page).toHaveURL(/\/today$/);
   return href!.replaceAll("&amp;", "&");
 }
+
+export async function dismissPlayTutorial(page: Page) {
+  const dialog = page.getByRole("dialog", { name: "How to play" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Let’s play", exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+}
+
+export function seedRankEvidence(uid: string) {
+  // Actual accepted preferences supply evidence, rather than faking counters or Elo.
+  runSql(`update rank_comparisons set status='expired' where user_id='${uid}' and status='pending';begin;set local request.jwt.claim.sub='${uid}';
+    do $$declare ids text[];c uuid;r jsonb;begin select array_agg(id order by id) into ids from (select id from songs where status='active' order by id limit 6) s;
+    for i in 1..3 loop insert into rank_comparisons(user_id,song_a_id,song_b_id) values('${uid}',ids[2*i-1],ids[2*i]) returning id into c;
+    r:=submit_rank_vote(c,ids[2*i-1]);if r ? 'error' then raise exception 'Play evidence fixture failed';end if;
+    update rank_comparisons set status='expired' where user_id='${uid}' and status='pending';end loop;end$$;commit`);
+}

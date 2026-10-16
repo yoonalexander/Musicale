@@ -1,6 +1,11 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { runSql, signIn } from "../browser-helpers";
+import {
+  runSql,
+  signIn,
+  dismissPlayTutorial,
+  seedRankEvidence,
+} from "../browser-helpers";
 
 const latest = (uid: string) =>
   JSON.parse(
@@ -14,14 +19,6 @@ const core = () =>
   runSql(
     `select jsonb_build_object('songs',(select jsonb_agg(to_jsonb(s) order by id) from songs s),'votes',(select jsonb_agg(to_jsonb(v) order by id) from votes v),'rank',(select jsonb_agg(to_jsonb(v) order by id) from rank_votes v),'events',(select jsonb_agg(to_jsonb(e) order by event_order) from rating_events e),'profiles',(select jsonb_agg(to_jsonb(p) order by user_id) from profiles p),'days',(select jsonb_agg(to_jsonb(d) order by id) from daily_matchups d))`,
   );
-function preferences(uid: string) {
-  // Actual accepted preferences supply evidence, rather than faking counters or Elo.
-  runSql(`update rank_comparisons set status='expired' where user_id='${uid}' and status='pending';begin;set local request.jwt.claim.sub='${uid}';
-    do $$declare ids text[];c uuid;r jsonb;begin select array_agg(id order by id) into ids from (select id from songs where status='active' order by id limit 6) s;
-    for i in 1..3 loop insert into rank_comparisons(user_id,song_a_id,song_b_id) values('${uid}',ids[2*i-1],ids[2*i]) returning id into c;
-    r:=submit_rank_vote(c,ids[2*i-1]);if r ? 'error' then raise exception 'Play evidence fixture failed';end if;
-    update rank_comparisons set status='expired' where user_id='${uid}' and status='pending';end loop;end$$;commit`);
-}
 
 test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, wrong/restart, mobile accessibility and zero ranking effects", async ({
   page,
@@ -34,11 +31,11 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Start a run", exact: true }),
-  ).toHaveCount(0);
+  ).toBeEnabled();
   const email = `play-browser-${Date.now()}-${info.project.name}@example.test`;
   await signIn(page, request, email);
   const uid = runSql(`select id from auth.users where email='${email}'`);
-  preferences(uid);
+  seedRankEvidence(uid);
   const before = core();
   await page.getByRole("link", { name: "Play", exact: true }).click();
   expect(runSql(`select count(*) from play_runs where user_id='${uid}'`)).toBe(
@@ -48,6 +45,7 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
   const form = page.locator("form.matchup"),
     buttons = form.locator('button[name="selectedSongId"]');
   await expect(buttons).toHaveCount(2);
+  await dismissPlayTutorial(page);
   await expect(form).not.toContainText(/Elo|wins|losses/);
   const r = latest(uid),
     id = r.id,
@@ -113,6 +111,7 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
   const third = latest(uid),
     wrong =
       higher(third) === third.song_a_id ? third.song_b_id : third.song_a_id;
+  await expect(form.locator('input[name="roundId"]')).toHaveValue(third.id);
   await form.locator(`button[value="${wrong}"]`).click();
   await expect(
     page.getByRole("heading", { name: "Run complete", exact: true }),
@@ -147,11 +146,12 @@ test("Play: expiry/unavailability preserves points; server-action retries and ot
   const email = `play-boundaries-${Date.now()}-${info.project.name}@example.test`;
   await signIn(page, request, email);
   const uid = runSql(`select id from auth.users where email='${email}'`);
-  preferences(uid);
+  seedRankEvidence(uid);
   await page.goto("/play");
   await page.getByRole("button", { name: "Start a run", exact: true }).click();
   const form = page.locator("form.matchup");
   await expect(form.locator('button[name="selectedSongId"]')).toHaveCount(2);
+  await dismissPlayTutorial(page);
   let r = latest(uid);
   const captured = page.waitForRequest(
     (req) => req.method() === "POST" && new URL(req.url()).pathname === "/play",

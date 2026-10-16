@@ -27,11 +27,9 @@ test("onboarding, honest initial ratings, support, metadata and missing pages", 
   page,
 }, info) => {
   await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Musicale" })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Three ways to play." }),
-  ).toBeVisible();
-  await expect(
-    page.getByText(/Sign in with an email link and vote once/),
+    page.getByRole("button", { name: "Play", exact: true }),
   ).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(

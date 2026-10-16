@@ -23,10 +23,12 @@ export function AppShell({
           <Link href="/rank">Rank</Link>
           <Link href="/today">Daily</Link>
           <Link href="/leaderboard">Leaderboard</Link>
-          {viewer.user ? <Link href="/profile">Profile</Link> : null}
+          {viewer.user && !viewer.user.isAnonymous ? (
+            <Link href="/profile">Profile</Link>
+          ) : null}
           {viewer.isAdmin ? <Link href="/admin">Admin</Link> : null}
         </nav>
-        {viewer.user ? (
+        {viewer.user && !viewer.user.isAnonymous ? (
           <form action={signOutAction}>
             <button className="text-button">Sign out</button>
           </form>

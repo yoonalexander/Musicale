@@ -25,13 +25,17 @@ port = 55324
 [auth]
 enabled = true
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["http://localhost:3000/api/auth/callback", "http://127.0.0.1:3000/api/auth/callback", "http://127.0.0.1:3100/api/auth/callback", "http://127.0.0.1:3200/api/auth/callback"]
+additional_redirect_urls = ["http://localhost:3000/api/auth/callback", "http://127.0.0.1:3000/api/auth/callback", "http://127.0.0.1:3100/api/auth/callback", "http://127.0.0.1:3200/api/auth/callback", "http://localhost:3000/api/auth/guest-confirm", "http://127.0.0.1:3000/api/auth/guest-confirm", "http://127.0.0.1:3100/api/auth/guest-confirm", "http://127.0.0.1:3200/api/auth/guest-confirm"]
 enable_signup = true
+enable_anonymous_sign_ins = true
+enable_manual_linking = true
 [auth.email]
 enable_signup = true
 enable_confirmations = true
 max_frequency = "1s"
 [auth.rate_limit]
+# Local browser projects share one IP. Keep hosted anonymous limits independently configured.
+anonymous_users = 200
 email_sent = 30
 sign_in_sign_ups = 30
 token_verifications = 30

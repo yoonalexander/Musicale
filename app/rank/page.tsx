@@ -3,6 +3,7 @@ import { getViewerState, isDemoMode } from "@/lib/data";
 import { getRankPair } from "@/lib/rank";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { RankPairCards } from "@/components/rank-pair";
+import { GuestForm } from "@/components/guest-form";
 import { SubmitButton } from "@/components/submit-button";
 import { startRank } from "./actions";
 export const metadata = {
@@ -36,19 +37,13 @@ export default async function Rank({
       throw new Error("Could not confirm your saved preference. Please retry.");
     saved = Boolean(data);
   }
+  const Form = viewer.user ? "form" : GuestForm;
   return (
-    <section className="today">
-      <header>
+    <section className="today game-stage rank-stage">
+      <header className="game-question">
         <p className="kicker">Continuous preference ranking</p>
         <h1>Which song do you prefer?</h1>
-        <p>
-          Listen, choose your favorite, then compare two new songs. There is no
-          right answer or daily voting quota.
-        </p>
-        <p>
-          Rank updates the shared Elo leaderboard. Your Daily vote and streak
-          stay separate.
-        </p>
+        <p>Pick your favorite. Both songs change after each vote.</p>
         {params.error ? (
           <p className="notice" role="alert">
             {params.error}
@@ -63,20 +58,15 @@ export default async function Rank({
           </p>
         ) : null}
       </header>
-      {!viewer.user ? (
-        <div className="panel">
+      {isDemoMode() ? (
+        <section className="panel">
           <p>
-            {isDemoMode()
-              ? "Preview mode — sign-in and persistent Rank voting are disabled."
-              : "Sign in to record preferences and resume your pending pair."}
+            Preview mode — guest ranking and persistent voting are disabled.
           </p>
-          <Link
-            className="button"
-            href={isDemoMode() ? "/leaderboard" : "/login"}
-          >
-            {isDemoMode() ? "Browse the catalog" : "Sign in"}
+          <Link className="button" href="/leaderboard">
+            Browse the catalog
           </Link>
-        </div>
+        </section>
       ) : pair ? (
         <RankPairCards key={pair.id} pair={pair} />
       ) : (
@@ -87,11 +77,17 @@ export default async function Rank({
             ten-minute cooldown, and pending pairs expire after thirty minutes.
             You can keep voting as new pairs become available.
           </p>
-          <form action={startRank}>
+          <Form action={startRank}>
             <SubmitButton busyText="Preparing…">Get a pair</SubmitButton>
-          </form>
+          </Form>
         </section>
       )}
+      {!viewer.user || viewer.user.isAnonymous ? (
+        <p className="guest-note">
+          Rank as a guest. <Link href="/login">Sign in</Link> to view your
+          preference history.
+        </p>
+      ) : null}
       <p>
         <Link href="/play">Play higher rated</Link>, or{" "}
         <Link href="/today">visit Daily</Link> for the shared UTC matchup, or{" "}

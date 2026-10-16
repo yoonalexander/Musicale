@@ -1,4 +1,5 @@
 "use client";
+import { GuestForm } from "@/components/guest-form";
 import { useEffect, useState, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -82,11 +83,13 @@ function Card({
 export function DailyMatchup({
   matchup,
   canVote,
+  guestEntry = false,
   streak = 0,
   siteUrl,
 }: {
   matchup: Matchup;
   canVote: boolean;
+  guestEntry?: boolean;
   streak?: number;
   siteUrl: string;
 }) {
@@ -149,6 +152,7 @@ export function DailyMatchup({
           matchup.totalVotes,
       )
     : 0;
+  const Form = guestEntry ? GuestForm : "form";
   return (
     <>
       {expired ? (
@@ -159,7 +163,7 @@ export function DailyMatchup({
           </button>
         </p>
       ) : null}
-      <form
+      <Form
         className="matchup"
         action={submitDailyVote}
         onSubmit={(event) => {
@@ -187,7 +191,7 @@ export function DailyMatchup({
           matchup={matchup}
           disabled={!canVote || voted || expired}
         />
-      </form>
+      </Form>
       <p>
         Voting resets at 00:00 UTC on{" "}
         <time dateTime={matchup.endsAt}>{matchup.endsAt.slice(0, 10)}</time>.

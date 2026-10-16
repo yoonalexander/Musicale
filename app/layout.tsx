@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Musicale",
-    title: "Musicale — Every day. Two songs. One choice.",
+    title: "Musicale — Two songs. One good instinct.",
     description:
-      "One shared daily matchup. Listen, choose, and build an auditable music leaderboard.",
+      "Guess the higher-rated song, rank your favorites, or join the Daily vote. Play without signing up.",
     url: "/",
   },
   twitter: {
@@ -20,11 +20,11 @@ export const metadata: Metadata = {
     description: "Every day. Two songs. One choice.",
   },
   title: {
-    default: "Musicale — Every day. Two songs. One choice.",
+    default: "Musicale — Two songs. One good instinct.",
     template: "%s — Musicale",
   },
   description:
-    "Listen to today's matchup, choose your favorite, and shape the global song leaderboard.",
+    "Play the music guessing game, rank your favorites, and discover the community leaderboard. No sign-up needed.",
 };
 export default async function Layout({
   children,

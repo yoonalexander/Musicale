@@ -75,7 +75,7 @@ export interface SongMatchupHistory {
 }
 
 export interface ViewerState {
-  user: { id: string; email?: string } | null;
+  user: { id: string; email?: string; isAnonymous?: boolean } | null;
   profile: Profile | null;
   isAdmin: boolean;
 }

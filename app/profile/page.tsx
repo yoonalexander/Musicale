@@ -17,7 +17,8 @@ export default async function ProfilePage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const v = await getViewerState();
-  if (!v.user) redirect("/login?message=Sign+in+to+view+your+profile");
+  if (!v.user || v.user.isAnonymous)
+    redirect("/login?message=Sign+in+to+view+your+profile");
   const params = await searchParams,
     page = Math.max(1, Math.min(10000, parseInt(params.page ?? "1") || 1));
   const { history, total, stats } = await getProfileData(page),
