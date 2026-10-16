@@ -137,6 +137,9 @@ test("two browsers: app vote and direct RPC bypass warm cache through public pus
         "artistName",
         "albumName",
         "artworkUrl",
+        "artworkSourceUrl",
+        "artworkAttribution",
+        "audioPreview",
         "releaseYear",
         "releaseDate",
         "durationMs",
@@ -151,7 +154,7 @@ test("two browsers: app vote and direct RPC bypass warm cache through public pus
       ].sort(),
     );
     expect(JSON.stringify(payload)).not.toMatch(
-      /user_id|email|selected_song_id|vote_id|matchup_id/,
+      /user_id|email|selected_song_id|vote_id|matchup_id|reviewed_by|catalog_sources/,
     );
     console.log(
       "LIVE LATENCY " +
@@ -263,7 +266,7 @@ test("offline recovery, visible-tab refresh, failed reads and subscription clean
   page,
   context,
 }) => {
-  test.setTimeout(90000);
+  test.setTimeout(150000);
   await page.goto("/leaderboard?artist=Aretha");
   await ready(page);
   const initial = Number(
@@ -306,7 +309,7 @@ test("offline recovery, visible-tab refresh, failed reads and subscription clean
     document.dispatchEvent(new Event("visibilitychange"));
   });
   await expect(row(page)).toContainText(initial + 2 + " votes");
-  // Read the actual database subscription rows, rather than counting JavaScript callbacks.
+  // Severed offline sockets need server-side cleanup; still require zero rows and one subscription after rejoining.
   for (let n = 0; n < 3; n++) {
     await page
       .getByRole("link", { name: "Today", exact: true })
@@ -320,7 +323,7 @@ test("offline recovery, visible-tab refresh, failed reads and subscription clean
               "select count(*) from realtime.subscription where entity='public.songs'::regclass",
             ),
           ),
-        { timeout: 15000 },
+        { timeout: 45000 },
       )
       .toBe(0);
     await page

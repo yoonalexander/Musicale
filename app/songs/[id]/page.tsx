@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getSong, getSongHistory } from "@/lib/data";
-import { providerLabels } from "@/lib/providers";
+import { SongListening } from "@/components/song-listening";
+import { ArtworkCredit } from "@/components/artwork-credit";
 import { RatingHistory } from "@/components/rating-history";
 
 export default async function SongPage({
@@ -34,6 +35,7 @@ export default async function SongPage({
           {song.genre ?? "Music"}
         </p>
         <h1>{song.title}</h1>
+        <ArtworkCredit song={song} />
         <p className="subtitle">
           {song.artistName} · {song.albumName} ·{" "}
           {song.releaseDate ?? song.releaseYear}
@@ -42,18 +44,7 @@ export default async function SongPage({
             : ""}
         </p>
         <div className="actions">
-          {song.providers.map((p) => (
-            <a
-              key={p.provider}
-              className="button secondary"
-              href={p.externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {p.provider === "musicbrainz" ? "View on" : "Listen on"}{" "}
-              {providerLabels[p.provider]}
-            </a>
-          ))}
+          <SongListening song={song} />
         </div>
         <dl className="stats">
           <div>

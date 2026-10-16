@@ -37,6 +37,8 @@ The finished release includes:
 
 Phase 3 proves the recovery guarantees locally and in CI. Phase 4 now implements push-based live rankings and an uncached public refresh path; [its evidence](PHASE_4.md) distinguishes local acceptance from the still-required hosted rollout and demonstration.
 
+An additional [catalog automation workstream](CATALOG_AUTOMATION.md) builds on Phase 4 with reviewed MusicBrainz discovery/imports, protected metadata refreshes and explicitly authorized previews. It does not complete or replace any remaining phase gate, and Phase 2's hosted sign-in issue remains separate.
+
 ## Phase order
 
 | Phase | Outcome | Depends on | Initial state |

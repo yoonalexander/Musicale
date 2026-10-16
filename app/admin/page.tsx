@@ -10,6 +10,11 @@ import {
 import { getAdminData } from "@/lib/data";
 import { requireAdmin } from "@/lib/auth";
 import { CatalogEditor } from "@/components/catalog-editor";
+import { CatalogDiscovery } from "@/components/catalog-discovery";
+import { AudioEditor } from "@/components/audio-editor";
+
+// MusicBrainz batches deliberately space requests; allow time for a reviewed ten-song import.
+export const maxDuration = 60;
 
 const example = [
   {
@@ -175,6 +180,8 @@ export default async function Admin({
         )}
       </section>
       <CatalogEditor songs={data.songs} />
+      <CatalogDiscovery sources={data.sources} />
+      <AudioEditor songs={data.songs} audio={data.audio} />
       <section className="panel">
         <h2>Add, edit or import songs</h2>
         <details>

@@ -1,5 +1,6 @@
 import { safeProviderUrl } from "@/lib/providers";
 import type { SongProvider } from "@/types/domain";
+import { httpsUrl } from "./audio";
 
 export function validDay(value: string) {
   return (
@@ -33,6 +34,8 @@ export interface SongInput {
   releaseDate: string | null;
   durationMs: number | null;
   artworkUrl: string | null;
+  artworkSourceUrl?: string | null;
+  artworkAttribution?: string | null;
 }
 export function validateSong(value: unknown): SongInput {
   if (!value || typeof value !== "object")
@@ -110,6 +113,14 @@ export function validateSong(value: unknown): SongInput {
     )
       throw new Error("Artwork needs a valid HTTPS URL without credentials.");
   }
+  const artworkSourceUrl = r.artworkSourceUrl
+    ? httpsUrl(r.artworkSourceUrl)
+    : artworkUrl;
+  if (r.artworkSourceUrl && !artworkSourceUrl)
+    throw new Error("Artwork source needs a valid HTTPS URL.");
+  const artworkAttribution = String(r.artworkAttribution ?? "").trim();
+  if (artworkAttribution.length > 1000)
+    throw new Error("Artwork attribution must be at most 1000 characters.");
   return {
     id: songId(String(r.id ?? "")),
     title,
@@ -122,5 +133,7 @@ export function validateSong(value: unknown): SongInput {
     releaseDate,
     durationMs,
     artworkUrl,
+    artworkSourceUrl: artworkUrl ? artworkSourceUrl : null,
+    artworkAttribution: artworkUrl ? artworkAttribution || null : null,
   };
 }

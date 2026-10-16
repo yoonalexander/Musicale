@@ -632,3 +632,6 @@ details:not([open]) > :not(summary) {
 footer {
   flex-wrap: wrap;
 }
+audio {
+  max-width: 100%;
+}

@@ -11,6 +11,7 @@ import { env, isSupabaseConfigured } from "@/lib/env";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { currentStreak } from "@/lib/elo";
 import { mapProviders } from "@/lib/providers";
+import { mapAudio } from "@/lib/audio";
 import type {
   Matchup,
   Profile,
@@ -35,6 +36,9 @@ function mapSong(r: Record<string, unknown>): Song {
     artistName: String(r.artist_name),
     albumName: String(r.album_name ?? "Single"),
     artworkUrl: r.artwork_url as string | null,
+    artworkSourceUrl: r.artwork_source_url as string | null,
+    artworkAttribution: r.artwork_attribution as string | null,
+    audioPreview: mapAudio(r.audio_preview as Record<string, unknown>),
     releaseYear: Number(r.release_year),
     releaseDate: r.release_date as string | null,
     durationMs: r.duration_ms ? Number(r.duration_ms) : null,
@@ -92,6 +96,17 @@ export async function getTodayMatchup(): Promise<Matchup | null> {
   check(error);
   const row = data?.[0];
   if (!row) return null;
+  const audio = await db!
+    .from("song_audio_sources")
+    .select(
+      "song_id,provider,url,availability,licensing_status,authorization_url,attribution",
+    )
+    .in("song_id", [row.song_a.id, row.song_b.id])
+    .eq("availability", "available")
+    .eq("licensing_status", "authorized");
+  check(audio.error);
+  for (const song of [row.song_a, row.song_b])
+    song.audio_preview = audio.data?.find((a) => a.song_id === song.id);
   return {
     id: row.matchup_id,
     matchupDay: row.matchup_day,
@@ -233,7 +248,7 @@ export async function getSongHistory(id: string) {
 }
 export async function getAdminData() {
   const db = await getSupabaseServerClient();
-  const [songs, matchups, settings, audit, overview, events] =
+  const [songs, matchups, settings, audit, overview, events, sources, audio] =
     await Promise.all([
       db!.from("song_catalog").select("*").order("title").limit(1000),
       db!
@@ -257,12 +272,29 @@ export async function getAdminData() {
         .select("*")
         .order("event_day", { ascending: false })
         .limit(240),
+      db!
+        .from("catalog_sources")
+        .select(
+          "provider,provider_song_id,song_id,source_url,metadata_license,metadata,isrcs,synced_at",
+        )
+        .order("synced_at", { ascending: false })
+        .limit(1000),
+      db!
+        .from("song_audio_sources")
+        .select(
+          "song_id,provider,url,availability,licensing_status,authorization_url,attribution",
+        ),
     ]);
-  [songs, matchups, settings, audit, overview, events].forEach((r) =>
-    check(r.error),
+  [songs, matchups, settings, audit, overview, events, sources, audio].forEach(
+    (r) => check(r.error),
   );
   return {
     songs: (songs.data ?? []).map(mapSong),
+    sources: sources.data ?? [],
+    audio: (audio.data ?? []).map((a) => ({
+      songId: a.song_id as string,
+      ...mapAudio(a)!,
+    })),
     matchups: matchups.data ?? [],
     kFactor: settings.data!.elo_k_factor,
     audit: audit.data ?? [],

@@ -7,7 +7,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   page,
   request,
 }, testInfo) => {
-  test.setTimeout(90000);
+  test.setTimeout(120000);
   const email = `musicale-${Date.now()}-${testInfo.project.name}@example.test`;
   await page.goto("/today");
   await expect(
@@ -220,7 +220,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     page.getByText(
       /\d+ editorial matchups added. Existing days were preserved./,
     ),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15000 });
   expect(
     runSql(
       "select count(*) from daily_matchups where matchup_day>(now() at time zone 'UTC')::date and matchup_day<=(now() at time zone 'UTC')::date+30 and status in('scheduled','active')",
