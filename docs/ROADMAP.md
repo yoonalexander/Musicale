@@ -35,7 +35,7 @@ The finished release includes:
 | Selective cache invalidation | Successful relevant mutations invalidate affected public ranking data and route views. Private user state is never shared through the public cache. Live refreshes cannot be masked by stale cached responses. |
 | Concurrency and reliability | Automated tests demonstrate correctness for specified concurrent workloads, with measured results recorded. Do not imply unlimited scale or production traffic that has not occurred. |
 
-The “real-time” claim is an explicit remaining feature: the current app has no live leaderboard subscription, and local Supabase Realtime is disabled. Recovery already has a substantial implementation, but its exact guarantees must be exercised and documented.
+Phase 3 proves the recovery guarantees locally and in CI. Phase 4 now implements push-based live rankings and an uncached public refresh path; [its evidence](PHASE_4.md) distinguishes local acceptance from the still-required hosted rollout and demonstration.
 
 ## Phase order
 
@@ -44,7 +44,7 @@ The “real-time” claim is an explicit remaining feature: the current app has 
 | 1 | Reproducible development, isolated testing and passing baseline checks | Nothing | Complete October 15; [verification evidence](PHASE_1.md) |
 | 2 | Working public sign-in and daily voting loop | 1 | Launch operations incomplete or unverified; Today was empty |
 | 3 | Proven transaction, authorization, migration and recovery guarantees | 1; use 2 for hosted smoke checks | Complete October 15; [local and CI evidence](PHASE_3.md) |
-| 4 | Live rankings with consistent caching | 3 | Cache invalidation exists; cross-browser live behavior missing |
+| 4 | Live rankings with consistent caching | 3 | Complete October 15; [local and CI evidence](PHASE_4.md); hosted rollout pending |
 | 5 | Complete consumer and administrator experience | 2–4 | Core screens exist; usability and content gaps remain |
 | 6 | Sustainable content, monitoring and recovery operations | 2–5 | Incomplete or unverified |
 | 7 | Release acceptance and résumé evidence | 1–6 | Not complete |
@@ -138,28 +138,30 @@ Most of this phase should validate and tighten the existing SQL. Do not replace 
 
 **Outcome:** The “real-time ranking” résumé variant corresponds to visible cross-browser behavior.
 
+**Scope of sign-off:** implementation and all gates below pass locally and in clean-checkout CI. Under the local-only instruction, hosted activation and timing verification remain explicit Phase 7 release requirements. Production and read-only previews are unchanged.
+
 Use Supabase's existing client stack and a narrowly scoped Realtime subscription. Do not introduce a separate application server or new messaging service for this release. If push delivery is ultimately omitted, the release cannot retain the real-time claim unchanged; polling should be described as automatic/near-real-time refresh.
 
 ### Tasks
 
-- [ ] **4.1 Enable and scope live delivery.** Configure local/staging/production Realtime consistently and publish only the public song changes needed to refresh rankings. Recheck grants and row-level access; do not publish private votes, profiles, request budgets or admin audit records to public subscribers.
-- [ ] **4.2 Add a live leaderboard client.** Subscribe while the leaderboard is open, combine duplicate notifications from the two song updates, and refetch authoritative public ranking data. Preserve filters, sort and page; dispose subscriptions on navigation.
-- [ ] **4.3 Keep cache behavior coherent.** The existing 30-second Next.js cache must not mask a live notification. Use an uncached authoritative public read for the live refresh path; preserve tagged public caching for ordinary page loads and selective invalidation after server-action mutations.
-- [ ] **4.4 Cover every relevant mutation.** Verify vote, catalog edit/import, availability, ranking rebuild and editorial changes refresh the views they affect. Test a direct authorized vote RPC as well as the normal app action; the RPC does not itself execute Next.js invalidation.
-- [ ] **4.5 Handle reconnection.** Refetch on reconnect or return to a visible tab, show a clear stale/disconnected state, and retain usable navigation if live delivery fails. Clients never calculate or apply authoritative Elo themselves.
-- [ ] **4.6 Prove isolation.** Ensure live payloads and public refresh responses contain no account identity or private history. Any later live daily-results view must use viewer-authorized reads, not a public stream of matchup counts.
+- [x] **4.1 Enable and scope live delivery.** Configure local/staging/production Realtime consistently and publish only the public song changes needed to refresh rankings. Local configuration and migration 0009 implement this scope; staging/production application is prepared for the release rollout. Recheck grants and row-level access; do not publish private votes, profiles, request budgets or admin audit records to public subscribers.
+- [x] **4.2 Add a live leaderboard client.** Subscribe while the leaderboard is open, combine duplicate notifications from the two song updates, and refetch authoritative public ranking data. Preserve filters, sort and page; dispose subscriptions on navigation.
+- [x] **4.3 Keep cache behavior coherent.** The existing 30-second Next.js cache must not mask a live notification. Use an uncached authoritative public read for the live refresh path; preserve tagged public caching for ordinary page loads and selective invalidation after server-action mutations.
+- [x] **4.4 Cover every relevant mutation.** Verify vote, catalog edit/import, availability, ranking rebuild and editorial changes refresh the views they affect. Test a direct authorized vote RPC as well as the normal app action; the RPC does not itself execute Next.js invalidation.
+- [x] **4.5 Handle reconnection.** Refetch on reconnect or return to a visible tab, show a clear stale/disconnected state, and retain usable navigation if live delivery fails. Clients never calculate or apply authoritative Elo themselves.
+- [x] **4.6 Prove isolation.** Ensure live payloads and public refresh responses contain no account identity or private history. Any later live daily-results view must use viewer-authorized reads, not a public stream of matchup counts.
 
 **Primary files:** [leaderboard](../app/leaderboard/page.tsx), [data access/cache](../lib/data.ts), [browser Supabase client](../lib/supabase/browser.ts), [actions](../app/actions.ts), [Supabase configuration](../supabase/config.toml), new forward migration and focused browser tests.
 
 ### Phase gate
 
-- [ ] In two separate browser contexts, account A votes and browser B's open leaderboard updates without reload within the five-second normal-condition target.
-- [ ] A warmed cache and a direct RPC vote cannot leave browser B displaying the old ranking after the live refresh.
-- [ ] Active filters, sorting and pagination remain correct after updates.
-- [ ] Reconnection catches missed changes, and repeated navigation does not accumulate subscriptions.
-- [ ] Subscriber and response checks show no private data exposure.
+- [x] In two separate browser contexts, account A votes and browser B's open leaderboard updates without reload within the five-second normal-condition target.
+- [x] A warmed cache and a direct RPC vote cannot leave browser B displaying the old ranking after the live refresh.
+- [x] Active filters, sorting and pagination remain correct after updates.
+- [x] Reconnection catches missed changes, and repeated navigation does not accumulate subscriptions.
+- [x] Subscriber and response checks show no private data exposure.
 
-**Evidence to retain:** repeatable two-browser Playwright test, an unedited demo of live behavior, measured latency and the documented cache/read strategy.
+**Evidence:** [Phase 4 record](PHASE_4.md), with repeatable two-browser Playwright cases, unedited local demo recordings, measured latency, explicit public/private boundaries and the cache/read strategy. Hosted proof remains required before release.
 
 ## Phase 5 — Finish the website as a consumer product
 
@@ -283,7 +285,7 @@ No calendar deadline is invented here: email/domain setup, environment access an
 - [x] Phase 1 — Baseline and isolation passed: [October 15 verification evidence](PHASE_1.md)
 - [ ] Phase 2 — Public daily loop passed: evidence link __________
 - [x] Phase 3 — Database guarantees passed: [October 15 local and CI evidence](PHASE_3.md)
-- [ ] Phase 4 — Live rankings and cache consistency passed: evidence link __________
+- [x] Phase 4 — Live rankings and cache consistency passed: [October 15 local and CI evidence; hosted rollout still required](PHASE_4.md)
 - [ ] Phase 5 — Consumer/admin experience passed: evidence link __________
 - [ ] Phase 6 — Sustainable operations passed: evidence link __________
 - [ ] Phase 7 — Release and résumé evidence passed: evidence link __________

@@ -2,7 +2,7 @@
 
 **Every day. Two songs. One choice.** Everyone gets the same editorial matchup, listens on an official music provider, votes once, and helps build an auditable Elo leaderboard.
 
-See [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+See [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
 
 ## Product and architecture
 
@@ -18,7 +18,7 @@ This rebuild replaces the previous musical-theatre ranking / higher-lower game. 
 
 Implemented pages: landing, Today, filtered/sortable leaderboard, song details, editable profile with paginated voting history and evidence-based listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. These screens exist, but the completion roadmap tracks remaining behavior, operations and release verification. The original brief's future social/personalized modes remain later work.
 
-Leaderboard filters cover genre, artist, year, decade and minimum votes. Sort by Elo, win percentage, total votes or seven-day rating movement. Only the public leaderboard is cached (30 seconds), with immediate invalidation after voting/editorial changes; private vote and profile state is never publicly cached.
+Leaderboard filters cover genre, artist, year, decade and minimum votes. Sort by Elo, win percentage, total votes or seven-day rating movement. Public leaderboard page loads are cached for 30 seconds, with selective invalidation after voting/editorial actions. An open leaderboard receives Supabase song-change notifications and refetches through an uncached public endpoint, including after direct RPC votes. Reconnection and visible-tab recovery preserve filters/page and show stale-state feedback on failure. Private vote/profile state is never publicly cached. See [Phase 4](docs/PHASE_4.md) for the local verification and pending hosted rollout.
 
 Daily side counts, totals and the saved selection are withheld by `get_today_matchup` until that account votes. Completed archive/song-history RPCs exclude active days. Cumulative Elo, wins/losses, comparison counts and public rating snapshots remain public and may permit inference; this is not a promise of absolute result secrecy. [Phase 3 evidence](docs/PHASE_3.md) documents the tested boundary.
 
@@ -54,14 +54,14 @@ To use a hosted Supabase project instead, apply the migrations as described belo
 
 `0001_initial.sql` is unchanged historical migration content. **Do not replace or reapply an already-applied migration.**
 
-- Fresh database: apply migrations `0001` through `0008` in order, followed by `seed.sql`.
-- Database running the original app: apply migrations `0002` through `0008` in order, then `seed.sql`.
-- Database already running the daily MVP through `0003`: apply `0004` through `0008`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
+- Fresh database: apply migrations `0001` through `0009` in order, followed by `seed.sql`.
+- Database running the original app: apply migrations `0002` through `0009` in order, then `seed.sql`.
+- Database already running the daily MVP through `0003`: apply `0004` through `0009`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
 - With Supabase CLI migration tracking, use normal ordered migration application; do not run a reset against hosted data.
 
 Migration 0002 moves the old songs, votes, profiles, game runs and quota records into the **private, unexposed `musicale_legacy` schema**. Existing account identities, join dates, display names and admin roles are copied into the new profiles. Old votes and ratings are preserved for reference, rather than mixed into the new catalog. The old public ranking RPC is removed. Migration 0003 completes access controls, result privacy, admin audit/import tools, configurable Elo, and history queries.
 
-Migration 0004 adds durable request limits, richer profiles/catalog metadata, analytics aggregates, featured archives and ranking recovery. Migration 0005 adds atomic batch scheduling and database provider-domain checks; migration 0006 indexes request cleanup. Migration 0007 aligns the display-name RPC with the form/server limit of 60 characters; it preserves existing names and rejects invalid future edits. Migration 0008 enforces profile/admin RPC budgets and direct editorial-write budgets in PostgreSQL, strengthens recovery source validation, and prevents cancellation of started/voted days. Apply 0008 before deploying its matching server-action changes; it is not applied to production by Phase 3. Provider checks preserve existing potentially stale data while enforcing new writes; inspect provider readiness before scheduling.
+Migration 0004 adds durable request limits, richer profiles/catalog metadata, analytics aggregates, featured archives and ranking recovery. Migration 0005 adds atomic batch scheduling and database provider-domain checks; migration 0006 indexes request cleanup. Migration 0007 aligns the display-name RPC with the form/server limit of 60 characters; it preserves existing names and rejects invalid future edits. Migration 0008 enforces profile/admin RPC budgets and direct editorial-write budgets in PostgreSQL, strengthens recovery source validation, and prevents cancellation of started/voted days. Apply 0008 before deploying its matching server-action changes; it is not applied to production by Phase 3. Migration 0009 publishes only public song changes for the live leaderboard; apply it before deploying the live client. Local Realtime is enabled; hosted delivery still needs the release smoke check. Provider checks preserve existing potentially stale data while enforcing new writes; inspect provider readiness before scheduling.
 
 Before rollout, take a database backup, inspect the starting schema, and apply the upgrade to an isolated copy. If the unfinished July rewrite of `0001_initial.sql` was applied manually, that is a different starting schema: do not apply the legacy upgrade blindly; preserve/export that data and reconcile it first. The fresh Musicale production project was bootstrapped on October 1, 2026; see [deployment status](docs/DEPLOYMENT.md).
 
@@ -112,7 +112,7 @@ npm run typecheck
 Start local Supabase before the database/browser checks. `npm run verify` runs the complete sequence (unit tests, database tests, production build, desktop/mobile browser tests, and TypeScript).
 
 - Unit tests cover the preview credential guard, Elo including rounding ties, streak expiry/date boundaries, UTC windows, catalog/provider validation, and spoiler-free sharing.
-- Database tests create and remove a disposable database inside **only** `supabase_db_musicale`. They exercise migration preservation, actual PostgreSQL transactions/RLS, authentication requirements, invalid/time-window votes, concurrent requests/users, streaks, result privacy, admin scheduling/audits/settings, and atomic imports. They do not reset the application's database or accept a hosted URL.
+- Database tests create and remove owned disposable databases inside **only** the selected local Musicale container (`supabase_db_musicale` by default). The optional `MUSICALE_LOCAL_WORKDIR` selects an isolated Musicale project as documented in Phase 4. They exercise migration preservation, actual PostgreSQL transactions/RLS, authentication requirements, invalid/time-window votes, concurrent requests/users, streaks, result privacy, admin scheduling/audits/settings, and atomic imports. They do not reset the application's database or accept a hosted URL.
 - Browser tests build with isolated local settings, then use actual local magic-link email and persisted voting on desktop/mobile. They cover keyboard voting, reload persistence, clipboard fallback, profiles/history, server admin checks, sign-out, 404s, 320px layouts and automated WCAG accessibility checks. Generated `example.test` accounts and sample votes remain only in the local test project. Screenshots go in ignored `output/`.
 - Browser checks never open the external music links. Listening availability and restrictions remain provider-dependent.
 

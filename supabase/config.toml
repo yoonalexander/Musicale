@@ -16,7 +16,7 @@ sql_paths = ["./seed.sql"]
 [studio]
 enabled = false
 [realtime]
-enabled = false
+enabled = true
 [storage]
 enabled = false
 [local_smtp]

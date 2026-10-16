@@ -1,3 +1,4 @@
+import { leaderboardQuery } from "../lib/leaderboard-query.ts";
 import assert from "node:assert/strict";
 import {
   applyEloResult,
@@ -209,4 +210,32 @@ run("catalog metadata validates dates, duration and HTTPS artwork", () => {
     { artworkUrl: "https://user:pass@example.com/art" },
   ])
     assert.throws(() => validateSong({ ...song, ...change }));
+});
+
+run("leaderboard queries share bounded public filters", () => {
+  const query = leaderboardQuery({
+    page: "-5",
+    sort: "private",
+    minimum: "999999",
+    genre: " Soul ",
+    artist: "x".repeat(250),
+    year: "no",
+    decade: "1991",
+  });
+  assert.equal(query.page, 1);
+  assert.equal(query.sort, "rating");
+  assert.equal(query.minimum, 100000);
+  assert.equal(query.filters.genre, "Soul");
+  assert.equal(query.filters.artist.length, 200);
+  assert.equal(query.filters.year, undefined);
+  assert.equal(query.filters.decade, undefined);
+  assert.equal(
+    leaderboardQuery({
+      page: "999999",
+      sort: "movement",
+      year: "2000",
+      decade: "2000",
+    }).page,
+    10000,
+  );
 });
