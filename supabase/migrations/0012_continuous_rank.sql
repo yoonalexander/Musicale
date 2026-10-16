@@ -205,14 +205,14 @@ begin
     perform id from songs where id in(c.song_a_id,c.song_b_id) order by id for no key update;
     if not rank_song_playable(c.song_a_id) or not rank_song_playable(c.song_b_id) then raise exception 'Playback unavailable. Request a new pair.';end if;
     -- Recheck expiry after waiting for another vote's song locks.
-    if c.expires_at<=clock_timestamp() then raise exception 'Comparison expired. Request a new pair.';end if;
+    event_time:=clock_timestamp();
+    if c.expires_at<=event_time then raise exception 'Comparison expired. Request a new pair.';end if;
     select * into strict w from songs where id=p_selected_song_id;
     select * into strict l from songs where id=case when p_selected_song_id=c.song_a_id then c.song_b_id else c.song_a_id end;
     select elo_k_factor into k from app_settings where id=true;
     expected:=1/(1+power(10,(l.elo_rating-w.elo_rating)/400));delta:=round(k*(1-expected));
     update songs set elo_rating=elo_rating+delta,wins=wins+1,matchup_count=matchup_count+1,updated_at=now() where id=w.id;
     update songs set elo_rating=elo_rating-delta,losses=losses+1,matchup_count=matchup_count+1,updated_at=now() where id=l.id;
-    event_time:=clock_timestamp();
     insert into rank_votes(comparison_id,user_id,selected_song_id,rejected_song_id,selected_rating_before,rejected_rating_before,
       selected_rating_after,rejected_rating_after,expected_score,rating_delta,created_at)
     values(c.id,u,w.id,l.id,w.elo_rating,l.elo_rating,w.elo_rating+delta,l.elo_rating-delta,expected,delta,event_time) returning id into vid;

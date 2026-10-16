@@ -270,6 +270,30 @@ try {
       await sql(`update songs set status='active' where id='${c.song_a_id}'`);
     }
   });
+  await test("a vote accepted before expiry remains replayable when its writes finish after expiry", async () => {
+    await start(66);
+    const c = await state(66);
+    await sql(`create function slow_rank_write() returns trigger language plpgsql as $$begin
+      if auth.uid()='${user(66)}' and new.id='${c.song_a_id}' then perform pg_sleep(2);end if;return new;end$$;
+      create trigger slow_rank_write before update on songs for each row execute function slow_rank_write()`);
+    try {
+      await sql(`begin;set local request.jwt.claim.sub='${user(66)}';
+        update rank_comparisons set expires_at=clock_timestamp()+interval '1 second' where id='${c.id}';
+        set local role authenticated;select submit_rank_vote('${c.id}','${c.song_a_id}');commit`);
+      assert.equal(
+        await sql(`select v.created_at<c.expires_at and clock_timestamp()>c.expires_at
+        from rank_votes v join rank_comparisons c on c.id=v.comparison_id where c.id='${c.id}'`),
+        "t",
+      );
+      const expected = await derived();
+      await sql(asUser(1, "select rebuild_rankings()"));
+      assert.equal(await derived(), expected);
+    } finally {
+      await sql(
+        "drop trigger slow_rank_write on songs;drop function slow_rank_write()",
+      );
+    }
+  });
   await test("Rank rate limits, failed attempts and minute rollover are independent of Daily", async () => {
     await resetBudget(7);
     await sql(
