@@ -200,7 +200,7 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 **Outcome:** The website continues working after launch week and can recover from an operational failure.
 
-**Current status:** readiness, monitoring implementation, isolated restore and runbooks pass locally; hosted activation, alert receipt and private backup destination/export remain pending. [Phase 6 evidence](PHASE_6.md) records the boundary.
+**Current status:** readiness, monitoring implementation, isolated restore and runbooks pass locally and in clean-checkout CI; hosted activation, alert receipt and private backup destination/export remain pending. [Phase 6 evidence](PHASE_6.md) records the boundary.
 
 ### Tasks
 
