@@ -126,6 +126,14 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
     await expect(audioEditor.getByRole("status")).toHaveText(
       "Audio source saved.",
     );
+    await expect(
+      audioEditor.getByText(
+        "Current audio: available; permission: unreviewed.",
+        {
+          exact: true,
+        },
+      ),
+    ).toBeVisible();
     await page.goto("/songs/respect-aretha");
     await expect(page.locator("audio")).toHaveCount(0);
     await page.goto("/admin");
@@ -157,6 +165,14 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
     await expect(audioEditor.getByRole("status")).toHaveText(
       "Audio source saved.",
     );
+    await expect(
+      audioEditor.getByText(
+        "Current audio: available; permission: authorized.",
+        {
+          exact: true,
+        },
+      ),
+    ).toBeVisible();
     expect(
       (
         await new AxeBuilder({ page })

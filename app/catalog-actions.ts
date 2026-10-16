@@ -99,7 +99,8 @@ export async function importExternalSongs(selections: CatalogSelection[]) {
     });
     if (error || data?.error)
       throw new Error(
-        data?.error ?? "Catalog import failed. No songs changed.",
+        data?.error ??
+          "Import could not be confirmed. Retry the same selection safely.",
       );
     revalidateTag("leaderboard");
     for (const path of ["/admin", "/today", "/leaderboard"])
