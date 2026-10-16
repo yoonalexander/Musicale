@@ -228,14 +228,16 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 **Outcome:** A recruiter can try the site, and an interviewer can inspect reproducible support for every résumé claim.
 
+**Current status:** release/demo/claim evidence, the real beta checklist and exact-candidate clean-checkout CI are complete. Hosted daily availability, sign-in, human acceptance, operational activation and seven actual UTC days remain blockers. [Phase 7 evidence](PHASE_7.md) records the observed public state and the withheld release.
+
 ### Tasks
 
-- [ ] **7.1 Freeze and verify a release candidate.** Run the complete test suite and dependency audit on a clean checkout. Confirm Linux CI exercises Chromium, Firefox and WebKit; explicitly record any platform exclusions. Include the new day-boundary, live-update, authorization and recovery cases.
+- [x] **7.1 Freeze and verify a release candidate.** Run the complete test suite and dependency audit on a clean checkout. Confirm Linux CI exercises Chromium, Firefox and WebKit; explicitly record any platform exclusions. Include the new day-boundary, live-update, authorization and recovery cases.
 - [ ] **7.2 Verify staging then production.** Apply only unapplied ordered migrations after the documented backup step. Repeat the hosted non-team sign-in/vote/reload/profile smoke check on the deployed release; record exactly which commit and migration versions it uses.
 - [ ] **7.3 Run a small real-user beta.** Have at least three people independently try the product. Observe at least seven consecutive UTC matchup days, including legitimate consecutive-day and missed-day participation. Keep accelerated edge-case fixtures in local/staging.
 - [ ] **7.4 Resolve release blockers.** Close reproducible issues in sign-in, voting, authorization, consistency, recovery and core usability. A missing essential check is a blocker, not a passing result. Minor cosmetic issues may remain in a named backlog.
-- [ ] **7.5 Prepare a concise README/demo.** Include the live URL, setup instructions, architecture, product screenshots and reproducible verification commands. Provide an interview demo path for daily voting, live rankings, admin tools and isolated recovery. Never expose a public admin credential.
-- [ ] **7.6 Create a claim-to-evidence record.** Link each claim below to its implementation, named tests, passing CI run and, where relevant, a dated hosted demonstration. Redact email addresses, tokens and private identifiers.
+- [x] **7.5 Prepare a concise README/demo.** Include the live URL, setup instructions, architecture, product screenshots and reproducible verification commands. Provide an interview demo path for daily voting, live rankings, admin tools and isolated recovery. Never expose a public admin credential.
+- [x] **7.6 Create a claim-to-evidence record.** Link each claim below to its implementation, named tests, passing CI run and, where relevant, a dated hosted demonstration. Redact email addresses, tokens and private identifiers.
 - [ ] **7.7 Publish a release record.** Create the release/tag after acceptance, list supported behavior and known limits, and distinguish live facts from local tests. Update the roadmap gates with evidence references rather than silently checking boxes.
 
 ### Phase gate
@@ -290,9 +292,9 @@ No calendar deadline is invented here: email/domain setup, environment access an
 - [ ] Phase 2 — Public daily loop passed: evidence link __________
 - [x] Phase 3 — Database guarantees passed: [October 15 local and CI evidence](PHASE_3.md)
 - [x] Phase 4 — Live rankings and cache consistency passed: [October 15 local and CI evidence; hosted rollout still required](PHASE_4.md)
-- [ ] Phase 5 — Consumer/admin experience passed: evidence link __________
-- [ ] Phase 6 — Sustainable operations passed: evidence link __________
-- [ ] Phase 7 — Release and résumé evidence passed: evidence link __________
+- [ ] Phase 5 — Automated implementation passed; human acceptance pending: [evidence](PHASE_5.md)
+- [ ] Phase 6 — Local/CI operations passed; hosted activation/backup/receipt pending: [evidence](PHASE_6.md)
+- [ ] Phase 7 — Release evidence prepared; hosted and beta gates pending: [evidence](PHASE_7.md)
 - [ ] Release commit/tag, deployment date and migration versions recorded: __________
 - [ ] Remaining minor issues and measured limitations published: __________
 

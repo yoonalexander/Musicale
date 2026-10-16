@@ -2,7 +2,15 @@
 
 **Every day. Two songs. One choice.** Everyone gets the same editorial matchup, listens on an official music provider, votes once, and helps build an auditable Elo leaderboard.
 
+**Release status (October 16, 2026):** implemented and tested locally; public acceptance is pending. The read-only production check found database health ready but Today unavailable. Hosted sign-in needs a successful retest, manual acceptance is outstanding, and the seven-day beta has not started. See [release evidence and blockers](docs/PHASE_7.md).
+
 See [Phase 6 operations evidence](docs/PHASE_6.md), [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+
+[Interview demo](docs/DEMO.md) · [Résumé claim evidence](docs/CLAIM_EVIDENCE.md) · [Real beta checklist](docs/BETA.md)
+
+![Musicale Home in the isolated local candidate](docs/screenshots/home-desktop.png)
+
+Local candidate screenshots use automated test participation, not production popularity: [Today on mobile](docs/screenshots/today-mobile.png), [live leaderboard on mobile](docs/screenshots/leaderboard-mobile.png), [song details](docs/screenshots/song-desktop.png).
 
 ## Product and architecture
 
