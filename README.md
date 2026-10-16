@@ -2,6 +2,8 @@
 
 **Every day. Two songs. One choice.** Everyone gets the same editorial matchup, listens on an official music provider, votes once, and helps build an auditable Elo leaderboard.
 
+**Approved next-release direction (October 16):** Play guesses the higher-rated song for run points, Rank continuously collects preferences to build Elo ratings, and Daily remains the shared UTC matchup. Play and continuous Rank are **planned, not implemented**. See [the three-mode product contract](docs/PRODUCT_MODES.md) and new roadmap gates 5A/5B.
+
 See [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
 
 ## Product and architecture
