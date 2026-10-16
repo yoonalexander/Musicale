@@ -278,8 +278,8 @@ begin
   update songs s set elo_rating=r.rating,wins=r.wins,losses=r.losses,matchup_count=r.wins+r.losses,updated_at=now()
     from replay_ratings r where s.id=r.song_id;
   update daily_matchups m set song_a_votes=(select count(*) from votes where matchup_id=m.id and selected_song_id=m.song_a_id),
-    song_b_votes=(select count(*) from votes where matchup_id=m.id and selected_song_id=m.song_b_id);
-  delete from song_rating_snapshots;
+    song_b_votes=(select count(*) from votes where matchup_id=m.id and selected_song_id=m.song_b_id) where m.id is not null;
+  delete from song_rating_snapshots where song_id is not null;
   with states as(
     select e.winner_song_id as song_id,v.event_day,e.event_order,e.winner_after as rating from rating_events e join rating_vote_sources v
       on (v.mode='daily' and e.vote_id=v.id) or (v.mode='rank' and e.rank_vote_id=v.id)
