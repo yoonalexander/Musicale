@@ -26,7 +26,9 @@ export default function Privacy() {
         <h2>Music links and artwork</h2>
         <p>
           Opening a music link takes you to its provider, where that provider’s
-          terms and privacy policy apply. No music players load automatically.
+          terms and privacy policy apply. Explicitly authorized previews stream
+          directly from their source when you press play; that host receives the
+          playback request. Musicale does not proxy, download or rehost audio.
           If supplied by an editor, artwork loads from its source; that host
           receives the image request. We suppress the referrer on artwork
           requests.

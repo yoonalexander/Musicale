@@ -13,6 +13,9 @@ export interface Song {
   artistName: string;
   albumName: string;
   artworkUrl: string | null;
+  artworkSourceUrl?: string | null;
+  artworkAttribution?: string | null;
+  audioPreview?: import("@/lib/audio").AudioPreview | null;
   releaseYear: number;
   releaseDate?: string | null;
   durationMs?: number | null;

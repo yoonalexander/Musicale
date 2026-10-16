@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { submitDailyVote } from "@/app/actions";
-import { providerLabels } from "@/lib/providers";
+import { SongListening } from "@/components/song-listening";
+import { ArtworkCredit } from "@/components/artwork-credit";
 import { resultMessage, shareResult } from "@/lib/share";
 import type { Matchup, Song } from "@/types/domain";
 import { track } from "@/lib/analytics";
@@ -51,6 +52,7 @@ function Card({
       </p>
       <h2>{song.title}</h2>
       <p>{song.artistName}</p>
+      <ArtworkCredit song={song} />
       {song.durationMs ? (
         <p>
           {Math.floor(song.durationMs / 60000)}:
@@ -59,25 +61,7 @@ function Card({
       ) : null}
       {chosen ? <p className="selected-label">Your pick ✓</p> : null}
       <div className="card-actions">
-        {song.providers.length ? (
-          song.providers.map((p) => (
-            <a
-              key={p.provider}
-              className="button secondary"
-              href={p.externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                if (p.provider !== "musicbrainz") track("preview_started");
-              }}
-            >
-              {p.provider === "musicbrainz" ? "View on" : "Listen on"}{" "}
-              {providerLabels[p.provider]}
-            </a>
-          ))
-        ) : (
-          <span>Playback unavailable</span>
-        )}
+        <SongListening key={song.id} song={song} />
         <form
           action={submitDailyVote}
           onSubmit={(event) => {

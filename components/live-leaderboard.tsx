@@ -162,6 +162,9 @@ export function LiveLeaderboard({
                 <small>
                   {s.artistName} · {s.releaseYear}
                 </small>
+                {s.artworkAttribution ? (
+                  <small>{s.artworkAttribution}</small>
+                ) : null}
               </div>
             </div>
             <span>

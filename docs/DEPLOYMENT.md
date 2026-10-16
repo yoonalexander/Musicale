@@ -6,6 +6,10 @@ Initial production setup: October 1, 2026. Preview environment scopes rechecked 
 
 Phase 4 adds local Realtime and migration `0009_live_rankings.sql`, scoped to public songs only. No hosted changes were made. Apply unapplied 0008 and 0009 before their corresponding app deployment, verify the publication/Realtime connection, and repeat the two-browser hosted smoke check in [PHASE_4.md](PHASE_4.md#hosted-rollout-still-required). The Phase 2 hosted sign-in blocker remains open; the historical production observations below have not been refreshed by Phase 4.
 
+## Catalog automation prepared rollout
+
+The catalog addition builds on Phase 4 and adds `0010_catalog_discovery.sql`. Apply all unapplied migrations in order through 0010 before deploying its code. It introduces empty source/audio tables, protects editorial fields during discovery refreshes and corrects historical listening analytics without changing voting history or rankings. New discoveries remain unavailable until reviewed. No iTunes previews or artwork are automatically authorized, and no hosted change was made. See [catalog automation and verification](CATALOG_AUTOMATION.md).
+
 ## October 15 Phase 2 update
 
 - Rechecked production before changes: migrations `0001`–`0006`, twenty songs and providers, zero users and votes, no matchup today and no next-thirty-day queue.

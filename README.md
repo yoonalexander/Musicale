@@ -13,7 +13,7 @@ This rebuild replaces the previous musical-theatre ranking / higher-lower game. 
 - One global day: midnight UTC inclusive through the next midnight exclusive. Browser dates never determine eligibility or streaks.
 - A transactional `submit_daily_vote` RPC locks the matchup and songs, validates membership/time/status, prevents duplicates, updates both ratings/records, records an audit event, updates participation, and saves daily rating snapshots.
 - Elo begins at 1500. Admin-configured K-factor (1–100, default 24) lives in `app_settings` and is recorded with each rating event. Rounded rating changes are equal and opposite.
-- Song providers are normalized separately. The launch UI opens official HTTPS provider links; it does not load third-party players or download audio.
+- Song providers are normalized separately. Official HTTPS listening links remain the fallback. Explicitly authorized direct audio sources can play through native controls; no third-party audio is downloaded, proxied or rehosted.
 - Vercel-compatible: no separate application server, Redis or paid analytics service.
 
 Implemented pages: landing, Today, filtered/sortable leaderboard, song details, editable profile with paginated voting history and evidence-based listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. These screens exist, but the completion roadmap tracks remaining behavior, operations and release verification. The original brief's future social/personalized modes remain later work.
@@ -54,9 +54,9 @@ To use a hosted Supabase project instead, apply the migrations as described belo
 
 `0001_initial.sql` is unchanged historical migration content. **Do not replace or reapply an already-applied migration.**
 
-- Fresh database: apply migrations `0001` through `0009` in order, followed by `seed.sql`.
-- Database running the original app: apply migrations `0002` through `0009` in order, then `seed.sql`.
-- Database already running the daily MVP through `0003`: apply `0004` through `0009`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
+- Fresh database: apply migrations `0001` through `0010` in order, followed by `seed.sql`.
+- Database running the original app: apply migrations `0002` through `0010` in order, then `seed.sql`.
+- Database already running the daily MVP through `0003`: apply `0004` through `0010`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
 - With Supabase CLI migration tracking, use normal ordered migration application; do not run a reset against hosted data.
 
 Migration 0002 moves the old songs, votes, profiles, game runs and quota records into the **private, unexposed `musicale_legacy` schema**. Existing account identities, join dates, display names and admin roles are copied into the new profiles. Old votes and ratings are preserved for reference, rather than mixed into the new catalog. The old public ranking RPC is removed. Migration 0003 completes access controls, result privacy, admin audit/import tools, configurable Elo, and history queries.
@@ -114,7 +114,7 @@ Start local Supabase before the database/browser checks. `npm run verify` runs t
 - Unit tests cover the preview credential guard, Elo including rounding ties, streak expiry/date boundaries, UTC windows, catalog/provider validation, and spoiler-free sharing.
 - Database tests create and remove owned disposable databases inside **only** the selected local Musicale container (`supabase_db_musicale` by default). The optional `MUSICALE_LOCAL_WORKDIR` selects an isolated Musicale project as documented in Phase 4. They exercise migration preservation, actual PostgreSQL transactions/RLS, authentication requirements, invalid/time-window votes, concurrent requests/users, streaks, result privacy, admin scheduling/audits/settings, and atomic imports. They do not reset the application's database or accept a hosted URL.
 - Browser tests build with isolated local settings, then use actual local magic-link email and persisted voting on desktop/mobile. They cover keyboard voting, reload persistence, clipboard fallback, profiles/history, server admin checks, sign-out, 404s, 320px layouts and automated WCAG accessibility checks. Generated `example.test` accounts and sample votes remain only in the local test project. Screenshots go in ignored `output/`.
-- Browser checks never open the external music links. Listening availability and restrictions remain provider-dependent.
+- Browser checks intercept external links and use synthetic local audio fixtures; they never test real recordings. Listening availability and restrictions remain provider-dependent.
 
 Windows verification runs Chromium desktop/mobile and WebKit. Linux CI also runs Firefox. The downloaded Firefox 155 Windows package failed to launch on this machine with a missing `mozglue` side-by-side assembly; it is excluded from Windows defaults rather than reported as verified. Set `MUSICALE_INCLUDE_FIREFOX=1` to exercise it after resolving the browser package. CI uses disposable local infrastructure and no production secrets. Install all three engines with `npx playwright install --with-deps chromium firefox webkit` on Linux.
 
@@ -141,11 +141,15 @@ Profile history paginates 25 votes at a time. Listening patterns require at leas
 
 Analytics is off by default and enabled per browser on `/privacy`. Do Not Track disables collection. The isolated adapter sends only allowlisted event names; the collector requires same-origin requests and authentication. Anonymous visitors are not collected. Storage contains only UTC day/event counts (not unique visitor measurements); counts older than 90 days are removed on subsequent analytics activity. Request budgets briefly retain account IDs for rate limiting, as disclosed separately in the privacy page. No external analytics account or paid service is needed.
 
+## Catalog automation and authorized audio
+
+Admin can search MusicBrainz, review duplicate candidates, import batches and refresh source metadata while preserving editorial edits and rankings. New discoveries start unavailable. Audio authorization and availability are managed separately from external links. See [catalog automation and evidence](docs/CATALOG_AUTOMATION.md) for provider terms, ownership rules, admin instructions and migration `0010` rollout. iTunes was evaluated and remains disabled; no third-party preview URL implies permission.
+
 ## Music providers and rights
 
 Musicale stores editorial metadata and provider IDs/links. It does not host, proxy, download, cache or redistribute audio. The initial matchup links to [Aretha Franklin's official Respect upload](https://www.youtube.com/watch?v=JzqGZjFnYnA) and [The Beach Boys' official God Only Knows video](https://www.youtube.com/watch?v=NADx3-qRxek), verified October 1, 2026. Artwork uses letter placeholders until permission for supplied artwork is established.
 
-External links are the initial playback approach. Review [YouTube's terms](https://www.youtube.com/t/terms), [developer policies](https://developers.google.com/youtube/terms/developer-policies), [embedding guidance](https://support.google.com/youtube/answer/171780) and [player requirements](https://developers.google.com/youtube/terms/required-minimum-functionality) before adding embeds or API metadata. Official embeds require provider identification, privacy disclosures and other applicable policies; privacy-enhanced mode does not eliminate all data sharing. Other supported providers currently supply external links only, without API metadata requests.
+External links are the initial playback approach. Review [YouTube's terms](https://www.youtube.com/t/terms), [developer policies](https://developers.google.com/youtube/terms/developer-policies), [embedding guidance](https://support.google.com/youtube/answer/171780) and [player requirements](https://developers.google.com/youtube/terms/required-minimum-functionality) before adding embeds or API metadata. Official embeds require provider identification, privacy disclosures and other applicable policies; privacy-enhanced mode does not eliminate all data sharing. MusicBrainz supplies core metadata through its server-side API. Other supported listening providers supply external links; no YouTube, Spotify or Apple audio is embedded automatically.
 
 Official upload availability is not a blanket license or assurance of regional playback. Confirm recording authorization, regional availability, artwork permissions, provider attribution/terms, and production privacy disclosures before broad launch. Disable unavailable recordings promptly.
 

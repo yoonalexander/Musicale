@@ -1,0 +1,148 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { normalizeRecording, musicBrainzAdapter } from "../lib/music-catalog";
+import { playablePreview, mapAudio } from "../lib/audio";
+const records = JSON.parse(readFileSync("tests/fixtures/catalog.json", "utf8"));
+let passed = 0;
+async function test(name: string, run: () => unknown) {
+  await run();
+  console.log(`PASS ${name}`);
+  passed++;
+}
+await test("recordings normalize identifiers, dates, artists and core metadata without granting media permission", () => {
+  const c = normalizeRecording(records[0]);
+  assert.equal(c.song.releaseDate, "1967-03-10");
+  assert.equal(c.song.artistName, "Aretha Franklin");
+  assert.deepEqual(c.isrcs, ["USAT26700001"]);
+  assert.equal(
+    c.song.providers.find((p) => p.provider === "youtube")?.providerSongId,
+    "JzqGZjFnYnA",
+  );
+  assert.equal(c.song.artworkUrl, null);
+  assert.equal(c.artwork?.licensingStatus, "unreviewed");
+  assert.equal(c.preview.licensingStatus, "unreviewed");
+  assert.equal(c.song.status, "unavailable");
+  assert.equal(c.song.genre, null);
+  const partial = normalizeRecording({
+    ...records[1],
+    "first-release-date": "2000",
+    length: null,
+  });
+  assert.equal(partial.song.releaseDate, null);
+  assert.equal(partial.song.releaseYear, 2000);
+  assert.throws(() =>
+    normalizeRecording({ ...records[1], "first-release-date": "unknown" }),
+  );
+  assert.throws(() =>
+    normalizeRecording({ ...records[1], id: "../../etc/passwd" }),
+  );
+});
+await test("provider relationships never promote arbitrary or credential-bearing URLs to playback", () => {
+  const c = normalizeRecording({
+    ...records[1],
+    relations: [
+      {
+        type: "streaming",
+        url: { resource: "https://user:pass@open.spotify.com/track/123" },
+      },
+      {
+        type: "streaming",
+        url: { resource: "https://open.spotify.com.evil.test/track/123" },
+      },
+      {
+        type: "other databases",
+        url: { resource: "https://www.youtube.com/watch?v=unrelated" },
+      },
+      {
+        type: "streaming",
+        url: { resource: "https://open.spotify.com/track/verified" },
+      },
+    ],
+  });
+  assert.deepEqual(
+    c.song.providers.map((p) => p.provider),
+    ["musicbrainz", "spotify"],
+  );
+  assert.equal(c.song.providers[1].providerSongId, "verified");
+});
+await test("adapter reserves each request, sends a meaningful identity, bounds pages and reports provider outages", async () => {
+  const original = globalThis.fetch;
+  let reserved = 0,
+    calls = 0;
+  const adapter = musicBrainzAdapter(async () => {
+    reserved++;
+  });
+  try {
+    globalThis.fetch = async (input, init) => {
+      calls++;
+      const url = new URL(String(input));
+      assert.equal(url.origin, "https://musicbrainz.org");
+      assert.match(
+        (init?.headers as Record<string, string>)["User-Agent"],
+        /Musicale.*github/,
+      );
+      assert.equal(init?.cache, "no-store");
+      return Response.json(
+        url.pathname.endsWith(records[0].id)
+          ? records[0]
+          : { recordings: [records[0], { id: "invalid" }], count: 2 },
+      );
+    };
+    const results = await adapter.search("Aretha Respect", 0);
+    assert.equal(results.candidates.length, 1);
+    assert.equal(results.total, 2);
+    assert.equal(
+      (await adapter.lookup(records[0].id)).providerId,
+      records[0].id,
+    );
+    assert.equal(reserved, calls);
+    await assert.rejects(adapter.search("a", 0), /2–120/);
+    await assert.rejects(adapter.search("artist", -1), /page/);
+    await assert.rejects(
+      adapter.lookup("https://evil.test"),
+      /valid MusicBrainz/,
+    );
+    assert.equal(calls, 2);
+    globalThis.fetch = async () => new Response(null, { status: 503 });
+    await assert.rejects(adapter.search("artist", 0), /busy/);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+await test("audio needs separate explicit authorization, availability, attribution and safe direct URLs", () => {
+  const audio = {
+    provider: "Licensed source",
+    url: "https://audio.example.test/preview.mp3",
+    availability: "available" as const,
+    licensingStatus: "authorized" as const,
+    authorizationUrl: "https://audio.example.test/license",
+    attribution: "Artist, CC BY 4.0",
+  };
+  assert.equal(playablePreview(audio), audio);
+  for (const change of [
+    { licensingStatus: "unreviewed" },
+    { licensingStatus: "rejected" },
+    { availability: "unavailable" },
+    { availability: "unknown" },
+    { authorizationUrl: null },
+    { attribution: "" },
+    { provider: "" },
+    { url: "http://audio.example.test/preview" },
+    { url: "https://user:pass@example.test/preview" },
+    { url: "javascript:alert(1)" },
+  ])
+    assert.equal(
+      playablePreview({ ...audio, ...change } as typeof audio),
+      null,
+    );
+  assert.equal(playablePreview(null), null);
+  assert.equal(
+    mapAudio({
+      ...audio,
+      licensing_status: "unreviewed",
+      authorization_url: audio.authorizationUrl,
+    })?.licensingStatus,
+    "unreviewed",
+  );
+});
+console.log(`${passed} catalog and audio unit cases passed.`);
