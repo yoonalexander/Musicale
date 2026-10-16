@@ -1,3 +1,9 @@
+import { getSiteUrl } from "@/lib/env";
+export const metadata = {
+  title: "Today’s matchup",
+  description:
+    "Listen to today’s two songs, sign in and save one vote before midnight UTC.",
+};
 import Link from "next/link";
 import { DailyMatchup } from "@/components/daily-matchup";
 import { getTodayMatchup, getViewerState, isDemoMode } from "@/lib/data";
@@ -36,7 +42,15 @@ export default async function Today({
           Musicale #{m.number} · {m.matchupDay}
         </p>
         <h1>Which song stays with you?</h1>
-        <p>Listen first. Then trust your instinct.</p>
+        <p>
+          Listen on an official provider, then choose one song. One saved vote
+          per account, per UTC day.
+        </p>
+        <p>
+          {m.songA.genre ?? "Music"} meets {m.songB.genre ?? "music"}:{" "}
+          {m.songA.artistName} ({m.songA.releaseYear}) and {m.songB.artistName}{" "}
+          ({m.songB.releaseYear}).
+        </p>
         {p.error ? (
           <p className="notice" role="alert">
             {p.error}
@@ -54,6 +68,7 @@ export default async function Today({
         ) : null}
       </header>
       <DailyMatchup
+        siteUrl={getSiteUrl()}
         matchup={m}
         canVote={Boolean(v.user) && !isDemoMode()}
         streak={v.profile?.currentStreak ?? 0}

@@ -1,3 +1,8 @@
+export const metadata = {
+  title: "Sign in",
+  description:
+    "Request a one-time email link to save your Musicale vote, profile and streak.",
+};
 import { SignInForm } from "@/components/sign-in-form";
 import { isDemoMode } from "@/lib/data";
 export default async function Login({

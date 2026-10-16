@@ -177,29 +177,31 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 **Outcome:** All promised screens form a coherent, useful experience on desktop and mobile.
 
+**Current status:** implementation and local/clean-checkout CI checks complete; manual visitor, owner and screen-reader acceptance is pending. [Phase 5 evidence and checklist](PHASE_5.md) records the boundary.
+
 ### Tasks
 
 - [ ] **5.1 Finish Home and onboarding.** Explain Play, Rank and Daily with their distinct questions, scores and participation rules. Keep Daily's sign-in/reset policy clear. Use honest initial/provisional/tied ranking states instead of calling arbitrary starting order community preference. Explain Elo briefly in language a visitor understands. Introduce working mode links as 5A/5B land; do not advertise unavailable functionality as complete.
-- [ ] **5.2 Finish Today and results.** Make the two songs, provider links, voting state, saved selection, result and next-day action easy to understand. Prevent accidental repeated submissions and provide clear pending, failure and retry feedback.
-- [ ] **5.3 Finish leaderboard details.** Keep vote counts, win percentage and rating movement visible or directly accessible on narrow screens. Verify every sort/filter, empty results and pagination with a larger isolated fixture than the current twenty songs.
-- [ ] **5.4 Finish profiles and song history.** Verify display-name editing, empty and populated vote history, pagination, streaks, sample thresholds and rating-history data. Handle insufficient data honestly rather than fabricating insights.
-- [ ] **5.5 Finish sharing.** Include the canonical site URL in copied/native shared results, retain song-spoiler protection and keep the clipboard fallback usable.
-- [ ] **5.6 Finish catalog presentation.** Verify all launch songs' title, artist, release metadata and official playback links. Use permission-confirmed artwork where available or an intentional, polished fallback. A modest verified catalog is sufficient; a 200–1,000-song library is not a completion gate.
-- [ ] **5.7 Improve editorial variety.** Validate the proposed 30-day schedule: no duplicate unordered pair, every included song has at least two different opponents, and the scheduled comparisons connect the included catalog rather than forming isolated pairs. Add brief matchup context where it helps listeners discover the recordings.
-- [ ] **5.8 Finish the archive.** Feature genuine completed matchups through Admin, with accurate counts and useful song links. Until genuine completed content exists, provide a deliberate empty state and clear navigation; do not seed fake production votes or historical popularity.
-- [ ] **5.9 Complete admin usability.** Verify editing, CSV/JSON file and paste imports, scheduling, replacement, cancellation, featuring, availability, K-factor changes, audit review and recovery feedback. Routine editorial work must not require production SQL.
+- [x] **5.2 Finish Today and results.** Make the two songs, provider links, voting state, saved selection, result and next-day action easy to understand. Prevent accidental repeated submissions and provide clear pending, failure and retry feedback.
+- [x] **5.3 Finish leaderboard details.** Keep vote counts, win percentage and rating movement visible or directly accessible on narrow screens. Verify every sort/filter, empty results and pagination with a larger isolated fixture than the current twenty songs.
+- [x] **5.4 Finish profiles and song history.** Verify display-name editing, empty and populated vote history, pagination, streaks, sample thresholds and rating-history data. Handle insufficient data honestly rather than fabricating insights.
+- [x] **5.5 Finish sharing.** Include the canonical site URL in copied/native shared results, retain song-spoiler protection and keep the clipboard fallback usable.
+- [x] **5.6 Finish catalog presentation.** Verify all launch songs' title, artist, release metadata and official playback links. Use permission-confirmed artwork where available or an intentional, polished fallback. A modest verified catalog is sufficient; a 200–1,000-song library is not a completion gate.
+- [x] **5.7 Improve editorial variety.** Validate the proposed 30-day schedule: no duplicate unordered pair, every included song has at least two different opponents, and the scheduled comparisons connect the included catalog rather than forming isolated pairs. Add brief matchup context where it helps listeners discover the recordings.
+- [x] **5.8 Finish the archive.** Feature genuine completed matchups through Admin, with accurate counts and useful song links. Until genuine completed content exists, provide a deliberate empty state and clear navigation; do not seed fake production votes or historical popularity.
+- [x] **5.9 Complete admin usability.** Verify editing, CSV/JSON file and paste imports, scheduling, replacement, cancellation, featuring, availability, K-factor changes, audit review and recovery feedback. Routine editorial work must not require production SQL.
 - [ ] **5.10 Complete accessibility and device checks.** Test all public and authenticated routes at 320px, a typical phone size and desktop. Include keyboard-only voting/forms, focus, labels, readable errors, contrast, reduced motion and a manual screen-reader pass through sign-in, voting and results.
-- [ ] **5.11 Finish public presentation.** Add meaningful page titles/descriptions and share metadata; check missing-song/404 and service-failure states. Provide a clear support/contact path and ensure privacy text describes actual storage and provider behavior.
+- [x] **5.11 Finish public presentation.** Add meaningful page titles/descriptions and share metadata; check missing-song/404 and service-failure states. Provide a clear support/contact path and ensure privacy text describes actual storage and provider behavior.
 
 **Primary files:** [app routes](../app/), [components](../components/), [styles](../app/globals.css), [catalog](../data/songs.json), [editorial pairs](../data/editorial-pairs.json), [share formatter](../lib/share.ts), [browser tests](../tests/browser/daily-flow.spec.ts).
 
 ### Phase gate
 
 - [ ] A new visitor understands and completes the loop without developer guidance.
-- [ ] Every public/profile/admin route has usable empty, populated and failure states appropriate to its function.
-- [ ] Mobile visitors can inspect the values used by leaderboard sorts, with no blocked controls or horizontal overflow.
+- [x] Every public/profile/admin route has usable empty, populated and failure states appropriate to its function.
+- [x] Mobile visitors can inspect the values used by leaderboard sorts, with no blocked controls or horizontal overflow.
 - [ ] Automated accessibility checks pass and the manual core-flow checks have recorded results.
-- [ ] Catalog/schedule validation passes, and no production content implies fabricated participation.
+- [x] Catalog/schedule validation passes, and no production content implies fabricated participation.
 - [ ] The owner completes a representative editorial session entirely through the interface.
 
 **Evidence to retain:** route/device checklist, representative screenshots, accessibility results and catalog/schedule validation output.
