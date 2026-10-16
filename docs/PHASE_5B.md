@@ -1,6 +1,6 @@
 # Phase 5B — Higher-rated Play
 
-October 16, 2026. Branch `phase-5b-higher-rated-game`, starting from Phase 5A `2e2c512`. Implementation is local only. Verification is in progress; this document will record the final results before completion.
+October 16, 2026. Branch `phase-5b-higher-rated-game`, starting from Phase 5A `2e2c512`. Phase 5B is complete locally and in clean-checkout CI. Production was not changed. [Draft PR #11](https://github.com/yoonalexander/musicale/pull/11) is stacked on Phase 5A.
 
 ## Delivered behavior
 
@@ -26,7 +26,22 @@ Play writes no preference votes, rating events, Elo/counters, Daily activity, st
 
 - `tests/play-database.mjs`: populated migration preservation; private projections/grants/publication; stable concurrent starts; both replacement slots; correct/wrong scoring; duplicate/opposite races; restart replay; expiry; unavailable audio; actual preference eligibility/ties; insufficient replacements/resumption; late rollback; durable independent budgets; exact ranking/Daily isolation; changed live rating order; recovery locks; and overlapping Play/Rank/Daily requests across expiry.
 - `tests/browser/play.spec.ts`: real local email sign-in; no issuance on GET; pending controls; hidden current snapshots; refresh; point progression; exactly one changed card; keyboard answer/reveal focus; wrong/restart; Profile isolation; responsive widths 320/390/768/1024/1280; axe WCAG checks; server-action retries; forged score; anonymous/other-account denial; expiry/unavailable pause and resume.
-- Full unit, database, browser, build, TypeScript and dependency audit results: pending final evidence.
+
+| Check | Result |
+| --- | --- |
+| Local unit suite | 26 passed |
+| Local database suite | 78 passed: 65 existing + 13 Play |
+| Targeted desktop Play browser checks | 2 passed |
+| Local production build and TypeScript | Passed |
+| Dependency audit | 0 vulnerabilities |
+| Full Windows browser suite | 63 passed: desktop Chromium, WebKit and mobile Chromium |
+| Clean-checkout CI | [Run 36](https://github.com/yoonalexander/musicale/actions/runs/38951051562) passed on implementation commit `6559d10519cdf1dfa082e2a4d60ee4c5b11b8b69` |
+
+CI also passed all **26 unit, 78 database and 84 browser cases**, the production build, TypeScript and dependency audit (zero vulnerabilities). Its four browser projects include Firefox on Linux. Windows uses three projects by default; the full local verify command exited successfully. The CI timeout was increased to thirty minutes for the expanded suite. These are functional/concurrency checks, not a claim about production capacity.
+
+The completion commit adds only documentation, roadmap status and screenshots; the runtime, tests and configuration remain the exact code verified in run 36.
+
+Recorded automated local screenshots: [desktop correct answer](evidence/phase-5b/desktop-correct.png), [desktop pause](evidence/phase-5b/desktop-paused.png), [mobile correct answer](evidence/phase-5b/mobile-correct.png), and [mobile pause](evidence/phase-5b/mobile-paused.png). These use synthetic local activity and were visually inspected. They do not replace physical-device or hosted acceptance.
 
 All synthetic accounts/preferences and temporary failure fixtures are confined to disposable local databases or the isolated browser backend. No hosted data was changed.
 

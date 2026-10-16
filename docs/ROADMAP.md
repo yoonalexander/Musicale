@@ -2,7 +2,7 @@
 
 Created October 15, 2026. Based on the [project status review](PROJECT_STATUS.md), the current implementation and the supplied résumé descriptions.
 
-Revised October 16: the owner approved Play and continuous Rank alongside Daily as a third mode. [The three-mode product contract](PRODUCT_MODES.md) defines the new scope. Rank is implemented and passed Phase 5A local/CI checks; hosted rollout remains pending. Play is implemented for Phase 5B with final regression checks in progress. See [Phase 5A](PHASE_5A.md) and [Phase 5B evidence](PHASE_5B.md).
+Revised October 16: the owner approved Play and continuous Rank alongside Daily as a third mode. [The three-mode product contract](PRODUCT_MODES.md) defines the new scope. Rank is implemented and passed Phase 5A local/CI checks; hosted rollout remains pending. Play passed Phase 5B locally and in clean-checkout CI; hosted rollout remains pending. See [Phase 5A](PHASE_5A.md) and [Phase 5B evidence](PHASE_5B.md).
 
 ## Finish line
 
@@ -41,7 +41,7 @@ The finished release includes:
 
 Phase 3 proves the recovery guarantees locally and in CI. Phase 4 now implements push-based live rankings and an uncached public refresh path; [its evidence](PHASE_4.md) distinguishes local acceptance from the still-required hosted rollout and demonstration.
 
-[Phase 5A](PHASE_5A.md) extends transaction, recovery and live-ranking evidence to continuous Rank, with all gates passed locally and in clean-checkout CI. Phase 5B adds Play scoring and isolation checks; its final verification status is in [the evidence](PHASE_5B.md). Hosted acceptance and the remaining release gates stay open.
+[Phase 5A](PHASE_5A.md) extends transaction, recovery and live-ranking evidence to continuous Rank, with all gates passed locally and in clean-checkout CI. [Phase 5B](PHASE_5B.md) proves Play scoring, snapshot fairness and isolation locally and in clean-checkout CI. Hosted acceptance and the remaining release gates stay open.
 
 An additional [catalog automation workstream](CATALOG_AUTOMATION.md) builds on Phase 4 with reviewed MusicBrainz discovery/imports, protected metadata refreshes and explicitly authorized previews. It does not complete or replace any remaining phase gate, and Phase 2's hosted sign-in issue remains separate.
 
@@ -54,8 +54,8 @@ An additional [catalog automation workstream](CATALOG_AUTOMATION.md) builds on P
 | 3 | Proven transaction, authorization, migration and recovery guarantees | 1; use 2 for hosted smoke checks | Complete October 15; [local and CI evidence](PHASE_3.md) |
 | 4 | Live rankings with consistent caching | 3 | Complete October 15; [local and CI evidence](PHASE_4.md); hosted rollout pending |
 | 5 | Complete consumer and administrator experience | 2–4 | Core screens exist; usability and content gaps remain |
-| 5A | Continuous Rank with shared Elo and mixed-mode recovery | 3–5 and catalog integration | New required scope; not implemented |
-| 5B | Higher-rated Play game with server-graded run points | 5A | Implemented locally; final regression evidence in progress |
+| 5A | Continuous Rank with shared Elo and mixed-mode recovery | 3–5 and catalog integration | Complete locally and in CI; [evidence](PHASE_5A.md); hosted rollout pending |
+| 5B | Higher-rated Play game with server-graded run points | 5A | Complete locally and in CI; [evidence](PHASE_5B.md); hosted rollout pending |
 | 6 | Sustainable content, monitoring and recovery operations | 2–5, 5A, 5B | Incomplete or unverified; extend coverage to all three modes |
 | 7 | Release acceptance and résumé evidence | 1–6 | Not complete |
 
@@ -231,23 +231,23 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 ## Phase 5B — Add the higher-rated guessing game
 
-**Outcome:** A listener earns points by correctly identifying the higher-rated song, with one randomly replaced card after each correct answer. See [the Play contract and proposed defaults](PRODUCT_MODES.md#play-contract).
+**Outcome:** A listener earns points by correctly identifying the higher-rated song, with one randomly replaced card after each correct answer. See [the Play contract and implemented defaults](PRODUCT_MODES.md#play-contract).
 
 ### Tasks
 
-- [ ] **5B.1 Issue private server-owned runs and rounds.** Capture the two song IDs and authoritative ratings per round. Reuse an outstanding round after refresh and validate ownership/expiry. Keep answer snapshots and run writes protected from other accounts and public subscriptions.
-- [ ] **5B.2 Grade and advance atomically.** Award one point for a correct guess against the issued snapshot, reveal it, randomly replace either card and persist the next round once. A retained song gets a fresh snapshot for the next round. Use the documented initial default that an incorrect guess ends the run; client-supplied scores/answers are never authoritative.
-- [ ] **5B.3 Handle eligibility and failure.** Exclude ties and songs without ranking evidence. Define and test the initial evidence threshold. If an untied replacement cannot be issued, preserve earned points and offer Rank. An expired round or service failure is not a wrong answer. Keep game points separate from Elo and Daily streaks.
-- [ ] **5B.4 Build the Play experience.** Add the question, accessible song/listening cards, run score, answer reveal, next round and end/restart flow. Use existing account authentication for persisted runs; guest play and a competitive score leaderboard are outside the first version. Provide honest loading, empty, retry and resumed-run states.
-- [ ] **5B.5 Verify fairness and isolation.** Exercise guesses while concurrent Rank/Daily votes change live ratings, double submissions, opposite-choice races, refresh/retry, expiry, ties and missing replacements. Prove both replacement slots are possible and only one card changes. Assert no Play action creates votes/rating events or modifies Elo/Daily participation. Run mobile, keyboard, accessibility and full browser checks.
+- [x] **5B.1 Issue private server-owned runs and rounds.** Capture the two song IDs and authoritative ratings per round. Reuse an outstanding round after refresh and validate ownership/expiry. Keep answer snapshots and run writes protected from other accounts and public subscriptions.
+- [x] **5B.2 Grade and advance atomically.** Award one point for a correct guess against the issued snapshot, reveal it, randomly replace either card and persist the next round once. A retained song gets a fresh snapshot for the next round. Use the documented initial default that an incorrect guess ends the run; client-supplied scores/answers are never authoritative.
+- [x] **5B.3 Handle eligibility and failure.** Exclude ties and songs without ranking evidence. Define and test the initial evidence threshold. If an untied replacement cannot be issued, preserve earned points and offer Rank. An expired round or service failure is not a wrong answer. Keep game points separate from Elo and Daily streaks.
+- [x] **5B.4 Build the Play experience.** Add the question, accessible song/listening cards, run score, answer reveal, next round and end/restart flow. Use existing account authentication for persisted runs; guest play and a competitive score leaderboard are outside the first version. Provide honest loading, empty, retry and resumed-run states.
+- [x] **5B.5 Verify fairness and isolation.** Exercise guesses while concurrent Rank/Daily votes change live ratings, double submissions, opposite-choice races, refresh/retry, expiry, ties and missing replacements. Prove both replacement slots are possible and only one card changes. Assert no Play action creates votes/rating events or modifies Elo/Daily participation. Run mobile, keyboard, accessibility and full browser checks.
 
 ### Phase gate
 
-- [ ] Correct guesses earn exactly one point; each success preserves one song and randomly replaces the other with a distinct new song.
-- [ ] Outstanding answers remain stable during concurrent rating changes; duplicate or forged requests cannot inflate scores or reroll a pending round.
-- [ ] Wrong guesses finish a run under the initial default; insufficient data and operational failures preserve its recorded points.
-- [ ] Play creates no preference votes, rating changes or Daily activity/streak changes.
-- [ ] All three modes are reachable and clearly distinguished, with new database/browser checks passing in clean-checkout CI.
+- [x] Correct guesses earn exactly one point; each success preserves one song and randomly replaces the other with a distinct new song.
+- [x] Outstanding answers remain stable during concurrent rating changes; duplicate or forged requests cannot inflate scores or reroll a pending round.
+- [x] Wrong guesses finish a run under the initial default; insufficient data and operational failures preserve its recorded points.
+- [x] Play creates no preference votes, rating changes or Daily activity/streak changes.
+- [x] All three modes are reachable and clearly distinguished, with new database/browser checks passing in clean-checkout CI.
 
 **Evidence to retain:** deterministic round/score tests, concurrent-rating snapshots, privacy checks and recorded desktop/mobile runs. Passing existing Daily tests is not evidence that Play works.
 
@@ -307,7 +307,7 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 | Next.js, React, TypeScript, PostgreSQL, Supabase full-stack app | Implemented; build/type/unit checks passed in the status review | 1, 2, 5, 7 | Clean build, source architecture and hosted user flow |
 | Daily matchups, profiles, history and streaks | Implemented; live daily content missing at review | 2, 3, 5, 7 | Hosted vote persistence plus automated UTC/streak/history tests |
 | Continuous preference ranking | Implemented and verified locally/in CI; hosted rollout pending | 5A, 6, 7 | Issued pairs, atomic votes, budgets/cooldowns, mixed-mode recovery and hosted loop |
-| Higher-rated guessing game | Implemented locally; verification in progress | 5B, 6, 7 | Server-graded snapshot answers, exactly-once points, random single-card replacement and no Elo effects |
+| Higher-rated guessing game | Phase 5B local/CI gates passed; hosted rollout pending | 5B, 6, 7 | Server-graded snapshot answers, exactly-once points, random single-card replacement and no Elo effects |
 | Elo-ranked leaderboard | Implemented; live catalog at starting ratings | 3–5, 7 | Audited rating changes, correct sorting/filtering and real user participation |
 | Real-time ranking platform | Implemented and verified across four browser projects in CI; hosted verification pending | 4, 5A, 7 | Push subscription, two-browser test and hosted demonstration |
 | Atomic concurrent voting and Daily uniqueness | Daily and Rank guarantees verified locally/in CI | 3, 5A, 7 | Daily account/day uniqueness, Rank issued-comparison uniqueness, duplicate races, distinct-account workloads, rollback and consistency assertions |
@@ -347,7 +347,7 @@ No calendar deadline is invented here: email/domain setup, environment access an
 - [x] Phase 4 — Live rankings and cache consistency passed: [October 15 local and CI evidence; hosted rollout still required](PHASE_4.md)
 - [ ] Phase 5 — Consumer/admin experience passed: evidence link __________
 - [x] Phase 5A — Continuous Rank and mixed-mode integrity/recovery passed: [October 16 local and CI evidence](PHASE_5A.md)
-- [ ] Phase 5B — Higher-rated Play game and scoring isolation passed: evidence link __________
+- [x] Phase 5B — Higher-rated Play game and scoring isolation passed locally/CI: [evidence](PHASE_5B.md)
 - [ ] Phase 6 — Sustainable operations passed: evidence link __________
 - [ ] Phase 7 — Release and résumé evidence passed: evidence link __________
 - [ ] Release commit/tag, deployment date and migration versions recorded: __________
