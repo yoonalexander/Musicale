@@ -167,7 +167,7 @@ Use Supabase's existing client stack and a narrowly scoped Realtime subscription
 
 **Outcome:** All promised screens form a coherent, useful experience on desktop and mobile.
 
-**Current status:** implementation and local automated checks complete; CI plus manual visitor, owner and screen-reader acceptance is pending. [Phase 5 evidence and checklist](PHASE_5.md) records the boundary.
+**Current status:** implementation and local/clean-checkout CI checks complete; manual visitor, owner and screen-reader acceptance is pending. [Phase 5 evidence and checklist](PHASE_5.md) records the boundary.
 
 ### Tasks
 
