@@ -2,6 +2,22 @@
 
 Initial production setup: October 1, 2026. Preview environment scopes rechecked and changed October 15, 2026 through the signed-in Chrome dashboard. Database/authentication observations below remain the October 1 record unless explicitly dated otherwise.
 
+## October 15 Phase 2 update
+
+- Rechecked production before changes: migrations `0001`–`0006`, twenty songs and providers, zero users and votes, no matchup today and no next-thirty-day queue.
+- Applied and tracked migration `0007` after saving the exact previous function definition locally and checking the starting state. A separate read-only check confirmed the 60-character rule and unchanged song/user/vote counts. No production data reset was performed.
+- Resend sending domain `auth.musicale.alexyoon.com` is verified. With owner approval, added its DKIM TXT and two sending CNAME records in Namecheap. Existing website DNS and the root mail policy were preserved.
+- Auth Site URL and exact callback remain correct. Supabase SMTP was prepared with sender `signin@auth.musicale.alexyoon.com`, sender name `Musicale`, host `smtp.resend.com`, TLS port `465` and username `resend`. The owner reports entering the credential directly and saving. The connected non-team inbox confirms actual email delivery; direct inspection of the persisted masked settings remains unavailable.
+- Hosted sign-in is blocked: a fresh link requested and opened in Chrome still reaches the generic callback error. The emailed verification endpoint and exact callback are correct; local sign-in passes. The specific production auth error must be inspected before claiming a cause or fix. See the investigation in [PHASE_2.md](PHASE_2.md).
+- Restored October 15's UTC matchup, Respect versus God Only Knows, through a conflict-preserving trusted setup insert. The database row and live Today page confirm Musicale #12; both official provider links resolved. This bootstrap has no app administrator actor yet. The next 30 production days still need scheduling after owner account setup; today's restored pair expires at `2026-10-16T00:00:00Z`.
+- Phase 2 application changes passed [clean-checkout CI](https://github.com/yoonalexander/musicale/actions/runs/38814328618) and remain on draft PR #2, stacked on Phase 1. Production still runs `main`; neither application branch has been promoted.
+
+Current Phase 2 evidence and remaining hosted checks are in [PHASE_2.md](PHASE_2.md). The sections below preserve the original deployment record.
+
+## October 16 sign-in diagnosis
+
+Read-only Supabase logs show the retry link verified by a Safari-style request before Chrome received an already-used-token error; no successful application session was created. A local test reproduces premature link consumption. Phase 2 now prepares an explicit confirmation page and token-hash POST verification for new emails. It has not been deployed, and production email templates have not changed. Follow [the required app-before-template rollout order](PHASE_2.md#required-rollout-order), including both signup and magic-link templates and the real hosted acceptance checks. Later phase branches must retain their changes when incorporating this fix.
+
 ## Services and domain
 
 - Canonical site: https://musicale.alexyoon.com

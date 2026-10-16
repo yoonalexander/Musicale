@@ -5,7 +5,7 @@ import {
   updateSongStatus,
   manageMatchup,
   rebuildRankings,
-  scheduleEditorialWeek,
+  scheduleEditorialMonth,
 } from "@/app/actions";
 import { getAdminData } from "@/lib/data";
 import { requireAdmin } from "@/lib/auth";
@@ -82,11 +82,11 @@ export default async function Admin({
       <section className="panel">
         <h2>Schedule or replace a future matchup</h2>
         <p>
-          Build your own pair below, or queue the ten curated starter pairs for
-          the next ten UTC days. Existing scheduled days are preserved.
+          Build your own pair below, or repeat the ten curated starter pairs
+          across the next 30 UTC days. Existing scheduled days are preserved.
         </p>
-        <form action={scheduleEditorialWeek}>
-          <button className="button secondary">Queue next ten days</button>
+        <form action={scheduleEditorialMonth}>
+          <button className="button secondary">Queue next 30 days</button>
         </form>
         <form action={scheduleMatchup} className="admin-form">
           <label>

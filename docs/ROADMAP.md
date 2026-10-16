@@ -82,13 +82,13 @@ Execute in this order by default. Safe local work in Phase 3 can continue while 
 
 ### Tasks
 
-- [ ] **2.1 Complete public email delivery.** Verify or configure the email provider, sending domain and Supabase SMTP settings. Keep credentials in provider settings, not frontend variables or Git. Verify exact production callback URLs.
+- [x] **2.1 Complete public email delivery.** Verify or configure the email provider, sending domain and Supabase SMTP settings. Keep credentials in provider settings, not frontend variables or Git. Verify exact production callback URLs. Owner reports SMTP saved; actual non-team inbox delivery and the emailed callback are confirmed. Hosted sign-in still fails and is tracked separately in [the Phase 2 investigation](PHASE_2.md#october-15-hosted-sign-in-investigation).
 - [ ] **2.2 Establish the owner account.** Sign in as the owner and assign that exact account the admin role through the trusted setup path. Verify an ordinary account remains unable to use admin actions.
-- [ ] **2.3 Restore today's matchup.** Schedule an active pair with working provider links. Populate the next 30 UTC days using the existing scheduler; Phase 5 finishes the variety/content checks.
+- [ ] **2.3 Restore today's matchup.** Schedule an active pair with working provider links. Populate the next 30 UTC days using the existing scheduler; Phase 5 finishes the variety/content checks. October 15's production pair is restored and its links checked; the thirty-day queue shortcut is implemented/tested, with production scheduling pending owner setup.
 - [ ] **2.4 Verify hosted persistence.** With an ordinary non-team account, sign in, listen, vote, reload, revisit Today, open Profile and confirm the saved choice and first-day streak.
-- [ ] **2.5 Finish authentication feedback.** Show a pending state, prevent accidental repeated submissions, and provide clear recovery for expired/used links, email delivery failure and session expiry. Preserve safe error messages.
-- [ ] **2.6 Finish unavailable states.** When Today has no valid pair, explain availability honestly and offer catalog/archive navigation. Do not imply a scheduled matchup exists when it does not.
-- [ ] **2.7 Handle day rollover.** Expire or refresh an open daily page at its UTC end time and recheck when a suspended tab becomes visible. The database remains the authority for vote eligibility and streaks.
+- [x] **2.5 Finish authentication feedback.** Show a pending state, prevent accidental repeated submissions, and provide clear recovery for expired/used links, email delivery failure and session expiry. Preserve safe error messages.
+- [x] **2.6 Finish unavailable states.** When Today has no valid pair, explain availability honestly and offer catalog/archive navigation. Do not imply a scheduled matchup exists when it does not.
+- [x] **2.7 Handle day rollover.** Expire or refresh an open daily page at its UTC end time and recheck when a suspended tab becomes visible. The database remains the authority for vote eligibility and streaks.
 
 **Primary files:** [login](../app/login/page.tsx), [auth callback](../app/api/auth/callback/route.ts), [Today](../app/today/page.tsx), [daily client](../components/daily-matchup.tsx), [actions](../app/actions.ts), [browser tests](../tests/browser/daily-flow.spec.ts), [deployment notes](DEPLOYMENT.md).
 
@@ -100,7 +100,7 @@ Execute in this order by default. Safe local work in Phase 3 can continue while 
 - [ ] Streaks increment on consecutive UTC days, expire/reset after a missed day, and behave consistently across browser time zones.
 - [ ] The owner can schedule and manage content through Admin after the one-time role setup.
 
-**Evidence to retain:** a dated hosted smoke-test checklist and redacted screenshots. Use local/staging accounts for repeated automation; production participation should be legitimate and documented.
+**Evidence:** [Phase 2 record](PHASE_2.md), with local test results and pending hosted checks. Retain a dated hosted smoke-test checklist and redacted screenshots. Use local/staging accounts for repeated automation; production participation should be legitimate and documented.
 
 ## Phase 3 — Prove database integrity, authorization and recovery
 

@@ -9,6 +9,7 @@ import {
   songId,
   utcWindow,
   validateSong,
+  validEmailTokenHash,
   type SongInput,
 } from "@/lib/validation";
 import { requireAdmin } from "@/lib/auth";
@@ -37,15 +38,21 @@ export async function requestMagicLinkAction(fd: FormData) {
   if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     go("/login", "message", "Enter a valid email address.");
   const db = await getSupabaseServerClient();
-  const { error } = await db!.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: `${getSiteUrl()}/api/auth/callback` },
-  });
+  let failed = false;
+  try {
+    const { error } = await db!.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${getSiteUrl()}/api/auth/callback` },
+    });
+    failed = Boolean(error);
+  } catch {
+    failed = true;
+  }
   go(
     "/login",
     "message",
-    error
-      ? "Could not send a sign-in link. Try again shortly."
+    failed
+      ? "Could not send a sign-in link. Wait a minute, then request a new link."
       : "Magic link sent. Check your inbox.",
   );
 }
@@ -54,11 +61,43 @@ export async function signOutAction() {
   await db?.auth.signOut();
   redirect("/");
 }
+export async function confirmEmailSignIn(fd: FormData) {
+  const tokenHash = fd.get("tokenHash");
+  if (!isSupabaseConfigured() || !validEmailTokenHash(tokenHash))
+    return go("/login", "message", "Invalid sign-in link. Request a new link.");
+  const db = await getSupabaseServerClient();
+  let failed = false;
+  try {
+    const { error } = await db!.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: "email",
+    });
+    failed = Boolean(error);
+  } catch {
+    go(
+      "/login",
+      "message",
+      "Sign-in is temporarily unavailable. Please request a new link shortly.",
+    );
+  }
+  if (failed)
+    go(
+      "/login",
+      "message",
+      "Sign-in link expired or was already used. Request a new link.",
+    );
+  redirect("/today");
+}
 export async function submitDailyVote(fd: FormData) {
   if (!isSupabaseConfigured())
     go("/today", "error", "Connect Supabase to record votes.");
   const viewer = await getViewerState();
-  if (!viewer.user) go("/login", "message", "Sign in before voting.");
+  if (!viewer.user)
+    go(
+      "/login",
+      "message",
+      "Sign in again to vote. Your saved votes are safe.",
+    );
   const matchupId = String(fd.get("matchupId") ?? "");
   const selectedSongId = String(fd.get("selectedSongId") ?? "");
   if (
@@ -338,11 +377,11 @@ export async function rebuildRankings(fd: FormData) {
       : `Rankings rebuilt from ${data} recorded votes.`,
   );
 }
-export async function scheduleEditorialWeek() {
+export async function scheduleEditorialMonth() {
   await requireAdmin();
   await requestBudget("admin");
   const today = new Date().toISOString().slice(0, 10);
-  const matchups = editorialPairs.map((_, i) => {
+  const matchups = Array.from({ length: 30 }, (_, i) => {
     const date = new Date(`${today}T00:00:00Z`);
     date.setUTCDate(date.getUTCDate() + i + 1);
     const [songA, songB] = editorialPairs[(i + 1) % editorialPairs.length];
