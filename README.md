@@ -2,7 +2,7 @@
 
 **Every day. Two songs. One choice.** Everyone gets the same editorial matchup, listens on an official music provider, votes once, and helps build an auditable Elo leaderboard.
 
-See [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+See [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
 
 ## Product and architecture
 
@@ -37,6 +37,8 @@ For a fully local backend, start Docker Desktop with its Linux engine and run:
 ```sh
 npm run local:start
 ```
+
+Automated browser tests use app port **3200** (with an allowlisted auth callback). The development server below remains on 3000.
 
 This initializes the database, applies migrations in order, and seeds today's matchup. Musicale uses ports **55321** (API), **55322** (PostgreSQL), and **55324** (local email catcher), separate from other projects. Emails sent locally stay in the catcher.
 
@@ -152,6 +154,6 @@ Official upload availability is not a blanket license or assurance of regional p
 ## Remaining launch operations and future versions
 
 - Resolve the hosted sign-in failure, then validate voting and persistence. As of October 15, production has migrations `0001`–`0007`, twenty songs and a restored matchup for that UTC day. The sending domain and public email delivery are verified; owner administration and the next-thirty-day production queue remain pending. See [Phase 2 evidence](docs/PHASE_2.md).
-- Continue editorial curation toward the brief's suggested 200–1,000 songs; the twenty-source starter catalog and bulk import tools are complete. Verify region-specific playback and artwork permissions before adding content.
+- Maintain the verified twenty-song launch catalog and thirty distinct starter pairs; a larger collection is optional. Verify region-specific playback and artwork permissions before adding content.
 - Extend manual assistive-technology/device testing and configure the hosting monitor against `/api/health`.
 - Later: pairing strategies, personalized comparisons, friends and tournaments.

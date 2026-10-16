@@ -141,7 +141,7 @@ export function LiveLeaderboard({
         </div>
         {songs.map((s, i) => (
           <Link className="leader-row" href={`/songs/${s.id}`} key={s.id}>
-            <b>{(page - 1) * pageSize + i + 1}</b>
+            <b>{s.matchupCount ? (page - 1) * pageSize + i + 1 : "—"}</b>
             <div className="leader-song">
               {s.artworkUrl ? (
                 <img
@@ -176,7 +176,11 @@ export function LiveLeaderboard({
             </span>
             <b>
               {Math.round(s.eloRating)}
-              {s.matchupCount < 5 ? <small>Provisional</small> : null}
+              {s.matchupCount < 5 ? (
+                <small>
+                  {s.matchupCount === 0 ? "Initial rating" : "Provisional"}
+                </small>
+              ) : null}
               {sort === "movement" ? (
                 <small>
                   {(s.recentMovement ?? 0) > 0 ? "+" : ""}

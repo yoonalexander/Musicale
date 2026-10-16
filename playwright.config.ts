@@ -8,7 +8,7 @@ export default defineConfig({
   workers: 1,
   timeout: 45000,
   reporter: "list",
-  use: { baseURL: "http://127.0.0.1:3100", trace: "retain-on-failure" },
+  use: { baseURL: "http://127.0.0.1:3200", trace: "retain-on-failure" },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     ...(process.platform !== "win32" ||
@@ -23,8 +23,8 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100",
-    url: "http://127.0.0.1:3100",
+      "node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3200",
+    url: "http://127.0.0.1:3200",
     reuseExistingServer: false,
     env: localAppEnv(),
     timeout: 45000,

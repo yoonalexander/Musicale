@@ -1,3 +1,9 @@
+import { SubmitButton } from "@/components/submit-button";
+export const metadata = {
+  title: "Your profile",
+  description:
+    "Your saved votes, UTC participation streak and listening history.",
+};
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getViewerState, getProfileData } from "@/lib/data";
@@ -53,7 +59,7 @@ export default async function ProfilePage({
               autoComplete="nickname"
             />
           </label>
-          <button className="button">Save display name</button>
+          <SubmitButton>Save display name</SubmitButton>
         </form>
       </details>
       <section className="panel">
@@ -138,7 +144,8 @@ export default async function ProfilePage({
             {history.map((h) => (
               <li key={h.id}>
                 <strong>
-                  {h.matchup_day} · {h.title}
+                  {h.matchup_day} ·{" "}
+                  <Link href={`/songs/${h.selected_song_id}`}>{h.title}</Link>
                 </strong>
                 <p>
                   {h.artist_name} · Rating moved +{h.rating_delta} ·{" "}

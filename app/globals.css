@@ -30,7 +30,8 @@ select {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+summary:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
@@ -381,7 +382,9 @@ footer {
     grid-template-columns: 40px 1fr 65px;
   }
   .leader-row > span {
-    display: none;
+    grid-column: 2/-1;
+    grid-row: 2;
+    display: block;
   }
   .stats {
     grid-template-columns: 1fr 1fr;
@@ -631,4 +634,62 @@ details:not([open]) > :not(summary) {
 }
 footer {
   flex-wrap: wrap;
+}
+
+.skip-link {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  padding: 12px;
+  background: var(--ink);
+  color: white;
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: none;
+}
+.onboarding ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+.onboarding li {
+  display: block;
+  border-top: 1px solid var(--line);
+}
+.onboarding p,
+.page p {
+  line-height: 1.65;
+}
+.result-counts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.result-counts dd {
+  margin: 8px 0;
+  font-weight: 700;
+}
+.notice a,
+.panel p a,
+footer a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .onboarding ol {
+    grid-template-columns: 1fr;
+  }
+  .home-board ol li {
+    grid-template-columns: 30px minmax(0, 1fr) 90px;
+  }
+  .leader-row > b:last-child {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .leader-row > span small {
+    display: inline;
+    margin-left: 8px;
+  }
 }

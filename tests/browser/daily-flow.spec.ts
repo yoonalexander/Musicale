@@ -7,7 +7,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   page,
   request,
 }, testInfo) => {
-  test.setTimeout(90000);
+  test.setTimeout(150000);
   const email = `musicale-${Date.now()}-${testInfo.project.name}@example.test`;
   await page.goto("/today");
   await expect(
@@ -69,8 +69,24 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   const text = await share.inputValue();
   expect(text).toContain("Musicale #");
   expect(text).toContain("1-day streak");
+  expect(text).toContain("http://127.0.0.1:3200/today");
   expect(text).not.toContain("Respect");
   expect(text).not.toContain("God Only Knows");
+  await page.evaluate(() =>
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: (data: ShareData) => {
+        sessionStorage.setItem("native-share-test", JSON.stringify(data));
+        return Promise.resolve();
+      },
+    }),
+  );
+  await page.getByRole("button", { name: "Share result", exact: true }).click();
+  expect(
+    JSON.parse(
+      (await page.evaluate(() => sessionStorage.getItem("native-share-test")))!,
+    ).text,
+  ).toBe(text);
   await page.reload();
   await expect(page.getByText("Vote recorded", { exact: true })).toBeVisible();
   await page.goto("/profile");
@@ -98,6 +114,17 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   await expect(
     page.getByRole("img", { name: /Elo rating history/ }),
   ).toBeVisible();
+  await page.getByText("View rating data", { exact: true }).click();
+  const snapshot = JSON.parse(
+    runSql(
+      "select row_to_json(s) from (select snapshot_date,rating from song_rating_snapshots where song_id='respect-aretha' order by snapshot_date desc limit 1) s",
+    ),
+  );
+  await expect(
+    page.getByText(`${snapshot.snapshot_date}: ${Number(snapshot.rating)}`, {
+      exact: true,
+    }),
+  ).toBeVisible();
   await page.goto("/leaderboard");
   await expect(
     page.getByRole("heading", { name: "The leaderboard" }),
@@ -122,7 +149,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   await expect(page.locator(".leader-row")).toHaveCount(1);
   await expect(page.locator(".leader-row")).toContainText("Respect");
   await page.getByRole("link", { name: "Clear filters" }).click();
-  await expect(page).toHaveURL("http://127.0.0.1:3100/leaderboard");
+  await expect(page).toHaveURL("http://127.0.0.1:3200/leaderboard");
   await expect(page.locator(".leader-row")).toHaveCount(20);
   await page.goto("/privacy");
   const consent = page.getByRole("checkbox");
@@ -132,7 +159,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     page.getByText("Preference saved on this browser."),
   ).toBeVisible();
   const response = await page.request.post("/api/analytics", {
-    headers: { Origin: "http://127.0.0.1:3100" },
+    headers: { Origin: "http://127.0.0.1:3200" },
     data: { event: "share_copied" },
   });
   expect(response.status()).toBe(204);
@@ -147,7 +174,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   expect(
     (
       await page.request.post("/api/analytics", {
-        headers: { Origin: "http://127.0.0.1:3100" },
+        headers: { Origin: "http://127.0.0.1:3200" },
         data: { event: "bad_event" },
       })
     ).status(),
@@ -330,7 +357,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   ).toEqual([]);
   // Replay a real server-action request after removing its caller's admin role.
   const headers = {
-    Origin: "http://127.0.0.1:3100",
+    Origin: "http://127.0.0.1:3200",
     "Next-Action": capturedAdminPost.headers()["next-action"],
     "Content-Type": capturedAdminPost.headers()["content-type"],
   };
@@ -362,7 +389,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   ).toBe(beforeAuthorizationCheck);
   expect(runSql("select elo_k_factor from app_settings")).toBe("24");
   await page.getByRole("button", { name: "Sign out" }).click();
-  await expect(page).toHaveURL("http://127.0.0.1:3100/");
+  await expect(page).toHaveURL("http://127.0.0.1:3200/");
   await expect(
     page.getByRole("link", { name: "Sign in", exact: true }),
   ).toBeVisible();
@@ -534,6 +561,7 @@ test("public pages stay usable at narrow widths and missing songs return 404", a
     "/login",
     "/songs/respect-aretha",
     "/privacy",
+    "/help",
     "/archive",
   ]) {
     await page.goto(path);
@@ -556,7 +584,7 @@ test("public pages stay usable at narrow widths and missing songs return 404", a
   expect(
     (
       await request.post("/api/analytics", {
-        headers: { Origin: "http://127.0.0.1:3100" },
+        headers: { Origin: "http://127.0.0.1:3200" },
         data: { event: "daily_view" },
       })
     ).status(),
