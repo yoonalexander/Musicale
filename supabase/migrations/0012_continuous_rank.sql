@@ -121,6 +121,7 @@ declare pair_id uuid;
 begin
   if not reserve_request('rank') then return jsonb_build_object('error','Too many Rank requests. Try again next minute.');end if;
   begin
+    lock table daily_matchups,songs,votes,rating_events,rank_comparisons,rank_votes in row exclusive mode;
     pair_id:=prepare_rank_pair();
     return jsonb_build_object('comparisonId',pair_id);
   exception when others then return jsonb_build_object('error','Could not prepare a pair. Please retry.');end;

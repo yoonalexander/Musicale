@@ -494,6 +494,46 @@ try {
     );
     await held;
     await blocked;
+    const heldRecovery = sql(
+      asUser(
+        1,
+        "set local application_name='rank-held-issuance-recovery';select rebuild_rankings();select pg_sleep(3)",
+      ),
+    );
+    await waitFor(
+      "application_name='rank-held-issuance-recovery' and wait_event='PgSleep'",
+    );
+    const issuance = sql(
+      asUser(
+        64,
+        "set local application_name='rank-waiting-issuance';select start_rank_pair()",
+      ),
+    );
+    await waitFor(
+      "application_name='rank-waiting-issuance' and wait_event_type='Lock'",
+    );
+    await heldRecovery;
+    await issuance;
+    const heldIssuance = sql(
+      asUser(
+        65,
+        "set local application_name='rank-held-issuance';select start_rank_pair();select pg_sleep(3)",
+      ),
+    );
+    await waitFor(
+      "application_name='rank-held-issuance' and wait_event='PgSleep'",
+    );
+    const waitingRecovery = sql(
+      asUser(
+        1,
+        "set local application_name='rank-issuance-waiting-recovery';select rebuild_rankings()",
+      ),
+    );
+    await waitFor(
+      "application_name='rank-issuance-waiting-recovery' and wait_event_type='Lock'",
+    );
+    await heldIssuance;
+    await waitingRecovery;
     const expected = await derived();
     await sql(asUser(1, "select rebuild_rankings()"));
     assert.equal(await derived(), expected);
