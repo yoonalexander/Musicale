@@ -1,6 +1,6 @@
 # Game-first Musicale and guest access
 
-October 16, 2026. Branch `game-first-guest-play`, based on completed Phase 5B `825679d`. Local implementation; final verification in progress. Production has not been changed.
+October 16, 2026. Branch `game-first-guest-play`, based on completed Phase 5B `825679d`. Implemented and locally verified. Production has not been changed.
 
 ## Product direction
 
@@ -40,4 +40,22 @@ Provider references checked for this implementation: [anonymous sessions, linkin
 
 `tests/browser/guest-play.spec.ts` exercises welcome/no identity on GET, immediate Play entry, first-visit/reopened tutorial, keyboard focus/Escape, side-by-side responsive cards, axe checks, guest scoring/resumption, optional profile access, Rank and Daily participation, verified new-email history preservation, existing-account sign-in without merging, signup outage/retry, raw-table/other-run/admin denial and user-metadata role injection. Existing Play, Rank, Daily, onboarding and auth regressions were updated for the approved guest behavior. The shared accepted-preference fixture is reused rather than duplicating song/rating setup.
 
-Final local/CI counts and screenshots will be recorded after verification finishes.
+Runtime implementation: `ff648d223b7c33fd4ac333e0b919cb4310021fef`. Verification uses the isolated `musicale-play` backend on port 59321; no hosted account, vote or configuration was changed.
+
+| Check | Result |
+| --- | --- |
+| Unit suite | 26 passed |
+| Production build and TypeScript | Passed |
+| Dependency audit | 0 vulnerabilities |
+| Selected existing and guest browser regressions | 59 passed; one mobile layout failure identified and fixed |
+| Final guest regressions after the mobile fix | 15 passed: 5 each in desktop Chromium, WebKit and mobile Chromium |
+| Clean-checkout CI | Queued at the time of this record; see [PR 12 checks](https://github.com/yoonalexander/musicale/pull/12/checks) for the latest run. No green CI claim |
+
+The mobile failure came from the inherited static VS badge occupying a grid cell. The fix explicitly positions it over the cards and adds a same-row assertion. The final tutorial also keeps its close and Play controls visible while its instructions scroll on small screens. These assertions passed in all three local browser projects. The selected regression run was not the full browser suite; the final 15-case run rechecks all new guest scenarios after the layout fix. Firefox and the full database/browser regression suite remain pending in CI, rather than being inferred from Phase 5B's previous green run.
+
+Recorded screenshots, visually inspected using synthetic local activity:
+
+- Desktop: [welcome](evidence/guest-experience/desktop-guest-welcome.png), [tutorial](evidence/guest-experience/desktop-guest-tutorial.png), [Play](evidence/guest-experience/desktop-guest-play.png).
+- Mobile: [welcome](evidence/guest-experience/mobile-guest-welcome.png), [tutorial](evidence/guest-experience/mobile-guest-tutorial.png), [Play](evidence/guest-experience/mobile-guest-play.png).
+
+The local preview is available at `http://127.0.0.1:3100` while its server is running. Local sign-in messages go to the mail viewer at `http://127.0.0.1:59324`, not the real inbox. Home, `/api/health` and the mail viewer returned HTTP 200 after restarting only this isolated backend with the updated configuration. Physical-device and hosted acceptance remain open.
