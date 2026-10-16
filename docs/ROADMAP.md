@@ -43,13 +43,13 @@ The “real-time” claim is an explicit remaining feature: the current app has 
 | --- | --- | --- | --- |
 | 1 | Reproducible development, isolated testing and passing baseline checks | Nothing | Complete October 15; [verification evidence](PHASE_1.md) |
 | 2 | Working public sign-in and daily voting loop | 1 | Launch operations incomplete or unverified; Today was empty |
-| 3 | Proven transaction, authorization, migration and recovery guarantees | 1; use 2 for hosted smoke checks | Substantial implementation; further verification required |
+| 3 | Proven transaction, authorization, migration and recovery guarantees | 1; use 2 for hosted smoke checks | Complete October 15; [local and CI evidence](PHASE_3.md) |
 | 4 | Live rankings with consistent caching | 3 | Cache invalidation exists; cross-browser live behavior missing |
 | 5 | Complete consumer and administrator experience | 2–4 | Core screens exist; usability and content gaps remain |
 | 6 | Sustainable content, monitoring and recovery operations | 2–5 | Incomplete or unverified |
 | 7 | Release acceptance and résumé evidence | 1–6 | Not complete |
 
-Execute in this order by default. Safe local work in Phase 3 can continue while external email setup in Phase 2 is pending. Build the specific tests alongside their phases; Phase 7 reruns and records the complete result.
+Execute in this order by default. Safe local work in Phase 3 can continue while Phase 2 hosted sign-in remains unresolved. Build the specific tests alongside their phases; Phase 7 reruns and records the complete result.
 
 ## Phase 1 — Establish a reproducible, isolated baseline
 
@@ -110,29 +110,29 @@ Most of this phase should validate and tighten the existing SQL. Do not replace 
 
 ### Tasks
 
-- [ ] **3.1 Verify vote invariants.** Check that each successful vote creates exactly one vote, rating event and daily activity record; both song records, matchup totals, profile totals and streaks agree. Verify equal-and-opposite rating changes using the recorded K-factor.
-- [ ] **3.2 Exercise concurrent requests.** Test simultaneous duplicate requests for one account and simultaneous votes from different accounts, including opposite choices. Include a small repeatable burst of 50 distinct accounts in local/staging; record timing and errors without treating it as an internet-scale benchmark.
-- [ ] **3.3 Prove rollback.** Deliberately fail a vote after some intended writes in an isolated test. Confirm there are no partial vote/rating/profile/audit updates and that the durable request budget behaves as documented.
-- [ ] **3.4 Verify the authorization matrix.** Test anonymous visitors, authenticated owners, another ordinary account and administrators through table access, RPCs and server actions. Users cannot edit roles, derived statistics, other users' history or editorial data.
-- [ ] **3.5 Verify rate-limit boundaries.** Exercise successful, failed and duplicate requests, minute rollover and separate accounts. Test direct exposed RPC calls as well as server actions; place advertised protections at the trusted entry points if a direct call bypasses them.
-- [ ] **3.6 Verify catalog transactions.** Confirm imports preserve ratings, enforce provider/metadata constraints and roll back the whole batch if one entry is invalid. Verify invalid scheduling and replacements leave existing days intact.
-- [ ] **3.7 Exercise migrations.** Test a fresh database, the supported legacy upgrade and an incremental upgrade from the existing daily schema. Verify preserved identities, roles and archived data, migration tracking and seed idempotence. Ship fixes in new ordered migrations.
-- [ ] **3.8 Demonstrate ranking recovery.** In a disposable database, capture correct derived state, corrupt ratings/counts/snapshots, rebuild, and compare exact restored values. Include multiple days, songs, opponents and historical K-factors; current tests largely exercise a narrower fixture.
-- [ ] **3.9 Verify recovery failure and concurrency.** Missing/inconsistent audit records must stop recovery without partial changes. A second rebuild must be idempotent. Concurrent voting must either complete safely or return a clear retriable failure, without partial records. Votes, original rating events and user identity/history remain preserved.
-- [ ] **3.10 Document result visibility.** State exactly which daily result fields are withheld until voting and which cumulative song statistics are public. Test that new endpoints and live subscriptions respect that contract; avoid promising that public aggregate data can never allow inference.
+- [x] **3.1 Verify vote invariants.** Check that each successful vote creates exactly one vote, rating event and daily activity record; both song records, matchup totals, profile totals and streaks agree. Verify equal-and-opposite rating changes using the recorded K-factor.
+- [x] **3.2 Exercise concurrent requests.** Test simultaneous duplicate requests for one account and simultaneous votes from different accounts, including opposite choices. Include a small repeatable burst of 50 distinct accounts in local/staging; record timing and errors without treating it as an internet-scale benchmark.
+- [x] **3.3 Prove rollback.** Deliberately fail a vote after some intended writes in an isolated test. Confirm there are no partial vote/rating/profile/audit updates and that the durable request budget behaves as documented.
+- [x] **3.4 Verify the authorization matrix.** Test anonymous visitors, authenticated owners, another ordinary account and administrators through table access, RPCs and server actions. Users cannot edit roles, derived statistics, other users' history or editorial data.
+- [x] **3.5 Verify rate-limit boundaries.** Exercise successful, failed and duplicate requests, minute rollover and separate accounts. Test direct exposed RPC calls as well as server actions; place advertised protections at the trusted entry points if a direct call bypasses them.
+- [x] **3.6 Verify catalog transactions.** Confirm imports preserve ratings, enforce provider/metadata constraints and roll back the whole batch if one entry is invalid. Verify invalid scheduling and replacements leave existing days intact.
+- [x] **3.7 Exercise migrations.** Test a fresh database, the supported legacy upgrade and an incremental upgrade from the existing daily schema. Verify preserved identities, roles and archived data, migration tracking and seed idempotence. Ship fixes in new ordered migrations.
+- [x] **3.8 Demonstrate ranking recovery.** In a disposable database, capture correct derived state, corrupt ratings/counts/snapshots, rebuild, and compare exact restored values. Include multiple days, songs, opponents and historical K-factors; current tests largely exercise a narrower fixture.
+- [x] **3.9 Verify recovery failure and concurrency.** Missing/inconsistent audit records must stop recovery without partial changes. A second rebuild must be idempotent. Concurrent voting must either complete safely or return a clear retriable failure, without partial records. Votes, original rating events and user identity/history remain preserved.
+- [x] **3.10 Document result visibility.** State exactly which daily result fields are withheld until voting and which cumulative song statistics are public. Test that new endpoints and live subscriptions respect that contract; avoid promising that public aggregate data can never allow inference.
 
 **Primary files:** [current SQL migrations](../supabase/migrations/), [database tests](../tests/database.mjs), [actions](../app/actions.ts), [data access](../lib/data.ts), [authorization helper](../lib/auth.ts), [provider validation](../lib/providers.ts), [catalog validation](../lib/validation.ts).
 
 ### Phase gate
 
-- [ ] Duplicate concurrency produces one successful vote and one set of derived changes for that account/day.
-- [ ] The distinct-account burst retains every accepted vote, conserves the rating total and leaves all counters consistent.
-- [ ] Invalid, unauthorized, expired and rate-limited requests cannot produce partial business writes.
-- [ ] Direct database/API tests enforce the same authorization and uniqueness guarantees as the interface.
-- [ ] Supported migrations preserve data; no hosted reset or historical migration rewrite is required.
-- [ ] Recovery exactly restores documented derived state, preserves its source records and refuses inconsistent input atomically.
+- [x] Duplicate concurrency produces one successful vote and one set of derived changes for that account/day.
+- [x] The distinct-account burst retains every accepted vote, conserves the rating total and leaves all counters consistent.
+- [x] Invalid, unauthorized, expired and rate-limited requests cannot produce partial business writes.
+- [x] Direct database/API tests enforce the same authorization and uniqueness guarantees as the interface.
+- [x] Supported migrations preserve data; no hosted reset or historical migration rewrite is required.
+- [x] Recovery exactly restores documented derived state, preserves its source records and refuses inconsistent input atomically.
 
-**Evidence to retain:** passing named database cases, workload size/results, migration fixture results and before/after recovery comparisons. Explain that event reconstruction is not a full database backup restore.
+**Evidence to retain:** passing named database cases, workload size/results, migration fixture results and before/after recovery comparisons. Explain that event reconstruction is not a full database backup restore. [Phase 3 completion evidence](PHASE_3.md) records passing local and clean-checkout CI results, including the measured fifty-account workload.
 
 ## Phase 4 — Deliver live ranking updates and coherent caching
 
@@ -282,7 +282,7 @@ No calendar deadline is invented here: email/domain setup, environment access an
 
 - [x] Phase 1 — Baseline and isolation passed: [October 15 verification evidence](PHASE_1.md)
 - [ ] Phase 2 — Public daily loop passed: evidence link __________
-- [ ] Phase 3 — Database guarantees passed: evidence link __________
+- [x] Phase 3 — Database guarantees passed: [October 15 local and CI evidence](PHASE_3.md)
 - [ ] Phase 4 — Live rankings and cache consistency passed: evidence link __________
 - [ ] Phase 5 — Consumer/admin experience passed: evidence link __________
 - [ ] Phase 6 — Sustainable operations passed: evidence link __________

@@ -2,7 +2,7 @@
 
 **Every day. Two songs. One choice.** Everyone gets the same editorial matchup, listens on an official music provider, votes once, and helps build an auditable Elo leaderboard.
 
-See the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+See [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
 
 ## Product and architecture
 
@@ -19,6 +19,8 @@ This rebuild replaces the previous musical-theatre ranking / higher-lower game. 
 Implemented pages: landing, Today, filtered/sortable leaderboard, song details, editable profile with paginated voting history and evidence-based listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. These screens exist, but the completion roadmap tracks remaining behavior, operations and release verification. The original brief's future social/personalized modes remain later work.
 
 Leaderboard filters cover genre, artist, year, decade and minimum votes. Sort by Elo, win percentage, total votes or seven-day rating movement. Only the public leaderboard is cached (30 seconds), with immediate invalidation after voting/editorial changes; private vote and profile state is never publicly cached.
+
+Daily side counts, totals and the saved selection are withheld by `get_today_matchup` until that account votes. Completed archive/song-history RPCs exclude active days. Cumulative Elo, wins/losses, comparison counts and public rating snapshots remain public and may permit inference; this is not a promise of absolute result secrecy. [Phase 3 evidence](docs/PHASE_3.md) documents the tested boundary.
 
 ## Local setup
 
@@ -54,14 +56,14 @@ New email sign-ins require both **Confirm signup** and **Magic Link** templates 
 
 `0001_initial.sql` is unchanged historical migration content. **Do not replace or reapply an already-applied migration.**
 
-- Fresh database: apply migrations `0001` through `0007` in order, followed by `seed.sql`.
-- Database running the original app: apply migrations `0002` through `0007` in order, then `seed.sql`.
-- Database already running the daily MVP through `0003`: apply `0004` through `0007`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
+- Fresh database: apply migrations `0001` through `0008` in order, followed by `seed.sql`.
+- Database running the original app: apply migrations `0002` through `0008` in order, then `seed.sql`.
+- Database already running the daily MVP through `0003`: apply `0004` through `0008`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
 - With Supabase CLI migration tracking, use normal ordered migration application; do not run a reset against hosted data.
 
 Migration 0002 moves the old songs, votes, profiles, game runs and quota records into the **private, unexposed `musicale_legacy` schema**. Existing account identities, join dates, display names and admin roles are copied into the new profiles. Old votes and ratings are preserved for reference, rather than mixed into the new catalog. The old public ranking RPC is removed. Migration 0003 completes access controls, result privacy, admin audit/import tools, configurable Elo, and history queries.
 
-Migration 0004 adds durable request limits, richer profiles/catalog metadata, analytics aggregates, featured archives and ranking recovery. Migration 0005 adds atomic batch scheduling and database provider-domain checks; migration 0006 indexes request cleanup. Migration 0007 aligns the display-name RPC with the form/server limit of 60 characters; it preserves existing names and rejects invalid future edits. Provider checks preserve existing potentially stale data while enforcing new writes; inspect provider readiness before scheduling.
+Migration 0004 adds durable request limits, richer profiles/catalog metadata, analytics aggregates, featured archives and ranking recovery. Migration 0005 adds atomic batch scheduling and database provider-domain checks; migration 0006 indexes request cleanup. Migration 0007 aligns the display-name RPC with the form/server limit of 60 characters; it preserves existing names and rejects invalid future edits. Migration 0008 enforces profile/admin RPC budgets and direct editorial-write budgets in PostgreSQL, strengthens recovery source validation, and prevents cancellation of started/voted days. Apply 0008 before deploying its matching server-action changes; it is not applied to production by Phase 3. Provider checks preserve existing potentially stale data while enforcing new writes; inspect provider readiness before scheduling.
 
 Before rollout, take a database backup, inspect the starting schema, and apply the upgrade to an isolated copy. If the unfinished July rewrite of `0001_initial.sql` was applied manually, that is a different starting schema: do not apply the legacy upgrade blindly; preserve/export that data and reconcile it first. The fresh Musicale production project was bootstrapped on October 1, 2026; see [deployment status](docs/DEPLOYMENT.md).
 
@@ -131,7 +133,7 @@ Production is configured at [musicale.alexyoon.com](https://musicale.alexyoon.co
 5. Schedule upcoming daily matchups in Admin. When no valid matchup is scheduled, Today shows an explicit empty state; it does not choose a random pair.
 6. Verify sign-in, provider link, one vote, persisted result after reload, streak, leaderboard and admin authorization on the deployed environment.
 
-Supabase rate-limits authentication. Voting has a durable budget of ten attempts per account per UTC minute, including failed choices and duplicates. Admin actions allow 30/minute, profile edits five/minute, and analytics 30/minute. Limits live in PostgreSQL across application instances. The private transactional voting function cannot be called directly by API users; its wrapper commits the request count even when the vote fails, returning a safe `error` field in that case. The app handles both transport errors and this field. No IP addresses are stored. Counters older than seven days are removed on subsequent requests.
+Supabase rate-limits authentication. Voting has a durable budget of ten attempts per account per UTC minute, including failed choices and duplicates. Admin mutation RPCs allow 30 attempts/minute, profile edits five attempts/minute, and analytics 30/minute. Direct authenticated editorial table writes reserve once per affected row from the same administrator budget; rejected table transactions roll their reservations back. RPC failures preserve their attempt while rolling back business writes. Limits live in PostgreSQL across application instances. The private transactional voting function cannot be called directly by API users; its wrapper commits the request count even when the vote fails, returning a safe `error` field in that case. The app handles both transport errors and this field. No IP addresses are stored. Counters older than seven days are removed on subsequent requests. Profile/catalog/scheduling/recovery RPC callers must check a returned `error` field as well as transport errors; their private processors are not API-callable.
 
 `GET /api/health` reports public database connectivity (`ready`, `unavailable`, or `preview`) without secrets, account data or daily results. Use it with your existing hosting monitor. It does not verify external playback, email delivery or the editorial queue; inspect the Admin participation/queue screens for those.
 

@@ -7,16 +7,17 @@ import {
 import { execFileSync } from "node:child_process";
 import AxeBuilder from "@axe-core/playwright";
 // @ts-expect-error Node-only local test helper.
-import { localSettings } from "../local-env.mjs";
+import { localSettings, localContainer } from "../local-env.mjs";
 
-localSettings(); // Refuse tests against a hosted project.
+const localBackend = localSettings(); // Refuse tests against a hosted project.
+const mailUrl = localBackend.MAILPIT_URL ?? localBackend.INBUCKET_URL;
 const runSql = (text: string) =>
   execFileSync(
     "docker",
     [
       "exec",
       "-i",
-      "supabase_db_musicale",
+      localContainer(),
       "psql",
       "-X",
       "-qAt",
@@ -44,9 +45,7 @@ async function requestSignInLink(
   let messageId = "";
   await expect
     .poll(async () => {
-      const response = await request.get(
-        "http://127.0.0.1:55324/api/v1/messages",
-      );
+      const response = await request.get(`${mailUrl}/api/v1/messages`);
       const inbox = await response.json();
       const message = inbox.messages.find(
         (m: { To: { Address: string }[]; ID: string }) =>
@@ -57,7 +56,7 @@ async function requestSignInLink(
     })
     .toBe(true);
   const message = await (
-    await request.get(`http://127.0.0.1:55324/api/v1/message/${messageId}`)
+    await request.get(`${mailUrl}/api/v1/message/${messageId}`)
   ).json();
   const href = String(message.HTML).match(
     /href="([^"]*\/api\/auth\/callback\?token_hash=[^"]*)"/,
@@ -312,10 +311,21 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
+  const adminPost = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname === "/admin",
+  );
   await page.getByRole("button", { name: "Save K-factor" }).click();
+  const capturedAdminPost = await adminPost;
   await expect(
     page.getByText("K-factor saved for future votes."),
   ).toBeVisible();
+  expect(
+    runSql(
+      `select sum(attempts) from request_budgets where user_id=(select id from auth.users where email='${email}') and action='admin'`,
+    ),
+  ).toBe("1");
   const editor = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: "Song editor", exact: true }),
   });
@@ -461,6 +471,39 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
         .analyze()
     ).violations,
   ).toEqual([]);
+  // Replay a real server-action request after removing its caller's admin role.
+  const headers = {
+    Origin: "http://127.0.0.1:3100",
+    "Next-Action": capturedAdminPost.headers()["next-action"],
+    "Content-Type": capturedAdminPost.headers()["content-type"],
+  };
+  expect(headers["Next-Action"]).toBeTruthy();
+  const beforeAuthorizationCheck = runSql(
+    "select json_agg(r order by user_id,action,window_start) from request_budgets r",
+  );
+  const anonymousPost = await request.post("/admin", {
+    headers,
+    data: capturedAdminPost.postDataBuffer()!,
+  });
+  expect(anonymousPost.headers()["x-action-redirect"]).toMatch(
+    /Admin\+access\+required/,
+  );
+  runSql(
+    `update profiles set role='user' where user_id=(select id from auth.users where email='${email}')`,
+  );
+  const ordinaryPost = await page.request.post("/admin", {
+    headers,
+    data: capturedAdminPost.postDataBuffer()!,
+  });
+  expect(ordinaryPost.headers()["x-action-redirect"]).toMatch(
+    /Admin\+access\+required/,
+  );
+  expect(
+    runSql(
+      "select json_agg(r order by user_id,action,window_start) from request_budgets r",
+    ),
+  ).toBe(beforeAuthorizationCheck);
+  expect(runSql("select elo_k_factor from app_settings")).toBe("24");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:3100/");
   await expect(
@@ -570,11 +613,11 @@ for (const [mode, timezoneId] of [
       await signIn(page, request, email);
       const fixture = JSON.parse(
         runSql(
-          "select json_build_object('id',matchup_id,'endsAt',ends_at) from get_today_matchup()",
+          "select json_build_object('id',matchup_id,'endsAt',ends_at,'songId',song_a->>'id') from get_today_matchup()",
         ),
       );
       const status = runSql(
-        `select status from daily_matchups where id='${fixture.id}'`,
+        `select status from songs where id='${fixture.songId}'`,
       );
       await page.clock.install({ time: new Date() });
       await page.reload();
@@ -596,7 +639,7 @@ for (const [mode, timezoneId] of [
       try {
         // Only the local test fixture is unavailable; the browser simulates crossing UTC midnight.
         runSql(
-          `update daily_matchups set status='cancelled' where id='${fixture.id}'`,
+          `update songs set status='unavailable' where id='${fixture.songId}'`,
         );
         const end = new Date(fixture.endsAt).getTime();
         if (mode === "timer") {
@@ -634,7 +677,7 @@ for (const [mode, timezoneId] of [
       } finally {
         release();
         runSql(
-          `update daily_matchups set status='${status}' where id='${fixture.id}'`,
+          `update songs set status='${status}' where id='${fixture.songId}'`,
         );
       }
     });
