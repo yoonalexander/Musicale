@@ -91,7 +91,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   await expect(page.getByText("Vote recorded", { exact: true })).toBeVisible();
   await page.goto("/profile");
   await expect(
-    page.getByRole("heading", { name: "Recent votes" }),
+    page.getByRole("heading", { name: "Recent Daily votes" }),
   ).toBeVisible();
   await expect(page.locator(".vote-history")).toContainText("Respect");
   await page.getByText("Edit display name", { exact: true }).click();

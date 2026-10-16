@@ -263,9 +263,9 @@ test("profile empty state, sample thresholds, pagination, streaks and archived s
     await expect(page.locator(".stats").first()).toContainText("26");
     await page.getByRole("link", { name: "Next", exact: true }).click();
     await expect(page.locator(".vote-history li")).toHaveCount(1);
-    await expect(page.locator(".pagination")).toContainText(
-      "Page 2 · 26 votes",
-    );
+    await expect(
+      page.getByRole("navigation", { name: "Daily history pages" }),
+    ).toContainText("Page 2 · 26 Daily votes");
     await page.goto("/archive");
     await expect(page.locator("article.panel").first()).toContainText(
       "3–2 · 5 listeners",
