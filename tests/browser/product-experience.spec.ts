@@ -62,13 +62,21 @@ test("onboarding, honest initial ratings, support, metadata and missing pages", 
     "href",
     "https://github.com/yoonalexander/musicale/issues/new",
   );
-  await page.goto("/songs/dynamite-bts");
-  await expect(
-    page.getByText("Not ranked yet", { exact: false }),
-  ).toBeVisible();
-  await expect(page.getByText(/Starting rating:/)).toBeVisible();
-  await page.goto("/leaderboard?artist=BTS");
-  await expect(page.locator(".leader-row")).toContainText("Initial rating");
+  // Rank may vote on any playable starter song; this metadata-only fixture stays unrated.
+  const initialId = "initial-ui-" + crypto.randomUUID();
+  runSql(`insert into songs(id,title,normalized_title,artist_name,normalized_artist_name,album_name,release_year,status)
+    values('${initialId}','Initial fixture','initial fixture','${initialId}','${initialId}','Single',2000,'active')`);
+  try {
+    await page.goto(`/songs/${initialId}`);
+    await expect(
+      page.getByText("Not ranked yet", { exact: false }),
+    ).toBeVisible();
+    await expect(page.getByText(/Starting rating:/)).toBeVisible();
+    await page.goto(`/leaderboard?artist=${initialId}`);
+    await expect(page.locator(".leader-row")).toContainText("Initial rating");
+  } finally {
+    runSql(`delete from songs where id='${initialId}'`);
+  }
   await page.goto("/archive");
   await expect(page.getByText(/No featured matchups yet/)).toBeVisible();
   const missing = await page.goto("/songs/does-not-exist");
