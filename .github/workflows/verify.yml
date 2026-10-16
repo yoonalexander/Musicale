@@ -20,6 +20,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium firefox webkit
+      - name: Start virtual audio output for browser playback
+        run: |
+          sudo apt-get install -y pulseaudio pulseaudio-utils
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=musicale_test
+          pactl set-default-sink musicale_test
       - name: Start isolated local backend
         run: npm run local:start > /tmp/musicale-supabase.log 2>&1
       - run: npm run verify
