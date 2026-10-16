@@ -1,12 +1,12 @@
 # Musicale: Play, Rank and Daily
 
-Product direction recorded October 16, 2026. The owner described the Play and Rank loops and confirmed that Daily remains a third mode. Rank implementation and its verification boundary are recorded in [Phase 5A](PHASE_5A.md). Play remains planned; the full hosted release is pending.
+Product direction recorded October 16, 2026. The owner described the Play and Rank loops and confirmed that Daily remains a third mode. Rank implementation and its verification boundary are recorded in [Phase 5A](PHASE_5A.md). Play implementation and verification are recorded in [Phase 5B](PHASE_5B.md); the full hosted release is pending.
 
 ## Purpose and current implementation
 
 Musicale lets listeners build a community music ranking and play a guessing game using that ranking. Daily adds a shared comparison and a reason to return each day.
 
-The current implementation supports continuous Rank, Daily, accounts, separate preference histories, Daily streaks, shared Elo rankings/recovery, administration and reviewed catalog discovery. Play still requires its application and database workflows. Reuse the catalog, authentication, authorization, Elo calculation, audit/recovery infrastructure, listening controls and live leaderboard.
+The current implementation supports continuous Rank, Daily, accounts, separate preference histories, Daily streaks, shared Elo rankings/recovery, administration and reviewed catalog discovery. Play adds private persisted runs, snapshot grading and independent points. Reuse the catalog, authentication, authorization, Elo calculation, audit/recovery infrastructure, listening controls and live leaderboard.
 
 | Mode  | Question                                  | Progression                                                                             | Effect on song Elo                                     |
 | ----- | ----------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
@@ -14,7 +14,7 @@ The current implementation supports continuous Rank, Daily, accounts, separate p
 | Rank  | Which song do you prefer?                 | Record the choice, show two new songs and repeat without a daily voting quota           | Chosen song gains Elo; the other loses the same amount |
 | Daily | Which of today's two songs do you prefer? | One shared editorial pair per UTC day; reveal results after the account votes           | Same Elo system as Rank                                |
 
-Proposed navigation is Play (`/play`), Rank (`/rank`), Daily (`/today`), Leaderboard and Profile. Keep `/today` working so existing links continue to resolve. Do not advertise working Play or Rank routes before their acceptance checks pass.
+Navigation is Play (`/play`), Rank (`/rank`), Daily (`/today`), Leaderboard and Profile. Keep `/today` working so existing links continue to resolve. Do not advertise working Play or Rank routes before their acceptance checks pass.
 
 ## Play contract
 
@@ -25,7 +25,9 @@ Proposed navigation is Play (`/play`), Rank (`/rank`), Daily (`/today`), Leaderb
 - Issue and consume rounds on the server. Repeated submissions, double clicks and concurrent requests cannot award extra points, reroll a pending pair or advance twice. Clients never supply authoritative points or correct answers.
 - Play never writes preference votes, rating events, song Elo or Daily participation/streaks. Public song ratings remain browsable elsewhere; server grading is not a claim that looking up the answer is impossible.
 
-Implementation defaults proposed for the first version: an incorrect guess ends the run; persisted runs use the existing signed-in account; eligible songs have at least one accepted Daily or Rank comparison. These are defaults, distinct from the owner's explicitly confirmed three-mode decision. Guest play and a competitive game-score leaderboard are outside the initial scope.
+Implemented first-version defaults: an incorrect guess ends the run; persisted runs use the existing signed-in account; eligible songs have at least one accepted Daily or Rank comparison. These are defaults, distinct from the owner's explicitly confirmed three-mode decision. Guest play and a competitive game-score leaderboard are outside the initial scope.
+
+Play rounds expire after thirty minutes, and mutations share a separate thirty-attempt per-account per UTC-minute budget. Expired/unavailable rounds resume with the same songs and fresh snapshots; pending valid rounds cannot be rerolled. A paused run may be explicitly ended and restarted at zero.
 
 If there are too few eligible songs or no distinct untied replacement, show an honest unavailable/paused state and a route to Rank. Preserve earned points; insufficient data, an expired round or a service error is not an incorrect guess. Do not fabricate ratings or silently replace both cards.
 

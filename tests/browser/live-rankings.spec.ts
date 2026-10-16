@@ -312,7 +312,7 @@ test("offline recovery, visible-tab refresh, failed reads and subscription clean
   // Severed offline sockets need server-side cleanup; still require zero rows and one subscription after rejoining.
   for (let n = 0; n < 3; n++) {
     await page
-      .getByRole("link", { name: "Today", exact: true })
+      .getByRole("link", { name: "Daily", exact: true })
       .first()
       .click();
     await expect

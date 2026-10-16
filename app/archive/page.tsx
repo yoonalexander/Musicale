@@ -38,7 +38,7 @@ export default async function Archive() {
         </p>
       )}
       <Link className="button" href="/today">
-        Play today
+        Visit Daily
       </Link>
     </section>
   );

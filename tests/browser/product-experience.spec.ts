@@ -28,7 +28,7 @@ test("onboarding, honest initial ratings, support, metadata and missing pages", 
 }, info) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "One daily listening habit." }),
+    page.getByRole("heading", { name: "Three ways to play." }),
   ).toBeVisible();
   await expect(
     page.getByText(/Sign in with an email link and vote once/),

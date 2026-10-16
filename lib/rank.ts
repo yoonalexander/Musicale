@@ -23,7 +23,7 @@ export interface RankPair {
   songA: RankSong;
   songB: RankSong;
 }
-function listeningSong(s: Song): RankSong {
+export function listeningSong(s: Song): RankSong {
   return {
     id: s.id,
     title: s.title,

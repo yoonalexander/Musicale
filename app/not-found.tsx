@@ -10,7 +10,7 @@ export default function NotFound() {
           Browse the catalog
         </Link>
         <Link className="button secondary" href="/today">
-          Play today
+          Visit Daily
         </Link>
       </div>
     </section>

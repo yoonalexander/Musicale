@@ -19,8 +19,9 @@ export function AppShell({
           Musicale
         </Link>
         <nav aria-label="Main navigation">
+          <Link href="/play">Play</Link>
           <Link href="/rank">Rank</Link>
-          <Link href="/today">Today</Link>
+          <Link href="/today">Daily</Link>
           <Link href="/leaderboard">Leaderboard</Link>
           {viewer.user ? <Link href="/profile">Profile</Link> : null}
           {viewer.isAdmin ? <Link href="/admin">Admin</Link> : null}
