@@ -220,17 +220,22 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
       });
     });
     await page.goto("/today");
-    if (!unsupportedWav)
-      await expect(
-        page.getByLabel("Preview Respect", { exact: true }),
-      ).toHaveAttribute("preload", "none");
+    await expect(
+      page.getByRole("region", {
+        name: "15-second preview of Respect",
+        exact: true,
+      }),
+    ).toHaveAttribute("data-state", "ready");
     await page.goto("/songs/respect-aretha");
-    const audio = page.getByLabel("Preview Respect", { exact: true });
-    if (!unsupportedWav) await expect(audio).toHaveAttribute("preload", "none");
+    const audio = page.getByRole("region", {
+      name: "15-second preview of Respect",
+      exact: true,
+    });
+    await expect(audio).toHaveAttribute("data-state", "ready");
     expect(events).not.toContain("preview_play_started");
     expect(audioRequests).toBe(0);
     if (unsupportedWav) {
-      // This Windows WebKit build has no WAV decoder; exercise the real unsupported-codec fallback.
+      // Windows WebKit omits Web Audio; exercise the unavailable-player fallback.
       await page
         .getByRole("button", { name: /^(Play|Retry) preview of Respect$/ })
         .click();
@@ -285,7 +290,7 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
     await page.reload();
     {
       await expect(audio).toHaveAttribute(
-        "src",
+        "data-source",
         "https://audio.example.test/unavailable.wav",
       );
       await page
@@ -324,16 +329,18 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
         }),
       );
       await early.goto("/songs/respect-aretha", { waitUntil: "commit" });
-      const beforeHydration = early.getByLabel("Preview Respect", {
-        exact: true,
-      });
-      await beforeHydration.evaluate((el: HTMLAudioElement) => el.load());
-      await expect
-        .poll(() =>
-          beforeHydration.evaluate((el: HTMLAudioElement) => el.error?.code),
-        )
-        .toBe(4);
+      // No media request or playback is possible before hydration and an explicit click.
+      await expect(
+        early.getByRole("region", {
+          name: "15-second preview of Respect",
+          exact: true,
+        }),
+      ).toHaveAttribute("data-state", "ready");
+      expect(earlyEvents).toEqual([]);
       releaseScripts();
+      await early
+        .getByRole("button", { name: "Play preview of Respect", exact: true })
+        .click();
       await expect(early.getByRole("status")).toContainText(
         "Preview unavailable",
       );

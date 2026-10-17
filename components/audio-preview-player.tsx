@@ -23,76 +23,91 @@ export function AudioPreviewPlayer({
   title: string;
   preview: AudioPreview;
 }) {
-  const audio = useRef<HTMLAudioElement>(null);
-  const graph = useRef<{
-    context: AudioContext;
-    gain: GainNode;
-    source: MediaElementAudioSourceNode;
-  } | null>(null);
+  const context = useRef<AudioContext | null>(null);
+  const buffer = useRef<AudioBuffer | null>(null);
+  const source = useRef<AudioBufferSourceNode | null>(null);
   const timing = useRef({
     heard: 0,
+    position: 0,
     since: null as number | null,
     deadline: 0,
   });
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const request = useRef<AbortController | null>(null);
+  const operation = useRef(0);
   const frame = useRef(0);
   const alive = useRef(true);
+  const intent = useRef(false);
   const started = useRef(false);
   const reportedFailure = useRef(false);
   const pauseHandler = useRef<() => void>(() => {});
   const owner = useRef(() => pauseHandler.current());
-  const intent = useRef(false);
   const [status, setStatus] = useState<Status>("ready");
   const [position, setPosition] = useState(0);
   const [remaining, setRemaining] = useState(LIMIT);
   const [duration, setDuration] = useState(LIMIT);
   const start = preview.startSeconds ?? 0;
+  const windowDuration = () =>
+    Math.min(LIMIT, (buffer.current?.duration ?? start + LIMIT) - start);
 
+  function cursor() {
+    const t = timing.current;
+    return (
+      t.position +
+      (t.since === null
+        ? 0
+        : Math.max(
+            0,
+            Math.min(context.current!.currentTime, t.deadline) - t.since,
+          ))
+    );
+  }
   function silence() {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
     cancelAnimationFrame(frame.current);
-    const g = graph.current,
-      t = timing.current;
-    if (g) {
-      if (t.since !== null)
-        t.heard = Math.min(
-          LIMIT,
-          t.heard +
-            Math.max(0, Math.min(g.context.currentTime, t.deadline) - t.since),
-        );
-      t.since = null;
-      g.gain.gain.cancelScheduledValues(g.context.currentTime);
-      g.gain.gain.setValueAtTime(0, g.context.currentTime);
+    const t = timing.current;
+    const next = cursor();
+    t.heard = Math.min(LIMIT, t.heard + next - t.position);
+    t.position = next;
+    t.since = null;
+    const old = source.current;
+    source.current = null;
+    if (old) {
+      old.stop();
+      old.disconnect();
     }
   }
   function pause() {
     intent.current = false;
+    operation.current++;
+    request.current?.abort();
     silence();
-    audio.current?.pause();
     if (active === owner.current) active = null;
-    if (alive.current)
-      setStatus((s) =>
-        ["error", "finished", "ready"].includes(s) ? s : "paused",
+    if (alive.current) {
+      setPosition(timing.current.position);
+      setRemaining(
+        Math.max(
+          0,
+          Math.min(
+            windowDuration() - timing.current.position,
+            LIMIT - timing.current.heard,
+          ),
+        ),
       );
+      setStatus((s) =>
+        ["ready", "error", "finished"].includes(s) ? s : "paused",
+      );
+    }
   }
   pauseHandler.current = pause;
   function finish() {
-    silence();
-    intent.current = false;
-    audio.current?.pause();
-    if (active === owner.current) active = null;
+    pause();
     if (alive.current) {
       setStatus("finished");
       setRemaining(0);
-      if (audio.current)
-        setPosition(
-          Math.min(duration, Math.max(0, audio.current.currentTime - start)),
-        );
     }
   }
   function fail() {
     pause();
+    if (!alive.current) return;
     setStatus("error");
     if (!reportedFailure.current) {
       reportedFailure.current = true;
@@ -100,51 +115,52 @@ export function AudioPreviewPlayer({
     }
   }
   function paint() {
-    const a = audio.current,
-      g = graph.current,
-      t = timing.current;
-    if (!a || !g || t.since === null) return;
-    const cursor = Math.min(duration, Math.max(0, a.currentTime - start));
-    setPosition(cursor);
+    if (!source.current) return;
+    const next = cursor();
+    setPosition(next);
     setRemaining(
       Math.max(
         0,
         Math.min(
-          duration - cursor,
-          LIMIT - t.heard - (g.context.currentTime - t.since),
+          windowDuration() - next,
+          LIMIT - timing.current.heard - (next - timing.current.position),
         ),
       ),
     );
-    if (
-      a.currentTime >= start + duration ||
-      g.context.currentTime >= t.deadline
-    )
-      finish();
-    else frame.current = requestAnimationFrame(paint);
+    frame.current = requestAnimationFrame(paint);
   }
-  function playing() {
-    const a = audio.current,
-      g = graph.current;
-    if (!a || !g || !intent.current || active !== owner.current) {
-      a?.pause();
+  function begin() {
+    if (
+      !intent.current ||
+      active !== owner.current ||
+      !context.current ||
+      !buffer.current
+    )
+      return;
+    const ctx = context.current,
+      t = timing.current;
+    if (ctx.state !== "running") {
+      owner.current();
       return;
     }
-    silence();
-    const seconds = Math.min(
-      duration - Math.max(0, a.currentTime - start),
-      LIMIT - timing.current.heard,
-    );
+    const window = Math.min(LIMIT, buffer.current.duration - start);
+    const seconds = Math.min(window - t.position, LIMIT - t.heard);
     if (seconds <= 0) {
       finish();
       return;
     }
-    const now = g.context.currentTime;
-    timing.current.since = now;
-    timing.current.deadline = now + seconds;
-    // The audio clock mutes at the deadline even when browser timers or frames are throttled.
-    g.gain.gain.setValueAtTime(1, now);
-    g.gain.gain.setValueAtTime(0, now + seconds);
-    timer.current = setTimeout(finish, seconds * 1000);
+    const node = ctx.createBufferSource();
+    node.buffer = buffer.current;
+    node.connect(ctx.destination);
+    node.onended = () => {
+      if (source.current === node) finish();
+    };
+    // The source duration stops on the audio clock, independently of UI timers.
+    const now = ctx.currentTime;
+    node.start(now, start + t.position, seconds);
+    source.current = node;
+    t.since = now;
+    t.deadline = t.since + seconds;
     setStatus("playing");
     if (!started.current) {
       started.current = true;
@@ -153,53 +169,76 @@ export function AudioPreviewPlayer({
     frame.current = requestAnimationFrame(paint);
   }
   async function play() {
-    const a = audio.current;
-    if (!a) return;
     if (active && active !== owner.current) active();
     active = owner.current;
     intent.current = true;
+    const id = ++operation.current;
     setStatus("loading");
     try {
-      if (!graph.current) {
-        const context = new AudioContext();
-        const gain = context.createGain(),
-          source = context.createMediaElementSource(a);
-        gain.gain.value = 0;
-        source.connect(gain);
-        gain.connect(context.destination);
-        graph.current = { context, gain, source };
+      if (!context.current) {
+        context.current = new AudioContext();
+        context.current.onstatechange = () => {
+          if (source.current && context.current?.state !== "running")
+            owner.current();
+        };
       }
-      await graph.current.context.resume();
-      if (!alive.current || !intent.current || active !== owner.current) return;
-      if (
-        status === "finished" ||
-        status === "error" ||
-        a.currentTime >= start + duration
-      ) {
-        timing.current.heard = 0;
+      await context.current.resume();
+      if (!alive.current || id !== operation.current) return;
+      if (status === "finished" || status === "error") {
+        timing.current = { heard: 0, position: 0, since: null, deadline: 0 };
         started.current = false;
         reportedFailure.current = false;
-        if (status === "error") a.load();
-        else a.currentTime = start;
         setPosition(0);
-        setRemaining(duration);
+        setRemaining(windowDuration());
       }
-      if (a.currentTime < start) a.currentTime = start;
-      await a.play();
-    } catch (error) {
-      if (
-        alive.current &&
-        intent.current &&
-        (error as Error).name !== "AbortError"
-      )
-        fail();
+      if (!buffer.current) {
+        const controller = new AbortController();
+        request.current = controller;
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+          const response = await fetch(preview.url!, {
+            signal: controller.signal,
+            cache: "no-store",
+            credentials: "omit",
+          });
+          if (
+            !response.ok ||
+            Number(response.headers.get("content-length")) > 10 * 1024 * 1024
+          )
+            throw new Error("Preview unavailable");
+          const bytes = await response.arrayBuffer();
+          if (bytes.byteLength > 10 * 1024 * 1024)
+            throw new Error("Preview too large");
+          if (!alive.current || id !== operation.current) return;
+          setStatus("buffering");
+          const decoded = await Promise.race([
+            context.current.decodeAudioData(bytes),
+            new Promise<never>((_, reject) =>
+              controller.signal.addEventListener(
+                "abort",
+                () => reject(new Error("Preview cancelled")),
+                { once: true },
+              ),
+            ),
+          ]);
+          if (!alive.current || id !== operation.current) return;
+          if (controller.signal.aborted) throw new Error("Preview timed out");
+          if (!Number.isFinite(decoded.duration) || decoded.duration <= start)
+            throw new Error("Invalid snippet");
+          buffer.current = decoded;
+          setDuration(Math.min(LIMIT, decoded.duration - start));
+          setRemaining(windowDuration());
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+      if (alive.current && id === operation.current) begin();
+    } catch {
+      if (alive.current && id === operation.current && intent.current) fail();
     }
   }
   useEffect(() => {
     alive.current = true;
-    const a = audio.current;
-    if (a && !a.getAttribute("src")) a.src = preview.url!;
-    if (a?.error) fail();
     const hidden = () => {
       if (document.hidden) owner.current();
     };
@@ -209,12 +248,12 @@ export function AudioPreviewPlayer({
     return () => {
       alive.current = false;
       owner.current();
-      a?.removeAttribute("src");
-      a?.load();
-      graph.current?.source.disconnect();
-      graph.current?.gain.disconnect();
-      void graph.current?.context.close();
-      graph.current = null;
+      if (context.current) {
+        context.current.onstatechange = null;
+        void context.current.close();
+      }
+      context.current = null;
+      buffer.current = null;
       document.removeEventListener("visibilitychange", hidden);
       window.removeEventListener("pagehide", leaving);
     };
@@ -225,59 +264,8 @@ export function AudioPreviewPlayer({
       className="audio-preview"
       aria-label={`15-second preview of ${title}`}
       data-state={status}
+      data-source={preview.url}
     >
-      <audio
-        ref={audio}
-        crossOrigin="anonymous"
-        preload="none"
-        aria-label={`Preview ${title}`}
-        src={preview.url!}
-        onLoadedMetadata={() => {
-          const a = audio.current!;
-          if (!Number.isFinite(a.duration) || a.duration <= start) {
-            fail();
-            return;
-          }
-          setDuration(Math.min(LIMIT, a.duration - start));
-          if (a.currentTime < start) a.currentTime = start;
-        }}
-        onPlaying={playing}
-        onPause={() => {
-          silence();
-          if (alive.current)
-            setStatus((s) =>
-              ["finished", "error", "ready"].includes(s) ? s : "paused",
-            );
-        }}
-        onWaiting={() => {
-          silence();
-          if (intent.current) setStatus("buffering");
-        }}
-        onSeeking={() => {
-          silence();
-          const a = audio.current!;
-          // Explicit pause/resume makes WebKit emit a fresh playing event after a seek.
-          a.pause();
-          if (a.currentTime < start) a.currentTime = start;
-          if (a.currentTime >= start + duration) finish();
-        }}
-        onSeeked={() => {
-          if (!intent.current || active !== owner.current || !audio.current)
-            return;
-          void audio.current.play().catch((error) => {
-            if (alive.current && intent.current && error.name !== "AbortError")
-              fail();
-          });
-        }}
-        onRateChange={() => {
-          if (audio.current && audio.current.playbackRate !== 1)
-            audio.current.playbackRate = 1;
-        }}
-        onEnded={finish}
-        onError={() => {
-          if (alive.current) fail();
-        }}
-      />
       <div className="audio-preview-controls">
         <button
           type="button"
@@ -317,14 +305,14 @@ export function AudioPreviewPlayer({
             step={0.1}
             value={position}
             disabled={
-              status === "ready" || status === "error" || status === "finished"
+              !buffer.current || status === "error" || status === "finished"
             }
             aria-label={`Preview position for ${title}`}
             aria-valuetext={`${time(position)} elapsed, ${time(remaining)} remaining`}
             onChange={(event) => {
               silence();
               const next = Number(event.target.value);
-              audio.current!.currentTime = start + next;
+              timing.current.position = next;
               setPosition(next);
               setRemaining(
                 Math.max(
@@ -333,6 +321,7 @@ export function AudioPreviewPlayer({
                 ),
               );
               if (next >= duration) finish();
+              else if (intent.current) begin();
             }}
           />
           <div className="audio-times">
@@ -343,7 +332,7 @@ export function AudioPreviewPlayer({
       </div>
       {status === "error" ? (
         <p className="audio-error">
-          Try again or use the listening links below.
+          Try again in a moment, or use an available listening link.
         </p>
       ) : null}
     </section>
