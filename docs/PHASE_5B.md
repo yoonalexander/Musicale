@@ -1,5 +1,7 @@
 # Phase 5B — Higher-rated Play
 
+October 17 integration note: operations now occupies the reserved `0011` slot on local main, and the complete combined chain passes through `0016`. The numbering discussion below records this phase’s original parallel-branch state. See [current integration and verification](INTEGRATION.md); applied hosted history must still be inspected before rollout.
+
 October 16, 2026. Branch `phase-5b-higher-rated-game`, starting from Phase 5A `2e2c512`. Phase 5B is complete locally and in clean-checkout CI. Production was not changed. [Draft PR #11](https://github.com/yoonalexander/musicale/pull/11) is stacked on Phase 5A.
 
 ## Delivered behavior

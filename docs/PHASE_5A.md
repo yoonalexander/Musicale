@@ -1,5 +1,7 @@
 # Phase 5A — Continuous preference ranking
 
+October 17 integration note: operations now occupies the reserved `0011` slot on local main, and the complete combined chain passes through `0016`. The numbering discussion below records this phase’s original parallel-branch state. See [current integration and verification](INTEGRATION.md); applied hosted history must still be inspected before rollout.
+
 October 16, 2026. Branch: `phase-5a-continuous-ranking`. Started from the approved three-mode roadmap at `e5bd921`; integrated the completed Phase 5 consumer work at `1790a0e` through integration commit `5047f29`. Production and the Phase 2 hosted sign-in issue are unchanged. Play remains Phase 5B.
 
 Status: **Phase 5A complete locally and in clean-checkout CI**. Hosted rollout and Phase 2 sign-in remain separate release work.

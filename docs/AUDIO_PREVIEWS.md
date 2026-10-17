@@ -56,7 +56,7 @@ All three import paths—individual song save, JSON/CSV batch import and MusicBr
 
 To enable this in an environment:
 
-1. Reconcile the existing migration chain (including the parallel migration reserved for `0011`) and apply unapplied migrations through `0013`, then `0014` and `0015`, before deploying the matching code. Preserve applied hosted history and data.
+1. Inspect the target migration history and apply only unapplied versions in the canonical `0001`–`0016` chain before deploying matching code. Operations now occupies `0011`; `0016` makes readiness recognize authorized audio-only Daily matchups. An older operations-only `0010` requires explicit reconciliation. Preserve applied hosted history and data; see [integration evidence](INTEGRATION.md).
 2. Deploy the application **with `public/audio/` and the provenance/credits files**. Existing unsupported songs retain their official listening links.
 3. Use the administrator's audio section to import the four-recording pack or discover matches in already imported recordings. Confirm four connected previews and inspect credits.
 4. Open Rank and click Listen and rank. Listen, replay, compare and submit a preference without leaving the page. New open recordings become eligible for Play after actual preference votes establish evidence; no initial rating evidence is fabricated.
