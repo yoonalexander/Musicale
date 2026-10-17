@@ -256,16 +256,18 @@ export function AudioPreviewPlayer({
         onSeeking={() => {
           silence();
           const a = audio.current!;
+          // Explicit pause/resume makes WebKit emit a fresh playing event after a seek.
+          a.pause();
           if (a.currentTime < start) a.currentTime = start;
           if (a.currentTime >= start + duration) finish();
         }}
         onSeeked={() => {
-          if (
-            intent.current &&
-            !audio.current?.paused &&
-            audio.current!.readyState >= 3
-          )
-            playing();
+          if (!intent.current || active !== owner.current || !audio.current)
+            return;
+          void audio.current.play().catch((error) => {
+            if (alive.current && intent.current && error.name !== "AbortError")
+              fail();
+          });
         }}
         onRateChange={() => {
           if (audio.current && audio.current.playbackRate !== 1)

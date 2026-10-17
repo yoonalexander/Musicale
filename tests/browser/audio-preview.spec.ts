@@ -177,6 +177,20 @@ test("real licensed music: custom controls, pause, exclusive playback, seeking, 
     await audio.evaluate((el: HTMLAudioElement) => {
       el.currentTime = 0;
     });
+    await expect
+      .poll(() => audio.evaluate((el: HTMLAudioElement) => el.seeking))
+      .toBe(false);
+    await expect(a).toHaveAttribute("data-state", "playing");
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const analyser = (window as any).__audioProbes[0].analyser,
+            samples = new Float32Array(analyser.fftSize);
+          analyser.getFloatTimeDomainData(samples);
+          return samples.some((v) => Math.abs(v) > 0.0001);
+        }),
+      )
+      .toBe(true);
     await expect(a).toHaveAttribute("data-state", "finished", {
       timeout: 16000,
     });

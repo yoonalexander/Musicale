@@ -43,8 +43,8 @@ export default async function Today({
         </p>
         <h1>Which song stays with you?</h1>
         <p>
-          Listen on an official provider, then choose one song. One saved vote
-          per account, per UTC day.
+          Preview a song here or use its official listening link, then choose
+          one song. One saved vote per account, per UTC day.
         </p>
         <p>
           {m.songA.genre ?? "Music"} meets {m.songB.genre ?? "music"}:{" "}
