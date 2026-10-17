@@ -225,7 +225,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     .getByRole("combobox", { name: "Status", exact: true })
     .selectOption("disabled");
   await editor.getByRole("button", { name: "Save song", exact: true }).click();
-  await expect(page.getByText("Song saved.", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Song saved\./)).toBeVisible();
   const importedId = `csv-song-${Date.now()}`;
   const csv = `id,title,artistName,albumName,releaseYear,status,providers\n${importedId},CSV test song,Test artist,Single,2001,disabled,[]`;
   await page.getByText("Open bulk import", { exact: true }).click();
@@ -236,7 +236,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     buffer: Buffer.from(csv),
   });
   await page.getByRole("button", { name: "Save catalog", exact: true }).click();
-  await expect(page.getByText("1 songs saved.", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^1 songs saved\./)).toBeVisible();
   expect(
     runSql(`select title||','||status from songs where id='${importedId}'`),
   ).toBe("CSV test song,disabled");

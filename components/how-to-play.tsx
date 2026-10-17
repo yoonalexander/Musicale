@@ -87,7 +87,8 @@ export function HowToPlay({ autoOpen = false }: { autoOpen?: boolean }) {
             <li>
               <strong>Listen, then trust your instinct.</strong>
               <p>
-                Use a song’s listening link, or make your pick straight away.
+                Play a 15-second preview when available, use a listening link,
+                or make your pick straight away.
               </p>
             </li>
             <li>

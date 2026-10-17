@@ -4,6 +4,8 @@ Initial production setup: October 1, 2026. Preview environment scopes rechecked 
 
 ## Phase 4 prepared rollout
 
+October 16 audio update: apply unapplied `0014_audio_preview_player.sql` and `0015_authorized_daily_audio.sql` after the inherited migration chain, then deploy the corresponding code and `public/audio/` assets. Import the reviewed four-recording pack through Audio administration. No hosted change has been performed. The original twenty commercial tracks retain external links. See [preview setup, permission evidence and acceptance](AUDIO_PREVIEWS.md).
+
 Phase 4 adds local Realtime and migration `0009_live_rankings.sql`, scoped to public songs only. No hosted changes were made. Apply unapplied 0008 and 0009 before their corresponding app deployment, verify the publication/Realtime connection, and repeat the two-browser hosted smoke check in [PHASE_4.md](PHASE_4.md#hosted-rollout-still-required). The Phase 2 hosted sign-in blocker remains open; the historical production observations below have not been refreshed by Phase 4.
 
 ## Catalog automation prepared rollout

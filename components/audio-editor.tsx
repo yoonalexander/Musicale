@@ -1,7 +1,11 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveAudioSource } from "@/app/catalog-actions";
+import {
+  saveAudioSource,
+  discoverAuthorizedAudio,
+  importOpenMusic,
+} from "@/app/catalog-actions";
 import type { AudioPreview } from "@/lib/audio";
 import type { Song } from "@/types/domain";
 export function AudioEditor({
@@ -24,6 +28,56 @@ export function AudioEditor({
         audio URL when you have explicit authorization for playback within
         Musicale. Public access or provider metadata does not grant permission.
       </p>
+      <p>
+        Reviewed Wikimedia Commons recordings can be matched automatically by
+        recording ID, ISRC, or exact recording metadata. Unsupported songs keep
+        their external links.
+      </p>
+      <div className="share-actions">
+        <button
+          type="button"
+          className="button secondary"
+          disabled={pending}
+          onClick={async () => {
+            setPending(true);
+            try {
+              const r = await discoverAuthorizedAudio();
+              setMessage(r.error ?? r.message);
+              router.refresh();
+            } catch {
+              setMessage(
+                "Discovery failed. Saved catalog data is unchanged; retry shortly.",
+              );
+            } finally {
+              setPending(false);
+            }
+          }}
+        >
+          Discover authorized previews
+        </button>
+        <button
+          type="button"
+          className="button secondary"
+          disabled={pending}
+          onClick={async () => {
+            setPending(true);
+            try {
+              const r = await importOpenMusic();
+              setMessage(r.error ?? r.message);
+              router.refresh();
+            } catch {
+              setMessage(
+                "Import could not be confirmed. Retry the same pack safely.",
+              );
+            } finally {
+              setPending(false);
+            }
+          }}
+        >
+          Import four open-license recordings
+        </button>
+      </div>
+      <p role="status">{message}</p>
       <details>
         <summary>Review audio sources</summary>
         <label>
@@ -89,7 +143,8 @@ export function AudioEditor({
             Audio HTTPS URL
             <input
               name="url"
-              type="url"
+              type="text"
+              inputMode="url"
               maxLength={2000}
               defaultValue={current?.url ?? ""}
             />
@@ -126,6 +181,26 @@ export function AudioEditor({
             />
           </label>
           <label>
+            Snippet start (seconds)
+            <input
+              name="startSeconds"
+              type="number"
+              min="0"
+              max="86400"
+              step="0.1"
+              defaultValue={current?.startSeconds ?? 0}
+            />
+          </label>
+          <label>
+            License HTTPS URL (optional)
+            <input
+              name="licenseUrl"
+              type="url"
+              maxLength={2000}
+              defaultValue={current?.licenseUrl ?? ""}
+            />
+          </label>
+          <label>
             Audio attribution
             <input
               name="attribution"
@@ -141,7 +216,6 @@ export function AudioEditor({
             {pending ? "Saving…" : "Save audio source"}
           </button>
         </form>
-        <p role="status">{message}</p>
       </details>
     </section>
   );

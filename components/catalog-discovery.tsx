@@ -56,7 +56,7 @@ export function CatalogDiscovery({
       const result = await importExternalSongs(selected);
       setMessage(
         result.error ??
-          `${result.songIds.length} recordings imported or refreshed. Existing edits and ratings preserved.`,
+          `${result.songIds.length} recordings imported or refreshed. Existing edits and ratings preserved. ${result.audioNotice ?? ""}`,
       );
       if (!result.error) {
         setSelections({});

@@ -7,6 +7,18 @@ const originalFetch = globalThis.fetch;
 globalThis.fetch = async (input, init) => {
   const url = new URL(String(input instanceof Request ? input.url : input));
   if (
+    url.origin === "https://commons.wikimedia.org" &&
+    url.pathname === "/w/api.php"
+  )
+    return Response.json(
+      JSON.parse(
+        readFileSync(
+          new URL("./fixtures/commons-previews.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    );
+  if (
     url.origin === "https://musicbrainz.org" &&
     url.pathname.startsWith("/ws/2/recording")
   ) {

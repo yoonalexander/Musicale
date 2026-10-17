@@ -1,5 +1,7 @@
 # Musicale
 
+Custom 15-second previews are available for explicitly authorized recordings across Play, Rank, Daily and song pages. See [audio coverage, licenses, setup and verification](docs/AUDIO_PREVIEWS.md). The original twenty commercial songs retain external links; four attributed open-license recordings supply real in-page music.
+
 **Trust your music instinct.** Play, Rank and Daily work without signing up. Optional accounts add full history and profile details. Guess the higher-rated song in Play, compare favorites continuously in Rank, or join the shared Daily matchup. Play points, preference-driven Elo, and Daily streaks have separate rules.
 
 **Three-mode direction (October 16):** Rank continuously collects preferences to build shared Elo ratings, and Daily remains the shared UTC matchup. Rank and Play are implemented locally; see [Phase 5A](docs/PHASE_5A.md) and [Phase 5B](docs/PHASE_5B.md) for verification. Hosted rollout remains pending. See [the product contract](docs/PRODUCT_MODES.md).

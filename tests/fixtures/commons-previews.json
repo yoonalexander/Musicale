@@ -1,0 +1,215 @@
+{
+  "batchcomplete": "",
+  "query": {
+    "pages": {
+      "64736833": {
+        "pageid": 64736833,
+        "ns": 6,
+        "title": "File:Hall of the Mountain King (ISRC USUAN1200072).mp3",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "size": 6123136,
+            "width": 0,
+            "height": 0,
+            "duration": 152.976,
+            "url": "https://upload.wikimedia.org/wikipedia/commons/8/84/Hall_of_the_Mountain_King_%28ISRC_USUAN1200072%29.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Hall_of_the_Mountain_King_(ISRC_USUAN1200072).mp3",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=64736833",
+            "extmetadata": {
+              "ObjectName": {
+                "value": "Hall of the Mountain King (ISRC USUAN1200072)",
+                "source": "mediawiki-metadata"
+              },
+              "Artist": {
+                "value": "Kevin MacLeod; Original compositon by: <a href=\"//commons.wikimedia.org/wiki/Edvard_Grieg\" title=\"Edvard Grieg\">Edvard Grieg</a>  (1843–1907)",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "CC BY 3.0",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Creative Commons Attribution 3.0",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "true",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "LicenseUrl": {
+                "value": "https://creativecommons.org/licenses/by/3.0",
+                "source": "commons-desc-page"
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              }
+            },
+            "mime": "audio/mpeg",
+            "sha1": "ebb62ed91f3d92740528cbc2030c396e993ca11c"
+          }
+        ]
+      },
+      "64738758": {
+        "pageid": 64738758,
+        "ns": 6,
+        "title": "File:Gymnopedie No. 1 (ISRC USUAN1100787).mp3",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "size": 7487656,
+            "width": 0,
+            "height": 0,
+            "duration": 187.089,
+            "url": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Gymnopedie_No._1_%28ISRC_USUAN1100787%29.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Gymnopedie_No._1_(ISRC_USUAN1100787).mp3",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=64738758",
+            "extmetadata": {
+              "ObjectName": {
+                "value": "Gymnopedie No. 1 (ISRC USUAN1100787)",
+                "source": "mediawiki-metadata"
+              },
+              "Artist": {
+                "value": "Original Composition: <a href=\"//commons.wikimedia.org/wiki/Erik_Satie\" title=\"Erik Satie\">Erik Satie</a>; Arrangement and performance: Kevin MacLeod",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "CC BY 3.0",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Creative Commons Attribution 3.0",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "true",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "LicenseUrl": {
+                "value": "https://creativecommons.org/licenses/by/3.0",
+                "source": "commons-desc-page"
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              }
+            },
+            "mime": "audio/mpeg",
+            "sha1": "a875a337f165f8dbfe3600ba3076b9d186f3c523"
+          }
+        ]
+      },
+      "64738767": {
+        "pageid": 64738767,
+        "ns": 6,
+        "title": "File:Gymnopedie No. 2 (ISRC USUAN1100786).mp3",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "size": 6365435,
+            "width": 0,
+            "height": 0,
+            "duration": 159.033475,
+            "url": "https://upload.wikimedia.org/wikipedia/commons/2/20/Gymnopedie_No._2_%28ISRC_USUAN1100786%29.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Gymnopedie_No._2_(ISRC_USUAN1100786).mp3",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=64738767",
+            "extmetadata": {
+              "ObjectName": {
+                "value": "Gymnopedie No. 2 (ISRC USUAN1100786)",
+                "source": "mediawiki-metadata"
+              },
+              "Artist": {
+                "value": "Original Compostion : <a href=\"//commons.wikimedia.org/wiki/Erik_Satie\" title=\"Erik Satie\">Erik Satie</a> ;Arrangment and performance: Kevin MacLeod",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "CC BY 3.0",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Creative Commons Attribution 3.0",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "true",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "LicenseUrl": {
+                "value": "https://creativecommons.org/licenses/by/3.0",
+                "source": "commons-desc-page"
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              }
+            },
+            "mime": "audio/mpeg",
+            "sha1": "2ad7ff5a728cc7a935dd90c3177b12c5eae4784e"
+          }
+        ]
+      },
+      "64738779": {
+        "pageid": 64738779,
+        "ns": 6,
+        "title": "File:Gymnopedie No. 3 (ISRC USUAN1100785).mp3",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "size": 5804325,
+            "width": 0,
+            "height": 0,
+            "duration": 145.005725,
+            "url": "https://upload.wikimedia.org/wikipedia/commons/1/18/Gymnopedie_No._3_%28ISRC_USUAN1100785%29.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Gymnopedie_No._3_(ISRC_USUAN1100785).mp3",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=64738779",
+            "extmetadata": {
+              "ObjectName": {
+                "value": "Gymnopedie No. 3 (ISRC USUAN1100785)",
+                "source": "mediawiki-metadata"
+              },
+              "Artist": {
+                "value": "Original Composition: <a href=\"//commons.wikimedia.org/wiki/Erik_Satie\" title=\"Erik Satie\">Erik Satie</a>; Arrangment and Performance: Kevin MacLeod",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "CC BY 3.0",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Creative Commons Attribution 3.0",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "true",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "LicenseUrl": {
+                "value": "https://creativecommons.org/licenses/by/3.0",
+                "source": "commons-desc-page"
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              }
+            },
+            "mime": "audio/mpeg",
+            "sha1": "7d43b3c8f597ef8611ae8be252b367e2357dfe71"
+          }
+        ]
+      }
+    }
+  }
+}

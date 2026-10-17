@@ -5,6 +5,9 @@ export interface AudioPreview {
   licensingStatus: "unreviewed" | "authorized" | "rejected";
   authorizationUrl: string | null;
   attribution: string;
+  startSeconds?: number;
+  licenseUrl?: string | null;
+  providerRecordingId?: string | null;
 }
 export function httpsUrl(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 2000) return null;
@@ -20,10 +23,14 @@ export function httpsUrl(value: unknown): string | null {
 export function playablePreview(preview: AudioPreview | null | undefined) {
   return preview?.availability === "available" &&
     preview.licensingStatus === "authorized" &&
-    httpsUrl(preview.url) &&
+    audioUrl(preview.url) &&
     httpsUrl(preview.authorizationUrl) &&
     preview.provider.trim() &&
-    preview.attribution.trim()
+    preview.attribution.trim() &&
+    Number.isFinite(preview.startSeconds ?? 0) &&
+    (preview.startSeconds ?? 0) >= 0 &&
+    (preview.startSeconds ?? 0) <= 86400 &&
+    (!preview.licenseUrl || httpsUrl(preview.licenseUrl))
     ? preview
     : null;
 }
@@ -38,5 +45,13 @@ export function mapAudio(
     licensingStatus: row.licensing_status,
     authorizationUrl: row.authorization_url ?? null,
     attribution: String(row.attribution ?? ""),
+    startSeconds: Number(row.start_seconds ?? 0),
+    licenseUrl: row.license_url ?? null,
+    providerRecordingId: row.provider_recording_id ?? null,
   };
+}
+export function audioUrl(value: unknown): string | null {
+  return typeof value === "string" && /^\/audio\/[a-z0-9-]+[.]mp3$/.test(value)
+    ? value
+    : httpsUrl(value);
 }

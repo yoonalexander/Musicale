@@ -179,6 +179,7 @@ export function DailyMatchup({
       >
         <input type="hidden" name="matchupId" value={matchup.id} />
         <Card
+          key={`${matchup.id}:${matchup.songA.id}`}
           song={matchup.songA}
           matchup={matchup}
           disabled={!canVote || voted || expired}
@@ -187,6 +188,7 @@ export function DailyMatchup({
           VS
         </div>
         <Card
+          key={`${matchup.id}:${matchup.songB.id}`}
           song={matchup.songB}
           matchup={matchup}
           disabled={!canVote || voted || expired}
