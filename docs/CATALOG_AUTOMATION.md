@@ -1,5 +1,7 @@
 # Automated catalog discovery and authorized previews
 
+October 16 update: [the completed 15-second custom player](AUDIO_PREVIEWS.md) replaces the native-control implementation described below. Four explicitly CC BY licensed excerpts are now distributed with attribution; the earlier no-rehosting default still applies to sources without that permission. This document retains the initial catalog implementation's evidence.
+
 Implemented locally on `automated-music-catalog`, based on completed Phase 4 (`db78716`). This addition preserves the existing catalog/editor, JSON/CSV imports, daily scheduling, voting, Elo, audit history and live leaderboard. Production and the Phase 2 hosted sign-in investigation are unchanged.
 
 ## Data flow

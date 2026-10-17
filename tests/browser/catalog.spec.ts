@@ -232,7 +232,7 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
     if (unsupportedWav) {
       // This Windows WebKit build has no WAV decoder; exercise the real unsupported-codec fallback.
       await page
-        .getByRole("button", { name: "Play preview of Respect", exact: true })
+        .getByRole("button", { name: /^(Play|Retry) preview of Respect$/ })
         .click();
       await expect(page.getByRole("status")).toContainText(
         "Preview unavailable",
@@ -283,13 +283,13 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
       }),
     );
     await page.reload();
-    if (!unsupportedWav) {
+    {
       await expect(audio).toHaveAttribute(
         "src",
         "https://audio.example.test/unavailable.wav",
       );
       await page
-        .getByRole("button", { name: "Play preview of Respect", exact: true })
+        .getByRole("button", { name: /^(Play|Retry) preview of Respect$/ })
         .click();
     }
     await expect(page.getByRole("status")).toContainText("Preview unavailable");

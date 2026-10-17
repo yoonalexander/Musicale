@@ -50,6 +50,7 @@ test("real licensed music: custom controls, pause, exclusive playback, seeking, 
   test.setTimeout(150000);
   // Observe real decoded music and the actual output gain, without changing the product's audio path.
   await context.addInitScript(() => {
+    if (typeof AudioContext === "undefined") return;
     const original = AudioContext.prototype.createGain;
     (window as any).__audioProbes = [];
     AudioContext.prototype.createGain = function () {
@@ -78,6 +79,19 @@ test("real licensed music: custom controls, pause, exclusive playback, seeking, 
       0,
     );
     await a.getByRole("button").click();
+    if (await page.evaluate(() => typeof AudioContext === "undefined")) {
+      // Windows Playwright WebKit omits Web Audio; verify honest fallback instead of claiming playback.
+      await expect(a).toHaveAttribute("data-state", "error");
+      await expect(a.getByRole("status")).toHaveText("Preview unavailable");
+      expect(
+        (
+          await new AxeBuilder({ page })
+            .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+            .analyze()
+        ).violations,
+      ).toEqual([]);
+      return;
+    }
     await expect(a).toHaveAttribute("data-state", "playing");
     await expect
       .poll(() =>
@@ -207,12 +221,15 @@ test("licensed catalog import, Rank votes, Play and song-page integration, clean
   try {
     const uid = await setup(page, request, info.project.name);
     await rank(page);
+    const expectedPlayback = await page.evaluate(() =>
+      typeof AudioContext === "undefined" ? "error" : "playing",
+    );
     for (let i = 0; i < 2; i++) {
       await expect(page.locator(".audio-preview")).toHaveCount(2);
       await page.locator(".audio-preview").first().getByRole("button").click();
       await expect(page.locator(".audio-preview").first()).toHaveAttribute(
         "data-state",
-        "playing",
+        expectedPlayback,
       );
       await page.evaluate(() => {
         (window as any).__oldAudio = document.querySelector("audio");
@@ -247,7 +264,7 @@ test("licensed catalog import, Rank votes, Play and song-page integration, clean
     await page.locator(".audio-preview").first().getByRole("button").click();
     await expect(page.locator(".audio-preview").first()).toHaveAttribute(
       "data-state",
-      "playing",
+      expectedPlayback,
     );
     const round = JSON.parse(
       runSql(
@@ -269,7 +286,7 @@ test("licensed catalog import, Rank votes, Play and song-page integration, clean
     await expect(player).toHaveAttribute("data-state", "error");
     await page.unroute("**/audio/64738758.mp3");
     await player.getByRole("button", { name: /Retry preview/ }).click();
-    await expect(player).toHaveAttribute("data-state", "playing");
+    await expect(player).toHaveAttribute("data-state", expectedPlayback);
     runSql(
       "update song_audio_sources set availability='unavailable' where song_id='open-gymnopedie-1'",
     );

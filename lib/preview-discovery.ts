@@ -88,6 +88,10 @@ export function normalizeCommonsPreview(
   };
 }
 export async function discoverPreviews(songs: PreviewSong[]) {
+  if (songs.length >= 1000)
+    throw new Error(
+      "Preview discovery requires a complete catalog below 1000 songs; add pagination before expanding this catalog.",
+    );
   const matched = recordings.flatMap((recording) => {
     const matches = songs.filter((s) => previewMatches(s, recording));
     return matches.length === 1 ? [{ recording, song: matches[0] }] : [];

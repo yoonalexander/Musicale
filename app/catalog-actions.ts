@@ -213,6 +213,10 @@ export async function importOpenMusic() {
       .limit(1000);
     if (existing.error)
       throw new Error("Could not review the catalog before import.");
+    if (existing.data.length >= 1000)
+      throw new Error(
+        "Review the complete catalog with pagination before importing the open pack. No recordings were changed.",
+      );
     const songs = authorizedRecordings
       .filter(
         (r) =>

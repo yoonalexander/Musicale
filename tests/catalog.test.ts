@@ -282,6 +282,10 @@ await test("reviewed open recordings match exact identities, reject ambiguous me
     );
     assert.equal(calls, 1);
     globalThis.fetch = async () => new Response(null, { status: 503 });
+    await assert.rejects(
+      discoverPreviews(Array(1000).fill(song)),
+      /complete catalog/,
+    );
     await assert.rejects(discoverPreviews([song]), /unavailable/);
   } finally {
     globalThis.fetch = original;

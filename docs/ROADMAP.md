@@ -341,7 +341,7 @@ Code changes and local tests can proceed independently where dependencies allow.
 
 ## Explicitly outside this release
 
-Friends, tournaments, personalized recommendations, voting modes beyond Play/Rank/Daily, guest Play, a competitive game-score leaderboard, native mobile apps, paid subscriptions, audio hosting, mandatory embedded players, a separate backend service and a large-scale infrastructure rewrite are outside the initial scope. Play and Rank are now required by the owner's approved product direction. A much larger catalog and complete artwork coverage can follow after the core release.
+Friends, tournaments, personalized recommendations, voting modes beyond Play/Rank/Daily, a competitive game-score leaderboard, native mobile apps, paid subscriptions, a separate backend service and a large-scale infrastructure rewrite remain outside the initial scope. Play, Rank, guest access and authorized 15-second previews are required by the owner's revised product direction. Commercial-preview coverage depends on explicit permission. A much larger catalog and complete artwork coverage can follow after the core release.
 
 No calendar deadline is invented here: email/domain setup, environment access and the seven-day beta introduce external or elapsed-time dependencies. Phase completion is based on evidence, not a subjective percentage.
 
