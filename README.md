@@ -58,6 +58,8 @@ Visit `http://localhost:3000`. Open `http://127.0.0.1:55324` to follow local sig
 
 To use a hosted Supabase project instead, apply the migrations as described below, fill in its URL/anon key, and configure the Site URL plus the exact `/api/auth/callback` redirect in Supabase Auth. Both configuration values must be set together. The only supported Musicale reset time zone is UTC.
 
+New email sign-ins require both **Confirm signup** and **Magic Link** templates to use [supabase/templates/sign-in.html](supabase/templates/sign-in.html). Opening that link displays a confirmation page; only pressing **Confirm sign-in** consumes the token and creates the browser session. Deploy the application support before changing hosted templates; [Phase 2 rollout instructions](docs/PHASE_2.md#required-rollout-order) include ordering and rollback. Previously sent PKCE links remain supported in their requesting browser.
+
 ## Database migration and existing data
 
 `0001_initial.sql` is unchanged historical migration content. **Do not replace or reapply an already-applied migration.**

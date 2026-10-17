@@ -137,3 +137,11 @@ export function validateSong(value: unknown): SongInput {
     artworkAttribution: artworkUrl ? artworkAttribution || null : null,
   };
 }
+export function validEmailTokenHash(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length >= 1 &&
+    value.length <= 512 &&
+    !/[^A-Za-z0-9_-]/.test(value)
+  );
+}

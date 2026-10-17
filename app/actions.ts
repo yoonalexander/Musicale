@@ -9,6 +9,7 @@ import {
   songId,
   utcWindow,
   validateSong,
+  validEmailTokenHash,
   type SongInput,
 } from "@/lib/validation";
 import { requireAdmin } from "@/lib/auth";
@@ -66,6 +67,33 @@ export async function signOutAction() {
   const db = await getSupabaseServerClient();
   await db?.auth.signOut();
   redirect("/");
+}
+export async function confirmEmailSignIn(fd: FormData) {
+  const tokenHash = fd.get("tokenHash");
+  if (!isSupabaseConfigured() || !validEmailTokenHash(tokenHash))
+    return go("/login", "message", "Invalid sign-in link. Request a new link.");
+  const db = await getSupabaseServerClient();
+  let failed = false;
+  try {
+    const { error } = await db!.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: "email",
+    });
+    failed = Boolean(error);
+  } catch {
+    go(
+      "/login",
+      "message",
+      "Sign-in is temporarily unavailable. Please request a new link shortly.",
+    );
+  }
+  if (failed)
+    go(
+      "/login",
+      "message",
+      "Sign-in link expired or was already used. Request a new link.",
+    );
+  redirect("/today");
 }
 export async function submitDailyVote(fd: FormData) {
   if (!isSupabaseConfigured())

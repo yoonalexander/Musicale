@@ -33,6 +33,12 @@ enable_manual_linking = true
 enable_signup = true
 enable_confirmations = true
 max_frequency = "1s"
+[auth.email.template.confirmation]
+subject = "Confirm your Musicale sign-in"
+content_path = "./supabase/templates/sign-in.html"
+[auth.email.template.magic_link]
+subject = "Your Musicale sign-in link"
+content_path = "./supabase/templates/sign-in.html"
 [auth.rate_limit]
 # Local browser projects share one IP. Keep hosted anonymous limits independently configured.
 anonymous_users = 200
