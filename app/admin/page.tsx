@@ -109,6 +109,15 @@ export default async function Admin({
           the next 30 UTC days. The starter plan connects all twenty songs, with
           three opponents each. Existing scheduled days are preserved.
         </p>
+        <p className="notice">
+          {data.readiness.today_playable
+            ? "Today is playable."
+            : "Today needs attention: no playable pair."}{" "}
+          {data.readiness.buffer_days} consecutive future days are playable.
+          {data.readiness.buffer_days < 14
+            ? " Replenish or repair the queue to keep at least 14 days ahead."
+            : " The minimum 14-day buffer is covered."}
+        </p>
         <p>{queue.length} of the next 30 days are scheduled.</p>
         {queue.length === 30 ? (
           <p className="notice">

@@ -44,10 +44,11 @@ export function localSettings() {
       "http://127.0.0.1:58321",
       "http://127.0.0.1:59321",
       "http://127.0.0.1:60321",
+      "http://127.0.0.1:61321",
     ].includes(settings.API_URL)
   )
     throw new Error(
-      "UI tests require an isolated local Musicale backend on port 55321, 56321, 57321, 58321, 59321 or 60321.",
+      "UI tests require an isolated local Musicale backend on port 55321, 56321, 57321, 58321, 59321, 60321 or 61321.",
     );
   return settings;
 }

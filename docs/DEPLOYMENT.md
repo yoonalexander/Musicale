@@ -1,6 +1,12 @@
 # Production deployment
 
+October 17 local integration: the current candidate combines all branches. Canonical migrations are `0001`–`0016`: catalog `0010`, operations `0011` (renamed from its unapplied parallel `0010`), Rank `0012`, Play `0013`, audio `0014`–`0015`, and audio-aware readiness `0016`. Apply only unapplied versions after inspecting the target history and taking a private backup. A local operations-only database tracking the older `0010_product_readiness` needs an explicit forward reconciliation; never silently rename applied history. No hosted changes or push occurred during integration. See [integration evidence](INTEGRATION.md).
+
 Initial production setup: October 1, 2026. Preview environment scopes rechecked and changed October 15, 2026 through the signed-in Chrome dashboard. Database/authentication observations below remain the October 1 record unless explicitly dated otherwise.
+
+## Phase 6 prepared rollout
+
+Migration `0011_product_readiness.sql` and `/api/readiness` are prepared locally. Apply only unapplied migrations in the canonical chain above before the compatible application deployment. The monitor is disabled until its private configuration, actual staging failure notification and release approval are recorded. No new production backup or deployment was made. [Operations](OPERATIONS.md), [capacity](CAPACITY.md) and [Phase 6 evidence](PHASE_6.md) distinguish prepared steps from hosted facts. The following Phase 2/initial observations are historical, not a fresh production inspection.
 
 ## Phase 4 prepared rollout
 
@@ -14,7 +20,7 @@ The catalog addition builds on Phase 4 and adds `0010_catalog_discovery.sql`. Ap
 
 ## Continuous Rank prepared rollout — October 16
 
-Phase 5A adds `0012_continuous_rank.sql` after the catalog migration. No hosted changes were made. Apply the migration before its application code, and verify private issued-comparison/vote RLS, mixed-mode replay, independent Daily participation and two-browser live delivery in the target environment. Version 0011 is reserved for the parallel operations migration; reconcile its duplicate 0010 before integrating those branches. Do not rewrite applied history or reset hosted data. See [Phase 5A evidence, migration order and limits](PHASE_5A.md). The hosted sign-in blocker remains open.
+Phase 5A adds `0012_continuous_rank.sql` after the catalog migration. No hosted changes were made. Apply the migration before its application code, and verify private issued-comparison/vote RLS, mixed-mode replay, independent Daily participation and two-browser live delivery in the target environment. Operations now occupies the previously reserved version 0011. Do not rewrite applied history or reset hosted data. See [Phase 5A evidence, migration order and limits](PHASE_5A.md). The hosted sign-in blocker remains open.
 
 ## October 16 game-first guest update
 
@@ -22,7 +28,7 @@ Phase 5A adds `0012_continuous_rank.sql` after the catalog migration. No hosted 
 
 ## October 16 Phase 5B update
 
-Play is implemented on `phase-5b-higher-rated-game` with additive migration `0013_play.sql`. Apply it before deploying the new Play/Profile code, after catalog `0010` and Rank `0012`; preserve `0011` for the parallel operations migration when integrated. Do not rewrite applied history or reset hosted data. Direct reads of Play tables are denied even to owners, and only graded own answers are exposed by the state RPC. Public Realtime remains songs only. No production changes were made for this phase. See [Phase 5B evidence and remaining hosted acceptance](PHASE_5B.md).
+Play is implemented on `phase-5b-higher-rated-game` with additive migration `0013_play.sql`. Apply it before deploying the new Play/Profile code, after catalog `0010` and Rank `0012`; operations now occupies `0011`. Do not rewrite applied history or reset hosted data. Direct reads of Play tables are denied even to owners, and only graded own answers are exposed by the state RPC. Public Realtime remains songs only. No production changes were made for this phase. See [Phase 5B evidence and remaining hosted acceptance](PHASE_5B.md).
 
 ## October 15 Phase 2 update
 

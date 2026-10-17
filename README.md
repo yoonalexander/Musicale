@@ -8,6 +8,18 @@ Custom 15-second previews are available for explicitly authorized recordings acr
 
 See [the game-first guest experience](docs/GUEST_EXPERIENCE.md), [Phase 5B Play evidence](docs/PHASE_5B.md), [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
 
+**Release status (October 16, 2026):** implemented and tested locally; public acceptance is pending. The read-only production check found database health ready but Today unavailable. Hosted sign-in needs a successful retest, manual acceptance is outstanding, and the seven-day beta has not started. See [release evidence and blockers](docs/PHASE_7.md).
+
+See [Phase 6 operations evidence](docs/PHASE_6.md), [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+
+[Interview demo](docs/DEMO.md) · [Résumé claim evidence](docs/CLAIM_EVIDENCE.md) · [Real beta checklist](docs/BETA.md)
+
+![Current Musicale guest welcome](docs/evidence/guest-experience/desktop-guest-welcome.png)
+
+Historical Phase 7 screenshots use automated test participation and predate the guest/audio updates: [Today on mobile](docs/screenshots/today-mobile.png), [live leaderboard on mobile](docs/screenshots/leaderboard-mobile.png), [song details](docs/screenshots/song-desktop.png).
+
+See [local branch integration and current validation](docs/INTEGRATION.md).
+
 ## Product and architecture
 
 This rebuild replaces the previous musical-theatre ranking / higher-lower game. The July 2026 product request called for a shared daily vote loop inspired by Wordle, with a monochrome editorial interface, one accent color, persistent accounts, and server-calculated ratings and streaks. The original unfinished changes were completed around that MVP; the October three-mode product contract now adds continuous Rank and the higher-rated Play game. See [the refactor notes](docs/REFACTOR.md).
@@ -69,7 +81,7 @@ New email sign-ins require both **Confirm signup** and **Magic Link** templates 
 - Database already running the daily MVP through `0003`: apply `0004` through `0010`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
 - With Supabase CLI migration tracking, use normal ordered migration application; do not run a reset against hosted data.
 
-Then apply `0012_continuous_rank.sql` before deploying the Rank application changes. Version 0011 is reserved for the parallel operations migration; this branch intentionally has a gap. Its existing `0010_product_readiness.sql` must be reconciled with catalog's 0010 before branch integration. See [the migration integration instructions](docs/PHASE_5A.md#migration-integration-and-rollout). Never rewrite applied hosted migration history.
+Canonical migration order is now catalog `0010`, operations `0011`, Rank `0012`, Play `0013`, audio `0014`–`0015`, and audio-aware readiness `0016`. Inspect applied history and apply only missing versions before deploying compatible code. The older operations branch’s unapplied `0010` was renamed to `0011`; never silently rename applied hosted history. See [integration evidence](docs/INTEGRATION.md).
 
 Migration 0002 moves the old songs, votes, profiles, game runs and quota records into the **private, unexposed `musicale_legacy` schema**. Existing account identities, join dates, display names and admin roles are copied into the new profiles. Old votes and ratings are preserved for reference, rather than mixed into the new catalog. The old public ranking RPC is removed. Migration 0003 completes access controls, result privacy, admin audit/import tools, configurable Elo, and history queries.
 
@@ -156,6 +168,12 @@ Analytics is off by default and enabled per browser on `/privacy`. Do Not Track 
 ## Catalog automation and authorized audio
 
 Admin can search MusicBrainz, review duplicate candidates, import batches and refresh source metadata while preserving editorial edits and rankings. New discoveries start unavailable. Audio authorization and availability are managed separately from external links. See [catalog automation and evidence](docs/CATALOG_AUTOMATION.md) for provider terms, ownership rules, admin instructions and migration `0010` rollout. iTunes was evaluated and remains disabled; no third-party preview URL implies permission.
+
+## Operations and recovery
+
+`/api/health` checks database connectivity; `/api/readiness` checks today and the consecutive playable future buffer without exposing future choices. Admin reports a gap before later scheduled dates can hide it. The hourly alert workflow is prepared but disabled until its Resend destination and real staging delivery are verified. See [operations](docs/OPERATIONS.md), [capacity assumptions](docs/CAPACITY.md), and [Phase 6 evidence](docs/PHASE_6.md).
+
+`npm run verify` also restores a private local logical export into a disposable database after browser voting. It verifies Auth/application rows, RLS, grants, constraints, object definitions and duplicate protection. This local rehearsal is separate from a hosted restore and an encrypted off-site production backup, both still release requirements.
 
 ## Music providers and rights
 

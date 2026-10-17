@@ -261,21 +261,23 @@ The October 16 audio scope adds a shared 15-second player, four explicitly licen
 
 **Outcome:** The website continues working after launch week and can recover from an operational failure.
 
+**Current status:** readiness, monitoring implementation, isolated restore and runbooks pass locally and in clean-checkout CI; hosted activation, alert receipt and private backup destination/export remain pending. [Phase 6 evidence](PHASE_6.md) records the boundary.
+
 ### Tasks
 
 - [ ] **6.1 Establish editorial ownership.** Maintain a 30-day scheduled buffer and a weekly replenishment routine. Assign an owner and document how to replace unavailable recordings and recover a cancelled/missing day.
 - [ ] **6.2 Monitor actual product availability.** Keep database health separate from Daily availability/schedule coverage and Rank/Play eligibility. Alert the owner when today's valid pair is missing, future coverage falls below 14 days or a mode lacks enough eligible songs. Do not expose future Daily choices, private issued pairs or Play answers through a public readiness endpoint.
 - [ ] **6.3 Verify failure notifications.** Deliberately trigger a safe staging failure and confirm the monitor delivers an actionable alert. Record the response steps; a configured monitor without a delivery test is incomplete.
 - [ ] **6.4 Exercise backup and restore.** Document the actual backup/export mechanism available on the chosen hosting plan. Restore a backup into an isolated database and verify schema, Daily/Rank votes, combined rating events, Play runs and constraints. Document how auth identities and grants are preserved or reconciled; ranking reconstruction alone does not restore deleted source records or accounts.
-- [ ] **6.5 Write recovery and deployment runbooks.** Cover missing matchup, email delivery failure, unavailable provider link, inconsistent rankings, failed migration and failed deployment. State when to use ranking rebuild versus database restore, and how to stop/retry writes safely.
-- [ ] **6.6 Record capacity and service limits.** Capture the small load-test results, expected beta use, relevant hosting/email/realtime limits and what would trigger a later capacity review. No paid upgrade is a default requirement; choose only what the verified release needs.
-- [ ] **6.7 Update operational documentation.** Replace stale deployment status with dated verified facts, owner actions and known limits. Keep secrets and personal account data out of logs and public evidence.
+- [x] **6.5 Write recovery and deployment runbooks.** Cover missing matchup, email delivery failure, unavailable provider link, inconsistent rankings, failed migration and failed deployment. State when to use ranking rebuild versus database restore, and how to stop/retry writes safely.
+- [x] **6.6 Record capacity and service limits.** Capture the small load-test results, expected beta use, relevant hosting/email/realtime limits and what would trigger a later capacity review. No paid upgrade is a default requirement; choose only what the verified release needs.
+- [x] **6.7 Update operational documentation.** Replace stale deployment status with dated verified facts, owner actions and known limits. Keep secrets and personal account data out of logs and public evidence.
 
 **Primary files:** [health endpoint](../app/api/health/route.ts), [Admin](../app/admin/page.tsx), [admin data](../lib/data.ts), [deployment notes](DEPLOYMENT.md), [README](../README.md), and a concise operational runbook.
 
 ### Phase gate
 
-- [ ] Database connectivity and daily-product availability are independently observable.
+- [x] Database connectivity and daily-product availability are independently observable.
 - [ ] Missing-day/low-queue alerts reach the designated owner.
 - [ ] A recorded isolated restore succeeds and the owner can follow the recovery instructions.
 - [ ] Content has enough forward coverage to survive a missed weekly maintenance session.
@@ -286,6 +288,8 @@ The October 16 audio scope adds a shared 15-second player, four explicitly licen
 ## Phase 7 — Validate the release and package the evidence
 
 **Outcome:** A recruiter can try the site, and an interviewer can inspect reproducible support for every résumé claim.
+
+**Current status:** release/demo/claim evidence, the real beta checklist and the original Phase 7 candidate CI are complete. The integrated candidate requires fresh local validation; see [integration evidence](INTEGRATION.md). Hosted daily availability, sign-in, human acceptance, operational activation and seven actual UTC days remain blockers. [Phase 7 evidence](PHASE_7.md) records the observed public state and the withheld release.
 
 ### Tasks
 

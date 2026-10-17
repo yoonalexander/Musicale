@@ -24,7 +24,7 @@ export const runSql = (text: string) =>
     { input: text, encoding: "utf8" },
   ).trim();
 
-export async function signIn(
+export async function requestSignInLink(
   page: Page,
   request: APIRequestContext,
   email: string,
@@ -52,12 +52,22 @@ export async function signIn(
     await request.get(`${mailUrl}/api/v1/message/${messageId}`)
   ).json();
   const href = String(message.HTML).match(
-    /href="([^"]*\/auth\/v1\/verify[^"]*)"/,
+    /href="([^"]*(?:\/auth\/v1\/verify|\/api\/auth\/callback\?token_hash=)[^"]*)"/,
   )?.[1];
   expect(href, "Local sign-in email contains a verification link").toBeTruthy();
-  await page.goto(href!.replaceAll("&amp;", "&"));
-  await expect(page).toHaveURL(/\/today$/);
   return href!.replaceAll("&amp;", "&");
+}
+export async function signIn(
+  page: Page,
+  request: APIRequestContext,
+  email: string,
+) {
+  const link = await requestSignInLink(page, request, email);
+  await page.goto(link);
+  if (new URL(link).searchParams.has("token_hash"))
+    await page.getByRole("button", { name: "Confirm sign-in" }).click();
+  await expect(page).toHaveURL(/\/today$/);
+  return link;
 }
 
 export async function dismissPlayTutorial(page: Page) {

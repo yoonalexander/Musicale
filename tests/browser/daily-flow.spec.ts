@@ -1,77 +1,9 @@
 import { readFileSync } from "node:fs";
 import { test, expect } from "@playwright/test";
-import { runSql, signIn } from "../browser-helpers";
+import { runSql, signIn, requestSignInLink } from "../browser-helpers";
 import AxeBuilder from "@axe-core/playwright";
-<<<<<<< HEAD
-=======
 // @ts-expect-error Node-only local test helper.
 import { localSettings } from "../local-env.mjs";
-
-localSettings(); // Refuse tests against a hosted project.
-const runSql = (text: string) =>
-  execFileSync(
-    "docker",
-    [
-      "exec",
-      "-i",
-      "supabase_db_musicale",
-      "psql",
-      "-X",
-      "-qAt",
-      "-v",
-      "ON_ERROR_STOP=1",
-      "-U",
-      "postgres",
-      "-d",
-      "postgres",
-    ],
-    { input: text, encoding: "utf8" },
-  ).trim();
-
-async function requestSignInLink(
-  page: Page,
-  request: APIRequestContext,
-  email: string,
-) {
-  await page.goto("/login");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByRole("button", { name: "Send magic link" }).click();
-  await expect(
-    page.getByText("Magic link sent. Check your inbox."),
-  ).toBeVisible();
-  let messageId = "";
-  await expect
-    .poll(async () => {
-      const response = await request.get(
-        "http://127.0.0.1:55324/api/v1/messages",
-      );
-      const inbox = await response.json();
-      const message = inbox.messages.find(
-        (m: { To: { Address: string }[]; ID: string }) =>
-          m.To.some((t) => t.Address === email),
-      );
-      messageId = message?.ID ?? "";
-      return Boolean(messageId);
-    })
-    .toBe(true);
-  const message = await (
-    await request.get(`http://127.0.0.1:55324/api/v1/message/${messageId}`)
-  ).json();
-  const href = String(message.HTML).match(
-    /href="([^"]*\/api\/auth\/callback\?token_hash=[^"]*)"/,
-  )?.[1];
-  expect(href, "Local sign-in email contains a verification link").toBeTruthy();
-  return href!.replaceAll("&amp;", "&");
-}
->>>>>>> phase-2-public-daily-loop
-
-async function signIn(page: Page, request: APIRequestContext, email: string) {
-  const link = await requestSignInLink(page, request, email);
-  await page.goto(link);
-  await page.getByRole("button", { name: "Confirm sign-in" }).click();
-  await expect(page).toHaveURL(/\/today$/);
-  return link;
-}
 
 test("an email preview cannot consume sign-in before the listener confirms", async ({
   page,

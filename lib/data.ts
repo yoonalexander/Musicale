@@ -252,46 +252,64 @@ export async function getSongHistory(id: string) {
 }
 export async function getAdminData() {
   const db = await getSupabaseServerClient();
-  const [songs, matchups, settings, audit, overview, events, sources, audio] =
-    await Promise.all([
-      db!.from("song_catalog").select("*").order("title").limit(1000),
-      db!
-        .from("daily_matchups")
-        .select("*")
-        .gte(
-          "matchup_day",
-          new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
-        )
-        .order("matchup_day")
-        .limit(90),
-      db!.from("app_settings").select("elo_k_factor").single(),
-      db!
-        .from("admin_audit_log")
-        .select("id,entity,entity_id,operation,created_at")
-        .order("created_at", { ascending: false })
-        .limit(20),
-      db!.rpc("get_admin_overview"),
-      db!
-        .from("product_event_counts")
-        .select("*")
-        .order("event_day", { ascending: false })
-        .limit(240),
-      db!
-        .from("catalog_sources")
-        .select(
-          "provider,provider_song_id,song_id,source_url,metadata_license,metadata,isrcs,synced_at",
-        )
-        .order("synced_at", { ascending: false })
-        .limit(1000),
-      db!
-        .from("song_audio_sources")
-        .select(
-          "song_id,provider,url,availability,licensing_status,authorization_url,attribution,start_seconds,license_url,provider_recording_id",
-        ),
-    ]);
-  [songs, matchups, settings, audit, overview, events, sources, audio].forEach(
-    (r) => check(r.error),
-  );
+  const [
+    songs,
+    matchups,
+    settings,
+    audit,
+    overview,
+    readiness,
+    events,
+    sources,
+    audio,
+  ] = await Promise.all([
+    db!.from("song_catalog").select("*").order("title").limit(1000),
+    db!
+      .from("daily_matchups")
+      .select("*")
+      .gte(
+        "matchup_day",
+        new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
+      )
+      .order("matchup_day")
+      .limit(90),
+    db!.from("app_settings").select("elo_k_factor").single(),
+    db!
+      .from("admin_audit_log")
+      .select("id,entity,entity_id,operation,created_at")
+      .order("created_at", { ascending: false })
+      .limit(20),
+    db!.rpc("get_admin_overview"),
+    db!.rpc("get_product_readiness"),
+    db!
+      .from("product_event_counts")
+      .select("*")
+      .order("event_day", { ascending: false })
+      .limit(240),
+    db!
+      .from("catalog_sources")
+      .select(
+        "provider,provider_song_id,song_id,source_url,metadata_license,metadata,isrcs,synced_at",
+      )
+      .order("synced_at", { ascending: false })
+      .limit(1000),
+    db!
+      .from("song_audio_sources")
+      .select(
+        "song_id,provider,url,availability,licensing_status,authorization_url,attribution,start_seconds,license_url,provider_recording_id",
+      ),
+  ]);
+  [
+    songs,
+    matchups,
+    settings,
+    audit,
+    overview,
+    readiness,
+    events,
+    sources,
+    audio,
+  ].forEach((r) => check(r.error));
   return {
     songs: (songs.data ?? []).map(mapSong),
     sources: sources.data ?? [],
@@ -303,6 +321,12 @@ export async function getAdminData() {
     kFactor: settings.data!.elo_k_factor,
     audit: audit.data ?? [],
     overview: overview.data as AdminOverview,
+    readiness: readiness.data as {
+      today_playable: boolean;
+      buffer_days: number;
+      scheduled_days: number;
+      utc_day: string;
+    },
     events: (events.data ?? []) as {
       event_day: string;
       event: string;

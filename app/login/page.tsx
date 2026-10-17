@@ -18,7 +18,6 @@ export default async function Login({
       <h1>Your music, remembered.</h1>
       <p>We’ll email you a secure, one-time sign-in link.</p>
       <p>
-<<<<<<< HEAD
         Playing and ranking are free to enjoy without signing in. An account
         adds your history and profile.
       </p>
@@ -29,11 +28,8 @@ export default async function Login({
         </p>
       ) : null}
       <p>
-        Open the newest link in this browser. Check spam if it doesn’t arrive.
-=======
         Open the newest email link, then press Confirm sign-in. Check spam if it
         doesn’t arrive.
->>>>>>> phase-2-public-daily-loop
       </p>
       {p.message ? (
         <div className="notice" role="status">

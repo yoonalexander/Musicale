@@ -18,6 +18,8 @@ async function test(name, run) {
 }
 // Filled from Git commit 96ab7d7, normalized to LF for Windows/Linux parity.
 const historicalHashes = {
+  "0009_live_rankings.sql":
+    "94aa73b652f1df38cbf38319b0f3b83a3522680d22764e9ea71c5b562a95686d",
   "0008_transactional_boundaries.sql":
     "d47b6aa8c184cd4f4964f91c3ea4cf88520a08d8c0d117a070a1f20dfb7fbb19",
   "0001_initial.sql":
