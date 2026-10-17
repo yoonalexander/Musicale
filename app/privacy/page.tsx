@@ -55,11 +55,12 @@ export default function Privacy() {
         <p>
           Opening a music link takes you to its provider, where that provider’s
           terms and privacy policy apply. Explicitly authorized previews stream
-          directly from their source when you press play; that host receives the
-          playback request. Musicale does not proxy, download or rehost audio.
-          If supplied by an editor, artwork loads from its source; that host
-          receives the image request. We suppress the referrer on artwork
-          requests.
+          when you press play. Four explicitly CC BY licensed excerpts are
+          served by Musicale with attribution; other approved external sources
+          receive the playback request directly. Musicale does not proxy or copy
+          commercial recordings without permission. If supplied by an editor,
+          artwork loads from its source; that host receives the image request.
+          We suppress the referrer on artwork requests.
         </p>
       </section>
       <section className="panel">

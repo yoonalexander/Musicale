@@ -19,6 +19,7 @@ import { requireAdmin } from "@/lib/auth";
 import { CatalogEditor } from "@/components/catalog-editor";
 import { CatalogDiscovery } from "@/components/catalog-discovery";
 import { AudioEditor } from "@/components/audio-editor";
+import { playablePreview } from "@/lib/audio";
 
 // MusicBrainz batches deliberately space requests; allow time for a reviewed ten-song import.
 export const maxDuration = 60;
@@ -51,7 +52,8 @@ export default async function Admin({
   const playable = data.songs.filter(
     (s) =>
       s.status === "active" &&
-      s.providers.some((p) => p.provider !== "musicbrainz"),
+      (s.providers.some((p) => p.provider !== "musicbrainz") ||
+        playablePreview(s.audioPreview)),
   );
   const songNames = Object.fromEntries(data.songs.map((s) => [s.id, s.title]));
   const queue = data.matchups.filter(
@@ -283,14 +285,16 @@ export default async function Admin({
         {data.songs.filter(
           (s) =>
             s.status === "active" &&
-            !s.providers.some((p) => p.provider !== "musicbrainz"),
+            !s.providers.some((p) => p.provider !== "musicbrainz") &&
+            !playablePreview(s.audioPreview),
         ).length ? (
           <ul>
             {data.songs
               .filter(
                 (s) =>
                   s.status === "active" &&
-                  !s.providers.some((p) => p.provider !== "musicbrainz"),
+                  !s.providers.some((p) => p.provider !== "musicbrainz") &&
+                  !playablePreview(s.audioPreview),
               )
               .map((s) => (
                 <li key={s.id}>

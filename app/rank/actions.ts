@@ -17,8 +17,16 @@ function fail(message: string): never {
   redirect(`/rank?error=${encodeURIComponent(message)}` as Route);
 }
 export async function startRank() {
+  return prepare(false);
+}
+export async function startPreviewRank() {
+  return prepare(true);
+}
+async function prepare(previews: boolean) {
   const db = await client();
-  const { data, error } = await db.rpc("start_rank_pair");
+  const { data, error } = await db.rpc(
+    previews ? "start_preview_rank_pair" : "start_rank_pair",
+  );
   if (error || data?.error)
     fail(data?.error ?? "Could not prepare your pair. Please retry.");
   revalidatePath("/rank");

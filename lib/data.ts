@@ -103,7 +103,7 @@ export async function getTodayMatchup(): Promise<Matchup | null> {
   const audio = await db!
     .from("song_audio_sources")
     .select(
-      "song_id,provider,url,availability,licensing_status,authorization_url,attribution",
+      "song_id,provider,url,availability,licensing_status,authorization_url,attribution,start_seconds,license_url,provider_recording_id",
     )
     .in("song_id", [row.song_a.id, row.song_b.id])
     .eq("availability", "available")
@@ -286,7 +286,7 @@ export async function getAdminData() {
       db!
         .from("song_audio_sources")
         .select(
-          "song_id,provider,url,availability,licensing_status,authorization_url,attribution",
+          "song_id,provider,url,availability,licensing_status,authorization_url,attribution,start_seconds,license_url,provider_recording_id",
         ),
     ]);
   [songs, matchups, settings, audit, overview, events, sources, audio].forEach(

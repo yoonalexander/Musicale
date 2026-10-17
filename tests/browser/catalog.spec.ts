@@ -198,9 +198,9 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
       localStorage.setItem("musicale-analytics", "yes"),
     );
     let audioRequests = 0;
-    const wav = Buffer.alloc(16044);
+    const wav = Buffer.alloc(480044);
     wav.write("RIFF", 0);
-    wav.writeUInt32LE(16036, 4);
+    wav.writeUInt32LE(480036, 4);
     wav.write("WAVEfmt ", 8);
     wav.writeUInt32LE(16, 16);
     wav.writeUInt16LE(1, 20);
@@ -210,10 +210,14 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
     wav.writeUInt16LE(2, 32);
     wav.writeUInt16LE(16, 34);
     wav.write("data", 36);
-    wav.writeUInt32LE(16000, 40);
+    wav.writeUInt32LE(480000, 40);
     await page.route("https://audio.example.test/preview.wav", (route) => {
       audioRequests++;
-      return route.fulfill({ contentType: "audio/wav", body: wav });
+      return route.fulfill({
+        contentType: "audio/wav",
+        body: wav,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      });
     });
     await page.goto("/today");
     if (!unsupportedWav)
@@ -227,10 +231,9 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
     expect(audioRequests).toBe(0);
     if (unsupportedWav) {
       // This Windows WebKit build has no WAV decoder; exercise the real unsupported-codec fallback.
-      if (await audio.count())
-        await audio.evaluate((el: HTMLAudioElement) => {
-          void el.play().catch(() => {});
-        });
+      await page
+        .getByRole("button", { name: "Play preview of Respect", exact: true })
+        .click();
       await expect(page.getByRole("status")).toContainText(
         "Preview unavailable",
       );
@@ -239,14 +242,18 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
         .toBe(true);
       expect(events).not.toContain("preview_play_started");
     } else {
-      await audio.evaluate((el: HTMLAudioElement) => el.play());
+      await page
+        .getByRole("button", { name: "Play preview of Respect", exact: true })
+        .click();
       await expect
         .poll(() => events.filter((e) => e === "preview_play_started").length)
         .toBe(1);
-      await audio.evaluate((el: HTMLAudioElement) => {
-        el.pause();
-      });
-      await audio.evaluate((el: HTMLAudioElement) => el.play());
+      await page
+        .getByRole("button", { name: "Pause preview of Respect", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Play preview of Respect", exact: true })
+        .click();
       expect(events.filter((e) => e === "preview_play_started")).toHaveLength(
         1,
       );
@@ -269,7 +276,11 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
       "update song_audio_sources set url='https://audio.example.test/unavailable.wav' where song_id='respect-aretha'",
     );
     await page.route("https://audio.example.test/unavailable.wav", (route) =>
-      route.fulfill({ status: 404, body: "Preview unavailable" }),
+      route.fulfill({
+        status: 404,
+        body: "Preview unavailable",
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }),
     );
     await page.reload();
     if (!unsupportedWav) {
@@ -277,9 +288,9 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
         "src",
         "https://audio.example.test/unavailable.wav",
       );
-      await audio.evaluate((el: HTMLAudioElement) => {
-        void el.play().catch(() => {});
-      });
+      await page
+        .getByRole("button", { name: "Play preview of Respect", exact: true })
+        .click();
     }
     await expect(page.getByRole("status")).toContainText("Preview unavailable");
     await expect.poll(() => events.includes("preview_play_failed")).toBe(true);
@@ -306,7 +317,11 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
         await route.continue();
       });
       await early.route("https://audio.example.test/unavailable.wav", (route) =>
-        route.fulfill({ status: 404, body: "Unavailable synthetic audio" }),
+        route.fulfill({
+          status: 404,
+          body: "Unavailable synthetic audio",
+          headers: { "Access-Control-Allow-Origin": "*" },
+        }),
       );
       await early.goto("/songs/respect-aretha", { waitUntil: "commit" });
       const beforeHydration = early.getByLabel("Preview Respect", {

@@ -14,6 +14,7 @@ import {
 import { requireAdmin } from "@/lib/auth";
 import { parseCatalog } from "@/lib/import";
 import editorialPairs from "@/data/editorial-pairs.json";
+import { syncAuthorizedPreviews } from "@/lib/sync-previews";
 
 const go = (path: string, key: string, value: string): never =>
   redirect(`${path}?${key}=${encodeURIComponent(value)}` as Route);
@@ -183,6 +184,15 @@ export async function importSongs(fd: FormData) {
   }
   const db = await getSupabaseServerClient();
   const { error, data } = await db!.rpc("save_catalog", { p_songs: songs });
+  let previewNotice = "";
+  if (!error && !data?.error) {
+    try {
+      previewNotice = await syncAuthorizedPreviews();
+    } catch {
+      previewNotice =
+        "Preview discovery unavailable; retry in Audio administration.";
+    }
+  }
   revalidatePath("/admin");
   revalidatePath("/leaderboard");
   revalidateTag("leaderboard");
@@ -193,7 +203,7 @@ export async function importSongs(fd: FormData) {
     "message",
     error || data?.error
       ? "Import failed; no songs were changed. Check provider IDs for duplicates."
-      : `${songs.length} songs saved.`,
+      : `${songs.length} songs saved. ${previewNotice}`,
   );
 }
 export async function updateSongStatus(fd: FormData) {
@@ -264,6 +274,15 @@ export async function saveSong(fd: FormData) {
   }
   const db = await getSupabaseServerClient();
   const { error, data } = await db!.rpc("save_catalog", { p_songs: [song] });
+  let previewNotice = "";
+  if (!error && !data?.error) {
+    try {
+      previewNotice = await syncAuthorizedPreviews();
+    } catch {
+      previewNotice =
+        "Preview discovery unavailable; retry in Audio administration.";
+    }
+  }
   ["/admin", "/today", "/leaderboard"].forEach((p) => revalidatePath(p));
   revalidateTag("leaderboard");
   revalidatePath("/songs/[id]", "page");
@@ -272,7 +291,7 @@ export async function saveSong(fd: FormData) {
     "message",
     error || data?.error
       ? "Song could not be saved. Check for duplicate provider IDs."
-      : "Song saved.",
+      : `Song saved. ${previewNotice}`,
   );
 }
 export async function updateDisplayName(fd: FormData) {

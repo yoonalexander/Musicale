@@ -18,6 +18,7 @@ export type RankSong = Pick<
   | "audioPreview"
 >;
 export interface RankPair {
+  previewOnly?: boolean;
   id: string;
   expiresAt: string;
   songA: RankSong;
@@ -51,6 +52,7 @@ export async function getRankPair(): Promise<RankPair | null> {
   if (!a || !b) return null;
   return {
     id: data.id,
+    previewOnly: data.preview_only === true,
     expiresAt: data.expires_at,
     songA: listeningSong(a.song),
     songB: listeningSong(b.song),

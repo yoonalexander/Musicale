@@ -30,14 +30,14 @@ The finished release includes:
 
 ### Precise meanings of the résumé claims
 
-| Claim | Required meaning and proof |
-| --- | --- |
-| One Daily vote per user per day | At most one successful Daily vote per authenticated account per UTC calendar day. Database constraints and transaction logic enforce this, including concurrent requests and direct RPC calls. Rank uses per-issued-comparison uniqueness and a repeat-pair cooldown. This does not claim one vote per human across multiple accounts. |
-| Atomic transactions | Daily writes its vote, both song records, matchup totals, participation, profile streak and rating event together. Rank writes its preference, both song records and rating event together, without changing Daily streaks/activity. A failed vote leaves business records unchanged; a rejected attempt may still consume its durable request budget. |
-| Real-time ranking | Another active browser receives a server-pushed change notification and displays authoritative updated rankings without manual reload. The normal-condition acceptance target is within five seconds of a committed vote. This is not a hard real-time timing guarantee. |
-| Replay-based recovery | Reconstruct ratings, win/loss records, Daily matchup totals and snapshots from preserved Daily and Rank rating events/votes in deterministic update order, starting from the documented baseline. Preserve original events and historical K-factors. Play guesses are excluded. Do not rerun old votes with today's K-factor. |
-| Selective cache invalidation | Successful relevant mutations invalidate affected public ranking data and route views. Private user state is never shared through the public cache. Live refreshes cannot be masked by stale cached responses. |
-| Concurrency and reliability | Automated tests demonstrate correctness for specified concurrent workloads, with measured results recorded. Do not imply unlimited scale or production traffic that has not occurred. |
+| Claim                           | Required meaning and proof                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| One Daily vote per user per day | At most one successful Daily vote per authenticated account per UTC calendar day. Database constraints and transaction logic enforce this, including concurrent requests and direct RPC calls. Rank uses per-issued-comparison uniqueness and a repeat-pair cooldown. This does not claim one vote per human across multiple accounts.                 |
+| Atomic transactions             | Daily writes its vote, both song records, matchup totals, participation, profile streak and rating event together. Rank writes its preference, both song records and rating event together, without changing Daily streaks/activity. A failed vote leaves business records unchanged; a rejected attempt may still consume its durable request budget. |
+| Real-time ranking               | Another active browser receives a server-pushed change notification and displays authoritative updated rankings without manual reload. The normal-condition acceptance target is within five seconds of a committed vote. This is not a hard real-time timing guarantee.                                                                               |
+| Replay-based recovery           | Reconstruct ratings, win/loss records, Daily matchup totals and snapshots from preserved Daily and Rank rating events/votes in deterministic update order, starting from the documented baseline. Preserve original events and historical K-factors. Play guesses are excluded. Do not rerun old votes with today's K-factor.                          |
+| Selective cache invalidation    | Successful relevant mutations invalidate affected public ranking data and route views. Private user state is never shared through the public cache. Live refreshes cannot be masked by stale cached responses.                                                                                                                                         |
+| Concurrency and reliability     | Automated tests demonstrate correctness for specified concurrent workloads, with measured results recorded. Do not imply unlimited scale or production traffic that has not occurred.                                                                                                                                                                  |
 
 Phase 3 proves the recovery guarantees locally and in CI. Phase 4 now implements push-based live rankings and an uncached public refresh path; [its evidence](PHASE_4.md) distinguishes local acceptance from the still-required hosted rollout and demonstration.
 
@@ -47,17 +47,17 @@ An additional [catalog automation workstream](CATALOG_AUTOMATION.md) builds on P
 
 ## Phase order
 
-| Phase | Outcome | Depends on | Initial state |
-| --- | --- | --- | --- |
-| 1 | Reproducible development, isolated testing and passing baseline checks | Nothing | Complete October 15; [verification evidence](PHASE_1.md) |
-| 2 | Working public sign-in and daily voting loop | 1 | Launch operations incomplete or unverified; Today was empty |
-| 3 | Proven transaction, authorization, migration and recovery guarantees | 1; use 2 for hosted smoke checks | Complete October 15; [local and CI evidence](PHASE_3.md) |
-| 4 | Live rankings with consistent caching | 3 | Complete October 15; [local and CI evidence](PHASE_4.md); hosted rollout pending |
-| 5 | Complete consumer and administrator experience | 2–4 | Core screens exist; usability and content gaps remain |
-| 5A | Continuous Rank with shared Elo and mixed-mode recovery | 3–5 and catalog integration | Complete locally and in CI; [evidence](PHASE_5A.md); hosted rollout pending |
-| 5B | Higher-rated Play game with server-graded run points | 5A | Complete locally and in CI; [evidence](PHASE_5B.md); hosted rollout pending |
-| 6 | Sustainable content, monitoring and recovery operations | 2–5, 5A, 5B | Incomplete or unverified; extend coverage to all three modes |
-| 7 | Release acceptance and résumé evidence | 1–6 | Not complete |
+| Phase | Outcome                                                                | Depends on                       | Initial state                                                                    |
+| ----- | ---------------------------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------- |
+| 1     | Reproducible development, isolated testing and passing baseline checks | Nothing                          | Complete October 15; [verification evidence](PHASE_1.md)                         |
+| 2     | Working public sign-in and daily voting loop                           | 1                                | Launch operations incomplete or unverified; Today was empty                      |
+| 3     | Proven transaction, authorization, migration and recovery guarantees   | 1; use 2 for hosted smoke checks | Complete October 15; [local and CI evidence](PHASE_3.md)                         |
+| 4     | Live rankings with consistent caching                                  | 3                                | Complete October 15; [local and CI evidence](PHASE_4.md); hosted rollout pending |
+| 5     | Complete consumer and administrator experience                         | 2–4                              | Core screens exist; usability and content gaps remain                            |
+| 5A    | Continuous Rank with shared Elo and mixed-mode recovery                | 3–5 and catalog integration      | Complete locally and in CI; [evidence](PHASE_5A.md); hosted rollout pending      |
+| 5B    | Higher-rated Play game with server-graded run points                   | 5A                               | Complete locally and in CI; [evidence](PHASE_5B.md); hosted rollout pending      |
+| 6     | Sustainable content, monitoring and recovery operations                | 2–5, 5A, 5B                      | Incomplete or unverified; extend coverage to all three modes                     |
+| 7     | Release acceptance and résumé evidence                                 | 1–6                              | Not complete                                                                     |
 
 Execute in this order by default. Safe local work in Phase 3 can continue while Phase 2 hosted sign-in remains unresolved. Build the specific tests alongside their phases; Phase 7 reruns and records the complete result.
 
@@ -257,6 +257,8 @@ The owner approved a focused welcome screen, direct Play entry with a first-visi
 
 ## Phase 6 — Make the product sustainable to operate
 
+The October 16 audio scope adds a shared 15-second player, four explicitly licensed open recordings, preview-aware Rank entry and audio-only Daily support. See [coverage, licensing and verification](AUDIO_PREVIEWS.md). The original twenty commercial tracks remain unsupported for embedded previews until appropriate permission exists. Include source health, credit/license retention and the authorized assets in release acceptance and backup/deployment checks.
+
 **Outcome:** The website continues working after launch week and can recover from an operational failure.
 
 ### Tasks
@@ -306,36 +308,36 @@ The owner approved a focused welcome screen, direct Play entry with a first-visi
 
 ## Résumé claim-to-evidence checklist
 
-| Résumé behavior | Current starting point | Required phases | Evidence needed before sign-off |
-| --- | --- | --- | --- |
-| Next.js, React, TypeScript, PostgreSQL, Supabase full-stack app | Implemented; build/type/unit checks passed in the status review | 1, 2, 5, 7 | Clean build, source architecture and hosted user flow |
-| Daily matchups, profiles, history and streaks | Implemented; live daily content missing at review | 2, 3, 5, 7 | Hosted vote persistence plus automated UTC/streak/history tests |
-| Continuous preference ranking | Implemented and verified locally/in CI; hosted rollout pending | 5A, 6, 7 | Issued pairs, atomic votes, budgets/cooldowns, mixed-mode recovery and hosted loop |
-| Higher-rated guessing game | Phase 5B local/CI gates passed; hosted rollout pending | 5B, 6, 7 | Server-graded snapshot answers, exactly-once points, random single-card replacement and no Elo effects |
-| Elo-ranked leaderboard | Implemented; live catalog at starting ratings | 3–5, 7 | Audited rating changes, correct sorting/filtering and real user participation |
-| Real-time ranking platform | Implemented and verified across four browser projects in CI; hosted verification pending | 4, 5A, 7 | Push subscription, two-browser test and hosted demonstration |
-| Atomic concurrent voting and Daily uniqueness | Daily and Rank guarantees verified locally/in CI | 3, 5A, 7 | Daily account/day uniqueness, Rank issued-comparison uniqueness, duplicate races, distinct-account workloads, rollback and consistency assertions |
-| Authentication and Row Level Security | Implemented; public delivery/setup unverified | 2, 3, 7 | Non-team hosted login and direct database authorization matrix |
-| Constraints, rate limiting and transactional catalog updates | Implemented across SQL and server actions; coverage must be checked at exposed boundaries | 3, 7 | Direct RPC/table tests, durable-budget cases and atomic import rollback |
-| Administrator catalog and scheduling workflows | Implemented; owner access unverified | 2, 5–7 | Owner workflow demonstration and ordinary-user denial tests |
-| Schema migrations | Ordered forward migrations through 0012, with 0011 reserved; fresh/legacy/incremental checks passed | 1, 3, 7 | Fresh/legacy/incremental fixture results and recorded deployment versions |
-| Replay-based ranking recovery | Mixed Daily/Rank recovery verified locally/in CI | 3, 5A, 6, 7 | Mixed Daily/Rank corruption/rebuild comparison, historical K-factor and event-order preservation, idempotence and failure rollback |
-| Selective cache invalidation | Tagged public cache and action invalidations exist | 3, 4, 7 | Warm-cache mutation tests, direct-RPC/live-path checks and private-state isolation |
-| Automated database and Playwright testing | Current clean-checkout CI passed 26 unit, 65 database and 76 browser cases | 1, 3–5A, 7 | Current passing clean-checkout commands, named cases and CI link |
-| Reliable cloud database operations | Managed deployment exists; restore/monitoring unverified | 2, 6, 7 | Hosted smoke tests, availability alert and isolated restore rehearsal |
+| Résumé behavior                                                 | Current starting point                                                                              | Required phases | Evidence needed before sign-off                                                                                                                   |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Next.js, React, TypeScript, PostgreSQL, Supabase full-stack app | Implemented; build/type/unit checks passed in the status review                                     | 1, 2, 5, 7      | Clean build, source architecture and hosted user flow                                                                                             |
+| Daily matchups, profiles, history and streaks                   | Implemented; live daily content missing at review                                                   | 2, 3, 5, 7      | Hosted vote persistence plus automated UTC/streak/history tests                                                                                   |
+| Continuous preference ranking                                   | Implemented and verified locally/in CI; hosted rollout pending                                      | 5A, 6, 7        | Issued pairs, atomic votes, budgets/cooldowns, mixed-mode recovery and hosted loop                                                                |
+| Higher-rated guessing game                                      | Phase 5B local/CI gates passed; hosted rollout pending                                              | 5B, 6, 7        | Server-graded snapshot answers, exactly-once points, random single-card replacement and no Elo effects                                            |
+| Elo-ranked leaderboard                                          | Implemented; live catalog at starting ratings                                                       | 3–5, 7          | Audited rating changes, correct sorting/filtering and real user participation                                                                     |
+| Real-time ranking platform                                      | Implemented and verified across four browser projects in CI; hosted verification pending            | 4, 5A, 7        | Push subscription, two-browser test and hosted demonstration                                                                                      |
+| Atomic concurrent voting and Daily uniqueness                   | Daily and Rank guarantees verified locally/in CI                                                    | 3, 5A, 7        | Daily account/day uniqueness, Rank issued-comparison uniqueness, duplicate races, distinct-account workloads, rollback and consistency assertions |
+| Authentication and Row Level Security                           | Implemented; public delivery/setup unverified                                                       | 2, 3, 7         | Non-team hosted login and direct database authorization matrix                                                                                    |
+| Constraints, rate limiting and transactional catalog updates    | Implemented across SQL and server actions; coverage must be checked at exposed boundaries           | 3, 7            | Direct RPC/table tests, durable-budget cases and atomic import rollback                                                                           |
+| Administrator catalog and scheduling workflows                  | Implemented; owner access unverified                                                                | 2, 5–7          | Owner workflow demonstration and ordinary-user denial tests                                                                                       |
+| Schema migrations                                               | Ordered forward migrations through 0012, with 0011 reserved; fresh/legacy/incremental checks passed | 1, 3, 7         | Fresh/legacy/incremental fixture results and recorded deployment versions                                                                         |
+| Replay-based ranking recovery                                   | Mixed Daily/Rank recovery verified locally/in CI                                                    | 3, 5A, 6, 7     | Mixed Daily/Rank corruption/rebuild comparison, historical K-factor and event-order preservation, idempotence and failure rollback                |
+| Selective cache invalidation                                    | Tagged public cache and action invalidations exist                                                  | 3, 4, 7         | Warm-cache mutation tests, direct-RPC/live-path checks and private-state isolation                                                                |
+| Automated database and Playwright testing                       | Current clean-checkout CI passed 26 unit, 65 database and 76 browser cases                          | 1, 3–5A, 7      | Current passing clean-checkout commands, named cases and CI link                                                                                  |
+| Reliable cloud database operations                              | Managed deployment exists; restore/monitoring unverified                                            | 2, 6, 7         | Hosted smoke tests, availability alert and isolated restore rehearsal                                                                             |
 
 ## External setup and ownership
 
 Code changes and local tests can proceed independently where dependencies allow. These items require access to the relevant accounts or a human participant; the document does not assume those steps are already complete.
 
-| Item | Owner/dependency | Phase |
-| --- | --- | --- |
-| SMTP provider, sending-domain verification and auth redirects | Project owner/provider account access; approve any actual cost before purchase | 2 |
-| First owner sign-in and exact-account admin assignment | Owner identity and trusted database setup access | 2 |
-| Staging backend and environment separation | Hosting/database project access; read-only previews suffice until ready | 1–2 |
-| Recording availability and artwork permission | Editorial owner; licensed artwork is optional | 5 |
-| Monitoring destination and backup/restore access | Project owner/hosting account access | 6 |
-| Independent beta and consecutive-day participation | At least three real participants plus seven elapsed UTC days | 7 |
+| Item                                                          | Owner/dependency                                                               | Phase |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----- |
+| SMTP provider, sending-domain verification and auth redirects | Project owner/provider account access; approve any actual cost before purchase | 2     |
+| First owner sign-in and exact-account admin assignment        | Owner identity and trusted database setup access                               | 2     |
+| Staging backend and environment separation                    | Hosting/database project access; read-only previews suffice until ready        | 1–2   |
+| Recording availability and artwork permission                 | Editorial owner; licensed artwork is optional                                  | 5     |
+| Monitoring destination and backup/restore access              | Project owner/hosting account access                                           | 6     |
+| Independent beta and consecutive-day participation            | At least three real participants plus seven elapsed UTC days                   | 7     |
 
 ## Explicitly outside this release
 

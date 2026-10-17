@@ -71,10 +71,11 @@ try {
   for (let i = 0; i < 6; i += 2) await evidence(3, songs[i], songs[i + 1]);
   await test("Play migration preserves the 20-song populated catalog, preferences, rankings, audit and participation", async () => {
     const before = await core();
-    await db.migrate(files.slice(index));
+    await db.migrate(files.slice(index, index + 1));
     assert.equal(await core(), before);
     assert.equal(await sql("select count(*) from songs"), "20");
   });
+  await db.migrate(files.slice(index + 1));
   const untouched = await core();
   await test("private issuance is stable under concurrent starts; GET cannot issue, reroll or reveal answers", async () => {
     assert.equal(await state(4), null);

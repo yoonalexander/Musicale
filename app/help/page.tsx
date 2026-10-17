@@ -1,4 +1,5 @@
 import Link from "next/link";
+import audioCredits from "@/data/audio-provenance.json";
 export const metadata = {
   title: "Help and contact",
   description:
@@ -68,9 +69,13 @@ export default function Help() {
         <h2>Listening and availability</h2>
         <p>
           Official listening links open in a new tab. Reviewed, authorized audio
-          sources may also play here. Availability can vary by region. Musicale
-          does not host audio. If today has no playable pair, browse the catalog
-          or return after the next midnight UTC reset.
+          sources play here through a custom 15-second player. Pause, seek
+          within the excerpt or replay it; starting another song pauses the
+          first. Rank’s Listen and rank option selects songs with authorized
+          previews. Musicale serves four attributed CC BY excerpts; commercial
+          tracks retain their official links until licensed. If today has no
+          playable pair, browse the catalog or return after the next midnight
+          UTC reset.
         </p>
       </section>
       <section className="panel">
@@ -98,6 +103,41 @@ export default function Help() {
           </a>
           .
         </p>
+      </section>
+      <section id="music-credits" className="panel">
+        <h2>Music credits and licenses</h2>
+        <p>
+          Our four open-license previews are arrangements/performances by Kevin
+          MacLeod (incompetech.com), licensed under Creative Commons Attribution
+          3.0 Unported. The Gymnopedies were composed by Erik Satie; Hall of the
+          Mountain King by Edvard Grieg. No endorsement is implied. These audio
+          licenses are independent of Musicale’s code license and do not
+          authorize other recordings. The excerpts are supplied as-is, without
+          warranties.
+        </p>
+        <ul>
+          {audioCredits.map((credit) => (
+            <li key={credit.songId}>
+              <strong>{credit.title}</strong> — Kevin MacLeod. {credit.changes}.{" "}
+              <a
+                href={credit.authorization}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Original recording and permission
+              </a>{" "}
+              ·{" "}
+              <a
+                href={credit.license}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                CC BY 3.0 license
+              </a>
+              .
+            </li>
+          ))}
+        </ul>
       </section>
       <Link className="button" href="/today">
         Visit Daily

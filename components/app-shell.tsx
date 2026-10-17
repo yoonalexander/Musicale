@@ -48,7 +48,7 @@ export function AppShell({
       </main>
       <footer>
         <span>Musicale</span>
-        <span>Music playback remains with its provider.</span>
+        <Link href="/help#music-credits">Music credits & licenses</Link>
         <Link href="/archive">Featured matchups</Link>
         <Link href="/privacy">Privacy & analytics</Link>
         <Link href="/help">Help & contact</Link>

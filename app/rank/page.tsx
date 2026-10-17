@@ -5,7 +5,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { RankPairCards } from "@/components/rank-pair";
 import { GuestForm } from "@/components/guest-form";
 import { SubmitButton } from "@/components/submit-button";
-import { startRank } from "./actions";
+import { startRank, startPreviewRank } from "./actions";
 export const metadata = {
   title: "Rank music",
   description:
@@ -58,6 +58,25 @@ export default async function Rank({
           </p>
         ) : null}
       </header>
+      {!isDemoMode() ? (
+        <div className="share-actions rank-listening-mode">
+          <Form action={startPreviewRank}>
+            <SubmitButton busyText="Finding previews…">
+              Listen and rank
+            </SubmitButton>
+          </Form>
+          {pair?.previewOnly ? (
+            <Form action={startRank}>
+              <SubmitButton busyText="Preparing…">Use all songs</SubmitButton>
+            </Form>
+          ) : null}
+          <p>
+            {pair?.previewOnly
+              ? "Comparing recordings with authorized in-page previews."
+              : "Choose Listen and rank for songs you can preview here."}
+          </p>
+        </div>
+      ) : null}
       {isDemoMode() ? (
         <section className="panel">
           <p>

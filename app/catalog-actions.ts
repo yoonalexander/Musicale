@@ -4,7 +4,19 @@ import { requireAdmin } from "@/lib/auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { musicBrainzAdapter, recordingId } from "@/lib/music-catalog";
 import { songId } from "@/lib/validation";
-import { httpsUrl, playablePreview, type AudioPreview } from "@/lib/audio";
+import {
+  audioUrl,
+  httpsUrl,
+  playablePreview,
+  type AudioPreview,
+} from "@/lib/audio";
+import { syncAuthorizedPreviews } from "@/lib/sync-previews";
+import {
+  authorizedRecordings,
+  previewMatches,
+  type PreviewSong,
+} from "@/lib/preview-discovery";
+import { validateSong } from "@/lib/validation";
 
 export interface Duplicate {
   song_id: string;
@@ -102,11 +114,17 @@ export async function importExternalSongs(selections: CatalogSelection[]) {
         data?.error ??
           "Import could not be confirmed. Retry the same selection safely.",
       );
+    let audioNotice: string;
+    try {
+      audioNotice = await syncAuthorizedPreviews();
+    } catch (error) {
+      audioNotice = errorMessage(error);
+    }
     revalidateTag("leaderboard");
     for (const path of ["/admin", "/today", "/leaderboard"])
       revalidatePath(path);
     revalidatePath("/songs/[id]", "page");
-    return { error: null, songIds: data.songIds as string[] };
+    return { error: null, songIds: data.songIds as string[], audioNotice };
   } catch (error) {
     return { error: errorMessage(error), songIds: [] };
   }
@@ -117,7 +135,7 @@ export async function saveAudioSource(form: FormData) {
     const id = songId(String(form.get("songId") ?? ""));
     const preview: AudioPreview = {
       provider: String(form.get("provider") ?? "").trim(),
-      url: httpsUrl(form.get("url")),
+      url: audioUrl(form.get("url")),
       availability: String(
         form.get("availability"),
       ) as AudioPreview["availability"],
@@ -126,9 +144,15 @@ export async function saveAudioSource(form: FormData) {
       ) as AudioPreview["licensingStatus"],
       authorizationUrl: httpsUrl(form.get("authorizationUrl")),
       attribution: String(form.get("attribution") ?? "").trim(),
+      startSeconds: Number(form.get("startSeconds") ?? 0),
+      licenseUrl: httpsUrl(form.get("licenseUrl")),
     };
     if (
       !preview.provider ||
+      !Number.isFinite(preview.startSeconds) ||
+      preview.startSeconds! < 0 ||
+      preview.startSeconds! > 86400 ||
+      (form.get("licenseUrl") && !preview.licenseUrl) ||
       preview.provider.length > 100 ||
       preview.attribution.length > 1000 ||
       !["unknown", "available", "unavailable"].includes(preview.availability) ||
@@ -157,9 +181,60 @@ export async function saveAudioSource(form: FormData) {
     revalidateTag("leaderboard");
     revalidatePath("/admin");
     revalidatePath("/today");
+    revalidatePath("/rank");
+    revalidatePath("/play");
     revalidatePath("/songs/[id]", "page");
     return { error: null };
   } catch (error) {
     return { error: errorMessage(error) };
+  }
+}
+export async function discoverAuthorizedAudio() {
+  await requireAdmin();
+  try {
+    const message = await syncAuthorizedPreviews();
+    for (const path of ["/admin", "/rank", "/play", "/today", "/songs/[id]"])
+      revalidatePath(path, path.includes("[") ? "page" : undefined);
+    revalidateTag("leaderboard");
+    return { message, error: null };
+  } catch (error) {
+    return { message: "", error: errorMessage(error) };
+  }
+}
+export async function importOpenMusic() {
+  await requireAdmin();
+  try {
+    const db = (await getSupabaseServerClient())!;
+    const existing = await db
+      .from("songs")
+      .select(
+        "id,title,artist_name,release_year,duration_ms,catalog_sources(isrcs,provider,provider_song_id),song_providers(provider,provider_song_id)",
+      )
+      .limit(1000);
+    if (existing.error)
+      throw new Error("Could not review the catalog before import.");
+    const songs = authorizedRecordings
+      .filter(
+        (r) =>
+          !existing.data.some(
+            (s) => s.id === r.id || previewMatches(s as PreviewSong, r),
+          ),
+      )
+      .map((r) => validateSong({ ...r, providers: [], status: "active" }));
+    // Reuse the normal transactional import; duplicate recording identity is checked again before attaching audio.
+    const result = songs.length
+      ? await db.rpc("save_catalog", { p_songs: songs })
+      : { error: null, data: null };
+    if (result.error || result.data?.error)
+      throw new Error(
+        "Open recordings could not be imported. No audio was attached.",
+      );
+    const synced = await discoverAuthorizedAudio();
+    return {
+      message: `${songs.length} open-license recordings imported; existing recordings and edits preserved. ${synced.error ?? synced.message}`,
+      error: null,
+    };
+  } catch (error) {
+    return { message: "", error: errorMessage(error) };
   }
 }

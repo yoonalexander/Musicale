@@ -1,5 +1,14 @@
 import assert from "node:assert/strict";
+import {
+  previewMatches,
+  normalizeCommonsPreview,
+  discoverPreviews,
+  authorizedRecordings,
+} from "../lib/preview-discovery";
+import commons from "./fixtures/commons-previews.json";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import provenance from "../data/audio-provenance.json";
 import { normalizeRecording, musicBrainzAdapter } from "../lib/music-catalog";
 import { playablePreview, mapAudio } from "../lib/audio";
 const records = JSON.parse(readFileSync("tests/fixtures/catalog.json", "utf8"));
@@ -144,5 +153,138 @@ await test("audio needs separate explicit authorization, availability, attributi
     })?.licensingStatus,
     "unreviewed",
   );
+});
+await test("reviewed open recordings match exact identities, reject ambiguous metadata and require current license evidence", async () => {
+  for (const asset of provenance) {
+    const bytes = readFileSync(`public${asset.asset}`);
+    assert.equal(
+      createHash("sha256").update(bytes).digest("hex"),
+      asset.assetSha256,
+    );
+    assert.ok(bytes.length > 100000 && bytes.length < 300000);
+  }
+  const recording = authorizedRecordings[0];
+  const song = {
+    id: "existing-id",
+    title: recording.title,
+    artist_name: recording.artistName,
+    release_year: recording.releaseYear,
+    duration_ms: recording.durationMs,
+    catalog_sources: [],
+    song_providers: [],
+  };
+  assert.equal(previewMatches(song, recording), true);
+  assert.equal(
+    previewMatches({ ...song, artist_name: "Different performer" }, recording),
+    false,
+  );
+  assert.equal(
+    previewMatches({ ...song, title: recording.title + " (Live)" }, recording),
+    false,
+  );
+  assert.equal(
+    previewMatches({ ...song, duration_ms: 90000 }, recording),
+    false,
+  );
+  assert.equal(
+    previewMatches(
+      {
+        ...song,
+        catalog_sources: [
+          {
+            provider: "musicbrainz",
+            provider_song_id: "id",
+            isrcs: [recording.isrc],
+          },
+        ],
+      },
+      recording,
+    ),
+    true,
+  );
+  assert.equal(
+    previewMatches(
+      {
+        ...song,
+        catalog_sources: [
+          { provider: "musicbrainz", provider_song_id: "id", isrcs: ["OTHER"] },
+        ],
+      },
+      recording,
+    ),
+    false,
+  );
+  const mountain = authorizedRecordings[3];
+  assert.equal(
+    previewMatches(
+      {
+        ...song,
+        song_providers: [
+          {
+            provider: "musicbrainz",
+            provider_song_id: "04d422eb-c157-488e-8d01-70e535033bfa",
+          },
+        ],
+      },
+      mountain,
+    ),
+    true,
+  );
+  const page =
+    commons.query.pages[recording.pageId as keyof typeof commons.query.pages];
+  const audio = normalizeCommonsPreview(page, recording);
+  assert.equal(audio.startSeconds, 0);
+  assert.equal(audio.licensingStatus, "authorized");
+  assert.equal(audio.url, `/audio/${recording.pageId}.mp3`);
+  for (const change of [
+    { ...page, pageid: 999 },
+    {
+      ...page,
+      imageinfo: [{ ...page.imageinfo[0], url: "https://evil.test/music.mp3" }],
+    },
+    { ...page, imageinfo: [{ ...page.imageinfo[0], duration: 5 }] },
+    {
+      ...page,
+      imageinfo: [
+        {
+          ...page.imageinfo[0],
+          extmetadata: {
+            ...page.imageinfo[0].extmetadata,
+            LicenseUrl: { value: "https://example.test/not-permission" },
+          },
+        },
+      ],
+    },
+  ])
+    assert.throws(
+      () => normalizeCommonsPreview(change, recording),
+      /permission or recording/,
+    );
+  const original = globalThis.fetch;
+  let calls = 0;
+  try {
+    globalThis.fetch = async (_url, init) => {
+      calls++;
+      return init?.method === "HEAD"
+        ? new Response(null, {
+            headers: {
+              "Content-Type": "audio/mpeg",
+              "Access-Control-Allow-Origin": "*",
+            },
+          })
+        : Response.json(commons);
+    };
+    assert.equal((await discoverPreviews([song])).length, 1);
+    assert.equal(calls, 1);
+    assert.equal(
+      (await discoverPreviews([song, { ...song, id: "duplicate" }])).length,
+      0,
+    );
+    assert.equal(calls, 1);
+    globalThis.fetch = async () => new Response(null, { status: 503 });
+    await assert.rejects(discoverPreviews([song]), /unavailable/);
+  } finally {
+    globalThis.fetch = original;
+  }
 });
 console.log(`${passed} catalog and audio unit cases passed.`);

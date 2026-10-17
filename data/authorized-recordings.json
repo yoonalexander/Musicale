@@ -1,0 +1,54 @@
+[
+  {
+    "id": "open-gymnopedie-1",
+    "title": "Gymnopedie No. 1",
+    "artistName": "Kevin MacLeod",
+    "albumName": "Classical Sampler",
+    "releaseYear": 2011,
+    "genre": "Classical",
+    "durationMs": 187089,
+    "isrc": "USUAN1100787",
+    "pageId": "64738758",
+    "file": "File:Gymnopedie No. 1 (ISRC USUAN1100787).mp3",
+    "startSeconds": 20
+  },
+  {
+    "id": "open-gymnopedie-2",
+    "title": "Gymnopedie No. 2",
+    "artistName": "Kevin MacLeod",
+    "albumName": "Classical Sampler",
+    "releaseYear": 2011,
+    "genre": "Classical",
+    "durationMs": 159033,
+    "isrc": "USUAN1100786",
+    "pageId": "64738767",
+    "file": "File:Gymnopedie No. 2 (ISRC USUAN1100786).mp3",
+    "startSeconds": 15
+  },
+  {
+    "id": "open-gymnopedie-3",
+    "title": "Gymnopedie No. 3",
+    "artistName": "Kevin MacLeod",
+    "albumName": "Classical Sampler",
+    "releaseYear": 2011,
+    "genre": "Classical",
+    "durationMs": 145006,
+    "isrc": "USUAN1100785",
+    "pageId": "64738779",
+    "file": "File:Gymnopedie No. 3 (ISRC USUAN1100785).mp3",
+    "startSeconds": 15
+  },
+  {
+    "id": "open-mountain-king",
+    "title": "Hall of the Mountain King",
+    "artistName": "Kevin MacLeod",
+    "albumName": "Classical music from Incompetech",
+    "releaseYear": 2012,
+    "genre": "Classical",
+    "durationMs": 152976,
+    "isrc": "USUAN1200072",
+    "pageId": "64736833",
+    "file": "File:Hall of the Mountain King (ISRC USUAN1200072).mp3",
+    "startSeconds": 40
+  }
+]
