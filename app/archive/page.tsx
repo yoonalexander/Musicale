@@ -1,3 +1,8 @@
+export const metadata = {
+  title: "Featured matchups",
+  description:
+    "Explore genuine completed Musicale matchups, final community votes and song histories.",
+};
 import Link from "next/link";
 import { getFeaturedMatchups } from "@/lib/data";
 export default async function Archive() {
@@ -27,11 +32,13 @@ export default async function Archive() {
         ))
       ) : (
         <p>
-          Featured matchups will appear here once their voting day has ended.
+          No featured matchups yet. An editor can feature a genuine completed
+          day once voting closes. Explore today’s songs or the catalog while you
+          wait.
         </p>
       )}
       <Link className="button" href="/today">
-        Play today
+        Visit Daily
       </Link>
     </section>
   );

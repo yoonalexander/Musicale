@@ -1,6 +1,10 @@
 # Starter catalog sources
 
-Twenty curated entries span the 1960s–2020s, multiple languages, genres and regions. This is a starter collection, not the suggested eventual 200–1,000-song launch library. Admin can import up to 100 entries per atomic batch and queue ten curated daily pairs from `data/editorial-pairs.json`. Editors should keep adding verified recordings for their audience.
+The twenty-song starter file remains curated and unchanged. Admin can additionally discover and import MusicBrainz recordings into the database without replacing this file; see [catalog automation](CATALOG_AUTOMATION.md) for duplicate review, editorial preservation and separate audio authorization.
+
+Twenty curated entries span the 1960s–2020s, multiple languages, genres and regions. This is the modest verified launch catalog; a larger library is optional ongoing curation. Admin can import up to 100 entries per atomic batch and queue thirty distinct curated daily pairs from `data/editorial-pairs.json`. Editors should keep adding verified recordings for their audience.
+
+[October 16, 2026 verification](CATALOG_VERIFICATION.md) records the current twenty-link and release-year review.
 
 The following external playback destinations were checked against primary artist, label or provider pages on October 1, 2026. Links open the provider; Musicale copies no audio or artwork. Provider availability can change and can differ by territory. Check playback before scheduling; this source review does not imply universal rights clearance.
 
@@ -9,7 +13,7 @@ The following external playback destinations were checked against primary artist
 | Respect — Aretha Franklin                     | [Official upload](https://www.youtube.com/watch?v=JzqGZjFnYnA)                                                                                                                  |
 | God Only Knows — The Beach Boys               | [Official video](https://www.youtube.com/watch?v=NADx3-qRxek)                                                                                                                   |
 | Dreams — Fleetwood Mac                        | [Artist's video page](https://www.fleetwoodmacofficial.com/video/fleetwood-mac-dreams-official-music-video?page=0), [video](https://www.youtube.com/watch?v=Y3ywicffOj4)        |
-| Superstition — Stevie Wonder                  | [Official artist / UMG Talking Book recording](https://www.youtube.com/watch?v=ftdZ363R9kQ)                                                                                    |
+| Superstition — Stevie Wonder                  | [Official artist / UMG Talking Book recording](https://www.youtube.com/watch?v=ftdZ363R9kQ)                                                                                     |
 | Fast Car — Tracy Chapman                      | [Official artist video](https://www.youtube.com/watch?v=AIOAlaACuv4)                                                                                                            |
 | Juicy — The Notorious B.I.G.                  | [Official video](https://www.youtube.com/watch?v=_JZom_gVfuw)                                                                                                                   |
 | Crazy in Love — Beyoncé                       | [Artist video](https://www.youtube.com/watch?v=ViwtNLUqkMY)                                                                                                                     |

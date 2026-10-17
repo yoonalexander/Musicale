@@ -1,9 +1,28 @@
 import { notFound } from "next/navigation";
 import { getSong, getSongHistory } from "@/lib/data";
-import { providerLabels } from "@/lib/providers";
+import { SongListening } from "@/components/song-listening";
+import { ArtworkCredit } from "@/components/artwork-credit";
 import { RatingHistory } from "@/components/rating-history";
-import { SongVideoPreview } from "@/components/song-video-preview";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const data = await getSong((await params).id);
+  return {
+    title: data
+      ? data.song.title + " · " + data.song.artistName
+      : "Song not found",
+    description: data
+      ? "Explore " +
+        data.song.title +
+        " by " +
+        data.song.artistName +
+        ": official listening links, recorded votes and Elo history."
+      : "This song is not available in Musicale.",
+  };
+}
 export default async function SongPage({
   params,
 }: {
@@ -31,10 +50,15 @@ export default async function SongPage({
       </div>
       <div>
         <p className="kicker">
-          {rank ? `#${rank} worldwide` : "Currently unavailable"} ·{" "}
-          {song.genre ?? "Music"}
+          {song.status !== "active"
+            ? "Currently unavailable"
+            : song.matchupCount === 0
+              ? "Not ranked yet"
+              : `Catalog position #${rank}`}{" "}
+          · {song.genre ?? "Music"}
         </p>
         <h1>{song.title}</h1>
+        <ArtworkCredit song={song} />
         <p className="subtitle">
           {song.artistName} · {song.albumName} ·{" "}
           {song.releaseDate ?? song.releaseYear}
@@ -43,20 +67,8 @@ export default async function SongPage({
             : ""}
         </p>
         <div className="actions">
-          {song.providers.map((p) => (
-            <a
-              key={p.provider}
-              className="button secondary"
-              href={p.externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {p.provider === "musicbrainz" ? "View on" : "Listen on"}{" "}
-              {providerLabels[p.provider]}
-            </a>
-          ))}
+          <SongListening song={song} />
         </div>
-        <SongVideoPreview song={song} />
         <dl className="stats">
           <div>
             <dt>Elo</dt>
@@ -82,6 +94,14 @@ export default async function SongPage({
             <dd>{song.matchupCount}</dd>
           </div>
         </dl>
+        <p>
+          {song.matchupCount === 0
+            ? "Starting rating: this song has no recorded votes yet."
+            : song.matchupCount < 5
+              ? "Provisional rating: fewer than five recorded votes."
+              : "Based on recorded community votes."}{" "}
+          Equal Elo ratings are tied; catalog order breaks display ties.
+        </p>
         <RatingHistory snapshots={history.snapshots} />
         <section className="panel">
           <h2>Recent daily matchups</h2>

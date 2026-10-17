@@ -1,5 +1,10 @@
-export function shareResult(number: number, percent: number, streak: number) {
-  return `Musicale #${number}\n\n🎵${percent >= 50 ? "🟩" : "⬛"}\n\nI voted with ${percent}% of listeners.\n🔥 ${streak}-day streak`;
+export function shareResult(
+  number: number,
+  percent: number,
+  streak: number,
+  siteUrl: string,
+) {
+  return `Musicale #${number}\n\n🎵${percent >= 50 ? "🟩" : "⬛"}\n\nI voted with ${percent}% of listeners.\n🔥 ${streak}-day streak\n\n${siteUrl}/today`;
 }
 
 export function resultMessage(percent: number) {

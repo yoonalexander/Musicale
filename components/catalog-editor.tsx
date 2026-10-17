@@ -1,18 +1,10 @@
 "use client";
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
+import { SubmitButton } from "@/components/submit-button";
 import { saveSong } from "@/app/actions";
 import type { Song } from "@/types/domain";
 import { providerLabels } from "@/lib/providers";
 import { YouTubeDiscovery } from "@/components/youtube-discovery";
-function Save() {
-  const { pending } = useFormStatus();
-  return (
-    <button className="button" disabled={pending}>
-      {pending ? "Saving…" : "Save song"}
-    </button>
-  );
-}
 export function CatalogEditor({ songs }: { songs: Song[] }) {
   const [id, setId] = useState("");
   const [youtubeId, setYouTubeId] = useState<string | null>(null);
@@ -57,7 +49,7 @@ export function CatalogEditor({ songs }: { songs: Song[] }) {
               name="id"
               required
               maxLength={100}
-              pattern="[a-z0-9][a-z0-9-]*"
+              pattern={"[a-z0-9][a-z0-9\\-]*"}
               defaultValue={song?.id}
               readOnly={Boolean(song)}
             />
@@ -146,6 +138,23 @@ export function CatalogEditor({ songs }: { songs: Song[] }) {
             <input name="artworkPermission" type="checkbox" />I have permission
             to display this artwork.
           </label>
+          <label>
+            Artwork source HTTPS URL (optional)
+            <input
+              name="artworkSourceUrl"
+              type="url"
+              maxLength={2000}
+              defaultValue={song?.artworkSourceUrl ?? ""}
+            />
+          </label>
+          <label>
+            Artwork attribution (optional)
+            <input
+              name="artworkAttribution"
+              maxLength={1000}
+              defaultValue={song?.artworkAttribution ?? ""}
+            />
+          </label>
           {(["youtube", "spotify", "apple_music", "musicbrainz"] as const).map(
             (provider) => {
               const p = song?.providers.find((p) => p.provider === provider);
@@ -186,7 +195,7 @@ export function CatalogEditor({ songs }: { songs: Song[] }) {
               );
             },
           )}
-          <Save />
+          <SubmitButton>Save song</SubmitButton>
         </form>
       </details>
     </section>

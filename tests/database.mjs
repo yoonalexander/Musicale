@@ -1,50 +1,15 @@
 import assert from "node:assert/strict";
-import { spawn, execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
-
-// Uses only a disposable database inside this project's local Supabase container.
-// Never accepts a hosted connection string and never resets the application's database.
-const container = "supabase_db_musicale",
-  database = `musicale_test_${process.pid}`;
+import {
+  databaseHarness,
+  user,
+  asUser,
+  day,
+  createDay,
+} from "./database-harness.mjs";
+const db = databaseHarness("baseline"),
+  { sql } = db;
 let assertions = 0;
-function sql(text, db = database) {
-  return new Promise((resolve, reject) => {
-    const child = spawn("docker", [
-      "exec",
-      "-i",
-      container,
-      "psql",
-      "-X",
-      "-qAt",
-      "-v",
-      "ON_ERROR_STOP=1",
-      "-U",
-      "postgres",
-      "-d",
-      db,
-    ]);
-    let out = "",
-      err = "";
-    child.stdout.on("data", (d) => (out += d));
-    child.stderr.on("data", (d) => (err += d));
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code !== 0) return reject(new Error(err.trim()));
-      // Vote failures return an error object so the durable request budget commits.
-      for (const line of out.trim().split("\n")) {
-        try {
-          const data = JSON.parse(line);
-          if (data?.error) return reject(new Error(data.error));
-        } catch {}
-      }
-      resolve(out.trim());
-    });
-    child.stdin.end(text);
-  });
-}
-const user = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
-const asUser = (n, text) =>
-  `begin;set local role authenticated;set local request.jwt.claim.sub='${user(n)}';${text};commit;`;
 async function test(name, fn) {
   await fn();
   assertions++;
@@ -58,18 +23,9 @@ const vote = (n, song = "respect-aretha") =>
     n,
     `select submit_daily_vote((select matchup_id from get_today_matchup()),'${song}')`,
   );
-const day = "(now() at time zone 'UTC')::date";
-const createDay = (offset) =>
-  `insert into daily_matchups(matchup_day,song_a_id,song_b_id,starts_at,ends_at) values(${day}+${offset},'respect-aretha','god-only-knows',(${day}+${offset})::timestamp at time zone 'UTC',(${day}+${offset}+1)::timestamp at time zone 'UTC')`;
 
 try {
-  await sql(`create database ${database}`, "postgres");
-  await sql(`create schema auth;create table auth.users(id uuid primary key,email text);
-    create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
-    grant usage on schema public,auth to anon,authenticated;
-    grant execute on function auth.uid() to anon,authenticated;
-    alter default privileges in schema public grant all on tables to anon,authenticated;
-    alter default privileges in schema public grant all on sequences to anon,authenticated;`);
+  await db.create();
   const files = readdirSync("supabase/migrations")
     .filter((f) => f.endsWith(".sql"))
     .sort();
@@ -268,7 +224,7 @@ try {
       ),
       /permission denied/,
     );
-    await denied(asUser(2, createDay(2)), /row-level security/);
+    await denied(asUser(2, createDay(2)), /Admin access required/);
     assert.equal(
       await sql(
         asUser(
@@ -428,9 +384,14 @@ try {
       ),
       "60",
     );
-    for (const name of ["''", "null", "repeat('a',61)", "E'bad\\nname'"])
+    for (const [i, name] of [
+      "''",
+      "null",
+      "repeat('a',61)",
+      "E'bad\\nname'",
+    ].entries())
       await denied(
-        asUser(2, `select update_my_display_name(${name})`),
+        asUser(i + 13, `select update_my_display_name(${name})`),
         /1 to 60/,
       );
     assert.equal(
@@ -461,6 +422,8 @@ try {
       "youtube_player_ready",
       "youtube_play_started",
       "youtube_player_error",
+      "preview_play_started",
+      "preview_play_failed",
     ]) {
       await sql(asUser(2, `select record_product_event('${event}')`));
       assert.equal(
@@ -470,6 +433,19 @@ try {
         "1",
       );
     }
+    await sql(asUser(2, "select record_product_event('preview_started')"));
+    assert.equal(
+      await sql(
+        "select count from product_event_counts where event='listening_link_clicked'",
+      ),
+      "2",
+    );
+    assert.equal(
+      await sql(
+        "select count(*) from product_event_counts where event='preview_started'",
+      ),
+      "0",
+    );
     assert.equal(
       await sql(
         "select count from product_event_counts where event='share_copied'",
@@ -490,7 +466,7 @@ try {
     );
     assert.equal(
       await sql(asUser(1, "select count(*) from product_event_counts")),
-      "5",
+      "7",
     );
   });
   await test("catalog saves full metadata and rejects inconsistent dates and invalid duration atomically", async () => {
@@ -679,25 +655,5 @@ try {
   });
   console.log(`${assertions} database integration tests passed.`);
 } finally {
-  try {
-    execFileSync(
-      "docker",
-      [
-        "exec",
-        container,
-        "psql",
-        "-X",
-        "-q",
-        "-U",
-        "postgres",
-        "-d",
-        "postgres",
-        "-c",
-        `drop database if exists ${database} with (force)`,
-      ],
-      { stdio: "pipe" },
-    );
-  } catch {
-    /* Report the original failure. */
-  }
+  db.close();
 }

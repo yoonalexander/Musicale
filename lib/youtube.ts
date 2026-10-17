@@ -1,7 +1,11 @@
 import { safeProviderUrl } from "./providers";
 import type { Song } from "@/types/domain";
 
-export function canTrackYouTube(song: Song, videoId: string, now = Date.now()) {
+export function canTrackYouTube(
+  song: Pick<Song, "youtubeValidation">,
+  videoId: string,
+  now = Date.now(),
+) {
   const validation = song.youtubeValidation;
   if (
     !validation ||
@@ -118,7 +122,7 @@ export function registerYouTubePlayer(player: YouTubePlayer) {
     players.delete(player);
   };
 }
-export function pauseOtherYouTubePlayers(active: YouTubePlayer) {
+export function pauseOtherYouTubePlayers(active?: YouTubePlayer) {
   for (const player of players) {
     if (player !== active) player.pauseVideo();
   }

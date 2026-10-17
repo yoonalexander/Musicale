@@ -23,10 +23,10 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100",
+      "node --import ./tests/catalog-fetch-fixture.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100",
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,
-    env: localAppEnv(),
+    env: { ...localAppEnv(), YOUTUBE_API_KEY: "musicale-browser-fixture" },
     timeout: 45000,
   },
 });

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
+import { pauseAudioPreview } from "@/components/audio-preview-player";
 import {
   loadYouTubeAPI,
   pauseOtherYouTubePlayers,
@@ -14,7 +15,14 @@ import {
 } from "@/lib/youtube";
 import type { Song } from "@/types/domain";
 
-export function SongVideoPreview({ song }: { song: Song }) {
+export function SongVideoPreview({
+  song,
+}: {
+  song: Pick<
+    Song,
+    "id" | "title" | "artistName" | "providers" | "youtubeValidation"
+  >;
+}) {
   const source = song.providers.find(
     (provider) => provider.provider === "youtube",
   );
@@ -105,11 +113,13 @@ function Video({
             onStateChange({ target, data }) {
               if (disposed) return;
               if (data === 1) {
+                pauseAudioPreview();
                 pauseOtherYouTubePlayers(target);
                 setStatus("Playing on YouTube. Ads may play before the song.");
                 if (Date.now() < trackingUntil) track("youtube_play_started");
               } else if (data === 2) setStatus("Paused.");
               else if (data === 3) {
+                pauseAudioPreview();
                 pauseOtherYouTubePlayers(target);
                 setStatus("Buffering on YouTube…");
               } else if (data === 0) setStatus("Playback ended.");
@@ -177,7 +187,11 @@ function Video({
               Google Privacy Policy
             </a>
           </p>
-          <button className="button secondary" onClick={() => setEnabled(true)}>
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => setEnabled(true)}
+          >
             Load YouTube player
           </button>
         </>
@@ -187,9 +201,12 @@ function Video({
         ref={host}
         hidden={!enabled || Boolean(error)}
       />
-      <p role="status">{error || status}</p>
+      <p aria-live="polite" role={error || status ? "status" : undefined}>
+        {error || status}
+      </p>
       {error ? (
         <button
+          type="button"
           className="button secondary"
           onClick={() => setAttempt((n) => n + 1)}
         >
@@ -198,6 +215,7 @@ function Video({
       ) : null}
       {enabled ? (
         <button
+          type="button"
           className="text-button"
           onClick={() => {
             setEnabled(false);

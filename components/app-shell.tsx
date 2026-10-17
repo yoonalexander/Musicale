@@ -11,17 +11,24 @@ export function AppShell({
 }) {
   return (
     <>
+      <a className="skip-link" href="#main-content" tabIndex={0}>
+        Skip to content
+      </a>
       <header className="site-header">
         <Link className="wordmark" href="/">
           Musicale
         </Link>
         <nav aria-label="Main navigation">
-          <Link href="/today">Today</Link>
+          <Link href="/play">Play</Link>
+          <Link href="/rank">Rank</Link>
+          <Link href="/today">Daily</Link>
           <Link href="/leaderboard">Leaderboard</Link>
-          {viewer.user ? <Link href="/profile">Profile</Link> : null}
+          {viewer.user && !viewer.user.isAnonymous ? (
+            <Link href="/profile">Profile</Link>
+          ) : null}
           {viewer.isAdmin ? <Link href="/admin">Admin</Link> : null}
         </nav>
-        {viewer.user ? (
+        {viewer.user && !viewer.user.isAnonymous ? (
           <form action={signOutAction}>
             <button className="text-button">Sign out</button>
           </form>
@@ -31,7 +38,7 @@ export function AppShell({
           </Link>
         )}
       </header>
-      <main>
+      <main id="main-content" tabIndex={-1}>
         {isDemoMode() ? (
           <p className="notice" role="status">
             Preview catalog — sign-in and persistent voting are disabled.
@@ -41,9 +48,10 @@ export function AppShell({
       </main>
       <footer>
         <span>Musicale</span>
-        <span>Music playback remains with its provider.</span>
+        <Link href="/help#music-credits">Music credits & licenses</Link>
         <Link href="/archive">Featured matchups</Link>
         <Link href="/privacy">Privacy & analytics</Link>
+        <Link href="/help">Help & contact</Link>
       </footer>
     </>
   );

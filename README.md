@@ -1,28 +1,48 @@
 # Musicale
 
-**Every day. Two songs. One choice.** Everyone gets the same editorial matchup, listens on an official music provider, votes once, and helps build an auditable Elo leaderboard.
+Visible, user-loaded YouTube players are integrated across Play, Rank, Daily and song pages. Existing authorized 15-second audio previews and external listening links remain available. See [YouTube integration and verification](docs/YOUTUBE_PLAYBACK.md) and [audio coverage and licenses](docs/AUDIO_PREVIEWS.md). Set the server-only `YOUTUBE_API_KEY` for metadata validation and admin candidate discovery; never prefix it with `NEXT_PUBLIC_`.
 
-See the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+**Trust your music instinct.** Play, Rank and Daily work without signing up. Optional accounts add full history and profile details. Guess the higher-rated song in Play, compare favorites continuously in Rank, or join the shared Daily matchup. Play points, preference-driven Elo, and Daily streaks have separate rules.
+
+**Three-mode direction:** Rank continuously collects preferences to build shared Elo ratings, and Daily remains the shared UTC matchup. Rank and Play are deployed; see [Phase 5A](docs/PHASE_5A.md) and [Phase 5B](docs/PHASE_5B.md) for implementation verification, and [the product contract](docs/PRODUCT_MODES.md).
+
+See [the game-first guest experience](docs/GUEST_EXPERIENCE.md), [Phase 5B Play evidence](docs/PHASE_5B.md), [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+
+**Publication status (October 17, 2026):** the integrated app is live at [musicale.alexyoon.com](https://musicale.alexyoon.com). Health/readiness pass, Daily has a thirty-day buffer, and guest Rank provides four licensed previews. Play needs genuine preference ratings before issuing an untied pair. Owner administration, real email acceptance, operations and the seven-day beta remain unfinished. See [production rollout evidence](docs/PRODUCTION_2026_10_17.md) and [release acceptance](docs/PHASE_7.md).
+
+See [Phase 6 operations evidence](docs/PHASE_6.md), [Phase 5 product experience and manual acceptance](docs/PHASE_5.md), [Phase 4 live ranking evidence](docs/PHASE_4.md), [Phase 3 database evidence](docs/PHASE_3.md), the [project status review](docs/PROJECT_STATUS.md) for the current verification boundary and the [completion roadmap](docs/ROADMAP.md) for phased work, release acceptance checks, and résumé claim evidence.
+
+[Interview demo](docs/DEMO.md) · [Résumé claim evidence](docs/CLAIM_EVIDENCE.md) · [Real beta checklist](docs/BETA.md)
+
+![Current Musicale guest welcome](docs/evidence/guest-experience/desktop-guest-welcome.png)
+
+Historical Phase 7 screenshots use automated test participation and predate the guest/audio updates: [Today on mobile](docs/screenshots/today-mobile.png), [live leaderboard on mobile](docs/screenshots/leaderboard-mobile.png), [song details](docs/screenshots/song-desktop.png).
+
+See [local branch integration and current validation](docs/INTEGRATION.md).
 
 ## Product and architecture
 
-This rebuild replaces the previous musical-theatre ranking / higher-lower game. The July 2026 product request called for a shared daily vote loop inspired by Wordle, with a monochrome editorial interface, one accent color, persistent accounts, and server-calculated ratings and streaks. The original unfinished changes were completed around that MVP; personalized modes and social features remain future work. See [the refactor notes](docs/REFACTOR.md).
+This rebuild replaces the previous musical-theatre ranking / higher-lower game. The July 2026 product request called for a shared daily vote loop inspired by Wordle, with a monochrome editorial interface, one accent color, persistent accounts, and server-calculated ratings and streaks. The original unfinished changes were completed around that MVP; the October three-mode product contract now adds continuous Rank and the higher-rated Play game. See [the refactor notes](docs/REFACTOR.md).
 
 - Next.js 15 App Router, React 19, TypeScript, server-rendered pages and server actions.
 - Supabase Auth with passwordless email magic links, PostgreSQL and row-level security.
 - One global day: midnight UTC inclusive through the next midnight exclusive. Browser dates never determine eligibility or streaks.
 - A transactional `submit_daily_vote` RPC locks the matchup and songs, validates membership/time/status, prevents duplicates, updates both ratings/records, records an audit event, updates participation, and saves daily rating snapshots.
+- Play captures immutable per-round Elo snapshots and atomically grades private, persisted runs. Correct guesses earn one point and replace exactly one randomly chosen card. Wrong guesses end the run; expiry and missing replacements preserve points. Play never changes Elo or Daily participation.
+- Continuous Rank uses private issued comparisons and atomic `submit_rank_vote` transactions, an independent request budget, expiring/resumable pairs and a bounded repeat-pair cooldown. Mixed-mode replay restores the shared ranking without changing Daily participation.
 - Elo begins at 1500. Admin-configured K-factor (1–100, default 24) lives in `app_settings` and is recorded with each rating event. Rounded rating changes are equal and opposite.
-- Song providers are normalized separately. The launch UI opens official HTTPS provider links; it does not load third-party players or download audio.
+- Song providers are normalized separately. Official HTTPS listening links remain the fallback. Explicitly authorized direct audio sources can play through native controls; no third-party audio is downloaded, proxied or rehosted.
 - Vercel-compatible: no separate application server, Redis or paid analytics service.
 
-Implemented pages: landing, Today, filtered/sortable leaderboard, song details, editable profile with paginated voting history and evidence-based listening statistics, email sign-in, featured completed matchups, privacy/analytics preferences, and protected administration. These screens exist, but the completion roadmap tracks remaining behavior, operations and release verification. The original brief's future social/personalized modes remain later work.
+Implemented pages: landing, Play, Rank, Daily (`/today`), filtered/sortable leaderboard, song details, editable profile with a saved Play score and separate paginated Daily and Rank histories and evidence-based Daily listening statistics, optional email sign-in with guest-to-new-account history preservation, featured completed matchups, privacy/analytics preferences, and protected administration. The completion roadmap tracks remaining behavior, operations and release verification.
 
-Leaderboard filters cover genre, artist, year, decade and minimum votes. Sort by Elo, win percentage, total votes or seven-day rating movement. Only the public leaderboard is cached (30 seconds), with immediate invalidation after voting/editorial changes; private vote and profile state is never publicly cached.
+Leaderboard filters cover genre, artist, year, decade and minimum votes. Sort by Elo, win percentage, total votes or seven-day rating movement. Public leaderboard page loads are cached for 30 seconds, with selective invalidation after voting/editorial actions. An open leaderboard receives Supabase song-change notifications and refetches through an uncached public endpoint, including after direct RPC votes. Reconnection and visible-tab recovery preserve filters/page and show stale-state feedback on failure. Private vote/profile state is never publicly cached. See [Phase 4](docs/PHASE_4.md) for the local verification and pending hosted rollout.
+
+Daily side counts, totals and the saved selection are withheld by `get_today_matchup` until that account votes. Completed archive/song-history RPCs exclude active days. Cumulative Elo, wins/losses, comparison counts and public rating snapshots remain public and may permit inference; this is not a promise of absolute result secrecy. [Phase 3 evidence](docs/PHASE_3.md) documents the tested boundary.
 
 ## Local setup
 
-Use Node.js 20.19+ and install locked dependencies:
+Use Node.js 22+ and install locked dependencies:
 
 ```sh
 npm ci
@@ -35,6 +55,8 @@ For a fully local backend, start Docker Desktop with its Linux engine and run:
 ```sh
 npm run local:start
 ```
+
+Automated browser tests use app port **3100** (with an allowlisted auth callback). The development server below remains on 3000. The separate Phase 5 acceptance worktree uses 3200.
 
 This initializes the database, applies migrations in order, and seeds today's matchup. Musicale uses ports **55321** (API), **55322** (PostgreSQL), and **55324** (local email catcher), separate from other projects. Emails sent locally stay in the catcher.
 
@@ -54,14 +76,16 @@ New email sign-ins require both **Confirm signup** and **Magic Link** templates 
 
 `0001_initial.sql` is unchanged historical migration content. **Do not replace or reapply an already-applied migration.**
 
-- Fresh database: apply migrations `0001` through `0007` in order, followed by `seed.sql`.
-- Database running the original app: apply migrations `0002` through `0007` in order, then `seed.sql`.
-- Database already running the daily MVP through `0003`: apply `0004` through `0007`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
+- Fresh database: apply migrations `0001` through `0010` in order, followed by `seed.sql`.
+- Database running the original app: apply migrations `0002` through `0010` in order, then `seed.sql`.
+- Database already running the daily MVP through `0003`: apply `0004` through `0010`, then seed to add missing starter records/providers. Repeat seeding preserves editorial changes, availability, ratings and scheduled days.
 - With Supabase CLI migration tracking, use normal ordered migration application; do not run a reset against hosted data.
+
+Canonical migration order is now catalog `0010`, operations `0011`, Rank `0012`, Play `0013`, audio `0014`–`0015`, and audio-aware readiness `0016`. Inspect applied history and apply only missing versions before deploying compatible code. The older operations branch’s unapplied `0010` was renamed to `0011`; never silently rename applied hosted history. See [integration evidence](docs/INTEGRATION.md).
 
 Migration 0002 moves the old songs, votes, profiles, game runs and quota records into the **private, unexposed `musicale_legacy` schema**. Existing account identities, join dates, display names and admin roles are copied into the new profiles. Old votes and ratings are preserved for reference, rather than mixed into the new catalog. The old public ranking RPC is removed. Migration 0003 completes access controls, result privacy, admin audit/import tools, configurable Elo, and history queries.
 
-Migration 0004 adds durable request limits, richer profiles/catalog metadata, analytics aggregates, featured archives and ranking recovery. Migration 0005 adds atomic batch scheduling and database provider-domain checks; migration 0006 indexes request cleanup. Migration 0007 aligns the display-name RPC with the form/server limit of 60 characters; it preserves existing names and rejects invalid future edits. Provider checks preserve existing potentially stale data while enforcing new writes; inspect provider readiness before scheduling.
+Migration 0004 adds durable request limits, richer profiles/catalog metadata, analytics aggregates, featured archives and ranking recovery. Migration 0005 adds atomic batch scheduling and database provider-domain checks; migration 0006 indexes request cleanup. Migration 0007 aligns the display-name RPC with the form/server limit of 60 characters; it preserves existing names and rejects invalid future edits. Migration 0008 enforces profile/admin RPC budgets and direct editorial-write budgets in PostgreSQL, strengthens recovery source validation, and prevents cancellation of started/voted days. Apply 0008 before deploying its matching server-action changes; it is not applied to production by Phase 3. Migration 0009 publishes only public song changes for the live leaderboard; apply it before deploying the live client. Local Realtime is enabled; hosted delivery still needs the release smoke check. Provider checks preserve existing potentially stale data while enforcing new writes; inspect provider readiness before scheduling.
 
 Before rollout, take a database backup, inspect the starting schema, and apply the upgrade to an isolated copy. If the unfinished July rewrite of `0001_initial.sql` was applied manually, that is a different starting schema: do not apply the legacy upgrade blindly; preserve/export that data and reconcile it first. The fresh Musicale production project was bootstrapped on October 1, 2026; see [deployment status](docs/DEPLOYMENT.md).
 
@@ -112,9 +136,9 @@ npm run typecheck
 Start local Supabase before the database/browser checks. `npm run verify` runs the complete sequence (unit tests, database tests, production build, desktop/mobile browser tests, and TypeScript).
 
 - Unit tests cover the preview credential guard, Elo including rounding ties, streak expiry/date boundaries, UTC windows, catalog/provider validation, and spoiler-free sharing.
-- Database tests create and remove a disposable database inside **only** `supabase_db_musicale`. They exercise migration preservation, actual PostgreSQL transactions/RLS, authentication requirements, invalid/time-window votes, concurrent requests/users, streaks, result privacy, admin scheduling/audits/settings, and atomic imports. They do not reset the application's database or accept a hosted URL.
+- Database tests create and remove owned disposable databases inside **only** the selected local Musicale container (`supabase_db_musicale` by default). The optional `MUSICALE_LOCAL_WORKDIR` selects an isolated Musicale project as documented in Phase 4. They exercise migration preservation, actual PostgreSQL transactions/RLS, authentication requirements, invalid/time-window votes, concurrent requests/users, streaks, result privacy, admin scheduling/audits/settings, and atomic imports. They do not reset the application's database or accept a hosted URL.
 - Browser tests build with isolated local settings, then use actual local magic-link email and persisted voting on desktop/mobile. They cover keyboard voting, reload persistence, clipboard fallback, profiles/history, server admin checks, sign-out, 404s, 320px layouts and automated WCAG accessibility checks. Generated `example.test` accounts and sample votes remain only in the local test project. Screenshots go in ignored `output/`.
-- Browser checks never open the external music links. Listening availability and restrictions remain provider-dependent.
+- Browser checks intercept external links and use synthetic local audio fixtures; they never test real recordings. Listening availability and restrictions remain provider-dependent.
 
 Windows verification runs Chromium desktop/mobile and WebKit. Linux CI also runs Firefox. The downloaded Firefox 155 Windows package failed to launch on this machine with a missing `mozglue` side-by-side assembly; it is excluded from Windows defaults rather than reported as verified. Set `MUSICALE_INCLUDE_FIREFOX=1` to exercise it after resolving the browser package. CI uses disposable local infrastructure and no production secrets. Install all three engines with `npx playwright install --with-deps chromium firefox webkit` on Linux.
 
@@ -131,7 +155,7 @@ Production is configured at [musicale.alexyoon.com](https://musicale.alexyoon.co
 5. Schedule upcoming daily matchups in Admin. When no valid matchup is scheduled, Today shows an explicit empty state; it does not choose a random pair.
 6. Verify sign-in, provider link, one vote, persisted result after reload, streak, leaderboard and admin authorization on the deployed environment.
 
-Supabase rate-limits authentication. Voting has a durable budget of ten attempts per account per UTC minute, including failed choices and duplicates. Admin actions allow 30/minute, profile edits five/minute, and analytics 30/minute. Limits live in PostgreSQL across application instances. The private transactional voting function cannot be called directly by API users; its wrapper commits the request count even when the vote fails, returning a safe `error` field in that case. The app handles both transport errors and this field. No IP addresses are stored. Counters older than seven days are removed on subsequent requests.
+Supabase rate-limits authentication. Daily voting has a durable budget of ten attempts per account per UTC minute, including failed choices and duplicates. Rank has its own thirty-attempt budget per account per UTC minute, thirty-minute pending-pair expiry and ten-minute repeat-pair cooldown, independent of Daily. Admin mutation RPCs allow 30 attempts/minute, profile edits five attempts/minute, and analytics 30/minute. Direct authenticated editorial table writes reserve once per affected row from the same administrator budget; rejected table transactions roll their reservations back. RPC failures preserve their attempt while rolling back business writes. Limits live in PostgreSQL across application instances. The private transactional voting function cannot be called directly by API users; its wrapper commits the request count even when the vote fails, returning a safe `error` field in that case. The app handles both transport errors and this field. No IP addresses are stored. Counters older than seven days are removed on subsequent requests. Profile/catalog/scheduling/recovery RPC callers must check a returned `error` field as well as transport errors; their private processors are not API-callable.
 
 `GET /api/health` reports public database connectivity (`ready`, `unavailable`, or `preview`) without secrets, account data or daily results. Use it with your existing hosting monitor. It does not verify external playback, email delivery or the editorial queue; inspect the Admin participation/queue screens for those.
 
@@ -141,19 +165,27 @@ Profile history paginates 25 votes at a time. Listening patterns require at leas
 
 Analytics is off by default and enabled per browser on `/privacy`. Do Not Track disables collection. The isolated adapter sends only allowlisted event names; the collector requires same-origin requests and authentication. Anonymous visitors are not collected. Storage contains only UTC day/event counts (not unique visitor measurements); counts older than 90 days are removed on subsequent analytics activity. Request budgets briefly retain account IDs for rate limiting, as disclosed separately in the privacy page. No external analytics account or paid service is needed.
 
+## Catalog automation and authorized audio
+
+Admin can search MusicBrainz, review duplicate candidates, import batches and refresh source metadata while preserving editorial edits and rankings. New discoveries start unavailable. Audio authorization and availability are managed separately from external links. See [catalog automation and evidence](docs/CATALOG_AUTOMATION.md) for provider terms, ownership rules, admin instructions and migration `0010` rollout. iTunes was evaluated and remains disabled; no third-party preview URL implies permission.
+
+## Operations and recovery
+
+`/api/health` checks database connectivity; `/api/readiness` checks today and the consecutive playable future buffer without exposing future choices. Admin reports a gap before later scheduled dates can hide it. The hourly alert workflow is prepared but disabled until its Resend destination and real staging delivery are verified. See [operations](docs/OPERATIONS.md), [capacity assumptions](docs/CAPACITY.md), and [Phase 6 evidence](docs/PHASE_6.md).
+
+`npm run verify` also restores a private local logical export into a disposable database after browser voting. It verifies Auth/application rows, RLS, grants, constraints, object definitions and duplicate protection. This local rehearsal is separate from a hosted restore and an encrypted off-site production backup, both still release requirements.
+
 ## Music providers and rights
 
 Musicale stores editorial metadata and provider IDs/links. It does not host, proxy, download, cache or redistribute audio. The initial matchup links to [Aretha Franklin's official Respect upload](https://www.youtube.com/watch?v=JzqGZjFnYnA) and [The Beach Boys' official God Only Knows video](https://www.youtube.com/watch?v=NADx3-qRxek), verified October 1, 2026. Artwork uses letter placeholders until permission for supplied artwork is established.
 
-Daily comparison cards and song details support visible YouTube IFrame API players from existing saved provider URLs. Each player loads only after the listener accepts the linked privacy policy and YouTube terms with “Load YouTube player”; playback starts through YouTube's native controls. Other players pause when playback starts, and players are destroyed on navigation or replacement. The full player keeps native controls and has no forced listening cutoff. External links remain available if YouTube is blocked or unavailable. Other providers continue to use external links.
-
-Apply `20261017182638_youtube_playback_events.sql` before rolling out the new analytics events. It preserves historical `preview_started` counts and adds separate link, player-ready, play-state and error counts; none measures audible listening duration. Configure `YOUTUBE_API_KEY` as a server-only secret for saved-video metadata validation and protected admin candidate search. Minimal Made for Kids metadata is cached for 24 hours; custom player tracking stays off for Made for Kids, unknown or stale sources. The IFrame player itself needs no browser API key, and no searches run during page views or votes. See [playback implementation and verification](docs/YOUTUBE_PLAYBACK.md) for live HTTPS evidence, source review, rollout gates and remaining design work. Review current [YouTube developer policies](https://developers.google.com/youtube/terms/developer-policies) before release.
+External links are the initial playback approach. Review [YouTube's terms](https://www.youtube.com/t/terms), [developer policies](https://developers.google.com/youtube/terms/developer-policies), [embedding guidance](https://support.google.com/youtube/answer/171780) and [player requirements](https://developers.google.com/youtube/terms/required-minimum-functionality) before adding embeds or API metadata. Official embeds require provider identification, privacy disclosures and other applicable policies; privacy-enhanced mode does not eliminate all data sharing. MusicBrainz supplies core metadata through its server-side API. Other supported listening providers supply external links; no YouTube, Spotify or Apple audio is embedded automatically.
 
 Official upload availability is not a blanket license or assurance of regional playback. Confirm recording authorization, regional availability, artwork permissions, provider attribution/terms, and production privacy disclosures before broad launch. Disable unavailable recordings promptly.
 
 ## Remaining launch operations and future versions
 
 - Resolve the hosted sign-in failure, then validate voting and persistence. As of October 15, production has migrations `0001`–`0007`, twenty songs and a restored matchup for that UTC day. The sending domain and public email delivery are verified; owner administration and the next-thirty-day production queue remain pending. See [Phase 2 evidence](docs/PHASE_2.md).
-- Continue editorial curation toward the brief's suggested 200–1,000 songs; the twenty-source starter catalog and bulk import tools are complete. Verify region-specific playback and artwork permissions before adding content.
+- Maintain the verified twenty-song launch catalog and thirty distinct starter pairs; a larger collection is optional. Verify region-specific playback and artwork permissions before adding content.
 - Extend manual assistive-technology/device testing and configure the hosting monitor against `/api/health`.
 - Later: pairing strategies, personalized comparisons, friends and tournaments.

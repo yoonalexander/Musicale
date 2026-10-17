@@ -1,6 +1,36 @@
 # Production deployment
 
+**October 17 publication:** integrated `main` is now deployed to [musicale.alexyoon.com](https://musicale.alexyoon.com), with migrations through `0016`, guest authentication, four authorized audio sources, updated confirmation templates and a thirty-day Daily buffer. Play still needs genuine preference ratings; owner administration and hosted human acceptance remain open. See [the current rollout evidence](PRODUCTION_2026_10_17.md). Older dated sections below are historical records.
+
+October 17 local integration: the current candidate combines all branches. Canonical migrations are `0001`–`0016`: catalog `0010`, operations `0011` (renamed from its unapplied parallel `0010`), Rank `0012`, Play `0013`, audio `0014`–`0015`, and audio-aware readiness `0016`. Apply only unapplied versions after inspecting the target history and taking a private backup. A local operations-only database tracking the older `0010_product_readiness` needs an explicit forward reconciliation; never silently rename applied history. No hosted changes or push occurred during integration. See [integration evidence](INTEGRATION.md).
+
 Initial production setup: October 1, 2026. Preview environment scopes rechecked and changed October 15, 2026 through the signed-in Chrome dashboard. Database/authentication observations below remain the October 1 record unless explicitly dated otherwise.
+
+## Phase 6 prepared rollout
+
+Migration `0011_product_readiness.sql` and `/api/readiness` are prepared locally. Apply only unapplied migrations in the canonical chain above before the compatible application deployment. The monitor is disabled until its private configuration, actual staging failure notification and release approval are recorded. No new production backup or deployment was made. [Operations](OPERATIONS.md), [capacity](CAPACITY.md) and [Phase 6 evidence](PHASE_6.md) distinguish prepared steps from hosted facts. The following Phase 2/initial observations are historical, not a fresh production inspection.
+
+## Phase 4 prepared rollout
+
+October 16 audio update: apply unapplied `0014_audio_preview_player.sql` and `0015_authorized_daily_audio.sql` after the inherited migration chain, then deploy the corresponding code and `public/audio/` assets. Import the reviewed four-recording pack through Audio administration. No hosted change has been performed. The original twenty commercial tracks retain external links. See [preview setup, permission evidence and acceptance](AUDIO_PREVIEWS.md).
+
+Phase 4 adds local Realtime and migration `0009_live_rankings.sql`, scoped to public songs only. No hosted changes were made. Apply unapplied 0008 and 0009 before their corresponding app deployment, verify the publication/Realtime connection, and repeat the two-browser hosted smoke check in [PHASE_4.md](PHASE_4.md#hosted-rollout-still-required). The Phase 2 hosted sign-in blocker remains open; the historical production observations below have not been refreshed by Phase 4.
+
+## Catalog automation prepared rollout
+
+The catalog addition builds on Phase 4 and adds `0010_catalog_discovery.sql`. Apply all unapplied migrations in order through 0010 before deploying its code. It introduces empty source/audio tables, protects editorial fields during discovery refreshes and corrects historical listening analytics without changing voting history or rankings. New discoveries remain unavailable until reviewed. No iTunes previews or artwork are automatically authorized, and no hosted change was made. See [catalog automation and verification](CATALOG_AUTOMATION.md).
+
+## Continuous Rank prepared rollout — October 16
+
+Phase 5A adds `0012_continuous_rank.sql` after the catalog migration. No hosted changes were made. Apply the migration before its application code, and verify private issued-comparison/vote RLS, mixed-mode replay, independent Daily participation and two-browser live delivery in the target environment. Operations now occupies the previously reserved version 0011. Do not rewrite applied history or reset hosted data. See [Phase 5A evidence, migration order and limits](PHASE_5A.md). The hosted sign-in blocker remains open.
+
+## October 16 game-first guest update
+
+`game-first-guest-play` adds guest entry and a focused welcome/tutorial flow without a schema migration. Hosted rollout requires enabling anonymous sign-ins and manual identity linking, and allowlisting the exact `/api/auth/guest-confirm` redirect before deploying the new UI. Public abuse prevention and guest retention/backup policies require environment acceptance. Do not delete anonymous users with preference history; account deletion cascades into ranking recovery sources. No production settings were changed. See [the guest experience and validation](GUEST_EXPERIENCE.md). The existing Phase 2 magic-link callback and hosted issue remain separate.
+
+## October 16 Phase 5B update
+
+Play is implemented on `phase-5b-higher-rated-game` with additive migration `0013_play.sql`. Apply it before deploying the new Play/Profile code, after catalog `0010` and Rank `0012`; operations now occupies `0011`. Do not rewrite applied history or reset hosted data. Direct reads of Play tables are denied even to owners, and only graded own answers are exposed by the state RPC. Public Realtime remains songs only. No production changes were made for this phase. See [Phase 5B evidence and remaining hosted acceptance](PHASE_5B.md).
 
 ## October 15 Phase 2 update
 

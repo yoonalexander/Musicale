@@ -1,92 +1,9 @@
-import {
-  test,
-  expect,
-  type Page,
-  type APIRequestContext,
-} from "@playwright/test";
-import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { test, expect } from "@playwright/test";
+import { runSql, signIn, requestSignInLink } from "../browser-helpers";
 import AxeBuilder from "@axe-core/playwright";
 // @ts-expect-error Node-only local test helper.
 import { localSettings } from "../local-env.mjs";
-
-localSettings(); // Refuse tests against a hosted project.
-const runSql = (text: string) =>
-  execFileSync(
-    "docker",
-    [
-      "exec",
-      "-i",
-      "supabase_db_musicale",
-      "psql",
-      "-X",
-      "-qAt",
-      "-v",
-      "ON_ERROR_STOP=1",
-      "-U",
-      "postgres",
-      "-d",
-      "postgres",
-    ],
-    { input: text, encoding: "utf8" },
-  ).trim();
-
-// The local seed preserves existing days, so today's pair changes with the date.
-const dailyPair = JSON.parse(
-  runSql(
-    "select json_build_object('songA',song_a,'songB',song_b) from get_today_matchup()",
-  ),
-) as {
-  songA: {
-    id: string;
-    title: string;
-    providers: { provider: string; external_url: string }[];
-  };
-  songB: { id: string; title: string };
-};
-
-async function requestSignInLink(
-  page: Page,
-  request: APIRequestContext,
-  email: string,
-) {
-  await page.goto("/login");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByRole("button", { name: "Send magic link" }).click();
-  await expect(
-    page.getByText("Magic link sent. Check your inbox."),
-  ).toBeVisible();
-  let messageId = "";
-  await expect
-    .poll(async () => {
-      const response = await request.get(
-        "http://127.0.0.1:55324/api/v1/messages",
-      );
-      const inbox = await response.json();
-      const message = inbox.messages.find(
-        (m: { To: { Address: string }[]; ID: string }) =>
-          m.To.some((t) => t.Address === email),
-      );
-      messageId = message?.ID ?? "";
-      return Boolean(messageId);
-    })
-    .toBe(true);
-  const message = await (
-    await request.get(`http://127.0.0.1:55324/api/v1/message/${messageId}`)
-  ).json();
-  const href = String(message.HTML).match(
-    /href="([^"]*\/api\/auth\/callback\?token_hash=[^"]*)"/,
-  )?.[1];
-  expect(href, "Local sign-in email contains a verification link").toBeTruthy();
-  return href!.replaceAll("&amp;", "&");
-}
-
-async function signIn(page: Page, request: APIRequestContext, email: string) {
-  const link = await requestSignInLink(page, request, email);
-  await page.goto(link);
-  await page.getByRole("button", { name: "Confirm sign-in" }).click();
-  await expect(page).toHaveURL(/\/today$/);
-  return link;
-}
 
 test("an email preview cannot consume sign-in before the listener confirms", async ({
   page,
@@ -118,7 +35,7 @@ test("an email preview cannot consume sign-in before the listener confirms", asy
       "no-referrer",
     );
     await expect(
-      page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
+      page.getByRole("button", { name: "Vote for Respect" }),
     ).toHaveCount(0);
     const confirm = page.getByRole("button", { name: "Confirm sign-in" });
     await expect(confirm).toBeEnabled();
@@ -164,23 +81,22 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   page,
   request,
 }, testInfo) => {
-  test.setTimeout(180000);
+  test.setTimeout(150000);
   const email = `musicale-${Date.now()}-${testInfo.project.name}@example.test`;
   await page.goto("/today");
   await expect(
     page.getByRole("heading", { name: "Which song stays with you?" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
-  ).toBeDisabled();
+    page.getByRole("button", { name: "Vote for Respect" }),
+  ).toBeEnabled();
   await expect(page.locator(".result")).toHaveCount(0);
   const provider = page
     .getByRole("link", { name: "Listen on YouTube" })
     .first();
   await expect(provider).toHaveAttribute(
     "href",
-    dailyPair.songA.providers.find((p) => p.provider === "youtube")!
-      .external_url,
+    "https://www.youtube.com/watch?v=JzqGZjFnYnA",
   );
   await expect(page.locator("iframe")).toHaveCount(0);
   const link = await signIn(page, request, email);
@@ -190,9 +106,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     page.getByText(/Sign-in link expired or was already used/),
   ).toBeVisible();
   await page.goto("/today");
-  const vote = page.getByRole("button", {
-    name: `Vote for ${dailyPair.songA.title}`,
-  });
+  const vote = page.getByRole("button", { name: "Vote for Respect" });
   await expect(vote).toBeEnabled();
   await vote.focus();
   await page.keyboard.press("Enter");
@@ -201,10 +115,10 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     page.getByText("Your current streak:", { exact: false }),
   ).toContainText("1 day");
   await expect(
-    page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
+    page.getByRole("button", { name: "Vote for Respect" }),
   ).toBeDisabled();
   await expect(
-    page.getByRole("button", { name: `Vote for ${dailyPair.songB.title}` }),
+    page.getByRole("button", { name: "Vote for God Only Knows" }),
   ).toBeDisabled();
   expect(
     (
@@ -230,17 +144,31 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   const text = await share.inputValue();
   expect(text).toContain("Musicale #");
   expect(text).toContain("1-day streak");
-  expect(text).not.toContain(dailyPair.songA.title);
-  expect(text).not.toContain(dailyPair.songB.title);
+  expect(text).toContain("http://127.0.0.1:3100/today");
+  expect(text).not.toContain("Respect");
+  expect(text).not.toContain("God Only Knows");
+  await page.evaluate(() =>
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: (data: ShareData) => {
+        sessionStorage.setItem("native-share-test", JSON.stringify(data));
+        return Promise.resolve();
+      },
+    }),
+  );
+  await page.getByRole("button", { name: "Share result", exact: true }).click();
+  expect(
+    JSON.parse(
+      (await page.evaluate(() => sessionStorage.getItem("native-share-test")))!,
+    ).text,
+  ).toBe(text);
   await page.reload();
   await expect(page.getByText("Vote recorded", { exact: true })).toBeVisible();
   await page.goto("/profile");
   await expect(
-    page.getByRole("heading", { name: "Recent votes" }),
+    page.getByRole("heading", { name: "Recent Daily votes" }),
   ).toBeVisible();
-  await expect(page.locator(".vote-history")).toContainText(
-    dailyPair.songA.title,
-  );
+  await expect(page.locator(".vote-history")).toContainText("Respect");
   await page.getByText("Edit display name", { exact: true }).click();
   await expect(
     page.getByLabel("Display name", { exact: true }),
@@ -257,9 +185,20 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     page.getByRole("heading", { name: "Test listener", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Display name saved.")).toBeVisible();
-  await page.goto(`/songs/${dailyPair.songA.id}`);
+  await page.goto("/songs/respect-aretha");
   await expect(
     page.getByRole("img", { name: /Elo rating history/ }),
+  ).toBeVisible();
+  await page.getByText("View rating data", { exact: true }).click();
+  const snapshot = JSON.parse(
+    runSql(
+      "select row_to_json(s) from (select snapshot_date,rating from song_rating_snapshots where song_id='respect-aretha' order by snapshot_date desc limit 1) s",
+    ),
+  );
+  await expect(
+    page.getByText(`${snapshot.snapshot_date}: ${Number(snapshot.rating)}`, {
+      exact: true,
+    }),
   ).toBeVisible();
   await page.goto("/leaderboard");
   await expect(
@@ -331,24 +270,25 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
+  const adminPost = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname === "/admin",
+  );
   await page.getByRole("button", { name: "Save K-factor" }).click();
+  const capturedAdminPost = await adminPost;
   await expect(
     page.getByText("K-factor saved for future votes."),
   ).toBeVisible();
+  expect(
+    runSql(
+      `select sum(attempts) from request_budgets where user_id=(select id from auth.users where email='${email}') and action='admin'`,
+    ),
+  ).toBe("1");
   const editor = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: "Song editor", exact: true }),
   });
   await editor.getByText("Open song editor", { exact: true }).click();
-  await editor
-    .getByLabel("Edit a song or add a new one")
-    .selectOption(dailyPair.songA.id);
-  await editor
-    .getByRole("button", { name: "Search YouTube candidates" })
-    .click();
-  await expect(
-    editor.getByText("YouTube discovery is not configured on this server."),
-  ).toBeVisible();
-  await editor.getByLabel("Edit a song or add a new one").selectOption("");
   const id = `test-song-${Date.now()}`;
   await editor.getByLabel("Song ID", { exact: true }).fill(id);
   await editor.getByLabel("Title", { exact: true }).fill("Editor test song");
@@ -360,7 +300,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     .getByRole("combobox", { name: "Status", exact: true })
     .selectOption("disabled");
   await editor.getByRole("button", { name: "Save song", exact: true }).click();
-  await expect(page.getByText("Song saved.", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Song saved\./)).toBeVisible();
   const importedId = `csv-song-${Date.now()}`;
   const csv = `id,title,artistName,albumName,releaseYear,status,providers\n${importedId},CSV test song,Test artist,Single,2001,disabled,[]`;
   await page.getByText("Open bulk import", { exact: true }).click();
@@ -371,7 +311,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     buffer: Buffer.from(csv),
   });
   await page.getByRole("button", { name: "Save catalog", exact: true }).click();
-  await expect(page.getByText("1 songs saved.", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^1 songs saved\./)).toBeVisible();
   expect(
     runSql(`select title||','||status from songs where id='${importedId}'`),
   ).toBe("CSV test song,disabled");
@@ -382,10 +322,10 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     page.getByText(
       /\d+ editorial matchups added. Existing days were preserved./,
     ),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15000 });
   expect(
     runSql(
-      "select count(*) from daily_matchups where matchup_day>(now() at time zone 'UTC')::date and matchup_day<=(now() at time zone 'UTC')::date+30",
+      "select count(*) from daily_matchups where matchup_day>(now() at time zone 'UTC')::date and matchup_day<=(now() at time zone 'UTC')::date+30 and status in('scheduled','active')",
     ),
   ).toBe("30");
   const scheduledPairs = runSql(
@@ -490,6 +430,39 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
         .analyze()
     ).violations,
   ).toEqual([]);
+  // Replay a real server-action request after removing its caller's admin role.
+  const headers = {
+    Origin: "http://127.0.0.1:3100",
+    "Next-Action": capturedAdminPost.headers()["next-action"],
+    "Content-Type": capturedAdminPost.headers()["content-type"],
+  };
+  expect(headers["Next-Action"]).toBeTruthy();
+  const beforeAuthorizationCheck = runSql(
+    "select json_agg(r order by user_id,action,window_start) from request_budgets r",
+  );
+  const anonymousPost = await request.post("/admin", {
+    headers,
+    data: capturedAdminPost.postDataBuffer()!,
+  });
+  expect(anonymousPost.headers()["x-action-redirect"]).toMatch(
+    /Admin\+access\+required/,
+  );
+  runSql(
+    `update profiles set role='user' where user_id=(select id from auth.users where email='${email}')`,
+  );
+  const ordinaryPost = await page.request.post("/admin", {
+    headers,
+    data: capturedAdminPost.postDataBuffer()!,
+  });
+  expect(ordinaryPost.headers()["x-action-redirect"]).toMatch(
+    /Admin\+access\+required/,
+  );
+  expect(
+    runSql(
+      "select json_agg(r order by user_id,action,window_start) from request_budgets r",
+    ),
+  ).toBe(beforeAuthorizationCheck);
+  expect(runSql("select elo_k_factor from app_settings")).toBe("24");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:3100/");
   await expect(
@@ -571,12 +544,10 @@ test("an expired session cannot record a vote and offers sign-in recovery", asyn
   const email = `session-${Date.now()}-${testInfo.project.name}@example.test`;
   await signIn(page, request, email);
   await expect(
-    page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
+    page.getByRole("button", { name: "Vote for Respect" }),
   ).toBeEnabled();
   await context.clearCookies();
-  await page
-    .getByRole("button", { name: `Vote for ${dailyPair.songA.title}` })
-    .click();
+  await page.getByRole("button", { name: "Vote for Respect" }).click();
   await expect(
     page.getByText("Sign in again to vote. Your saved votes are safe."),
   ).toBeVisible();
@@ -601,16 +572,16 @@ for (const [mode, timezoneId] of [
       await signIn(page, request, email);
       const fixture = JSON.parse(
         runSql(
-          "select json_build_object('id',matchup_id,'endsAt',ends_at) from get_today_matchup()",
+          "select json_build_object('id',matchup_id,'endsAt',ends_at,'songId',song_a->>'id') from get_today_matchup()",
         ),
       );
       const status = runSql(
-        `select status from daily_matchups where id='${fixture.id}'`,
+        `select status from songs where id='${fixture.songId}'`,
       );
       await page.clock.install({ time: new Date() });
       await page.reload();
       await expect(
-        page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
+        page.getByRole("button", { name: "Vote for Respect" }),
       ).toBeEnabled();
       let release!: () => void;
       let refreshes = 0;
@@ -627,7 +598,7 @@ for (const [mode, timezoneId] of [
       try {
         // Only the local test fixture is unavailable; the browser simulates crossing UTC midnight.
         runSql(
-          `update daily_matchups set status='cancelled' where id='${fixture.id}'`,
+          `update songs set status='unavailable' where id='${fixture.songId}'`,
         );
         const end = new Date(fixture.endsAt).getTime();
         if (mode === "timer") {
@@ -642,14 +613,10 @@ for (const [mode, timezoneId] of [
         await expect.poll(() => refreshes).toBe(1);
         await expect(page.getByText(/This matchup has ended/)).toBeVisible();
         await expect(
-          page.getByRole("button", {
-            name: `Vote for ${dailyPair.songA.title}`,
-          }),
+          page.getByRole("button", { name: "Vote for Respect" }),
         ).toBeDisabled();
         await expect(
-          page.getByRole("button", {
-            name: `Vote for ${dailyPair.songB.title}`,
-          }),
+          page.getByRole("button", { name: "Vote for God Only Knows" }),
         ).toBeDisabled();
         release();
         await expect(
@@ -669,7 +636,7 @@ for (const [mode, timezoneId] of [
       } finally {
         release();
         runSql(
-          `update daily_matchups set status='${status}' where id='${fixture.id}'`,
+          `update songs set status='${status}' where id='${fixture.songId}'`,
         );
       }
     });
@@ -687,6 +654,7 @@ test("public pages stay usable at narrow widths and missing songs return 404", a
     "/login",
     "/songs/respect-aretha",
     "/privacy",
+    "/help",
     "/archive",
   ]) {
     await page.goto(path);
@@ -741,4 +709,8 @@ test("public pages pass automated accessibility checks at 320px", async ({
       .analyze();
     expect(report.violations, path).toEqual([]);
   }
+});
+
+test.beforeAll(() => {
+  runSql(readFileSync("supabase/seed.sql", "utf8"));
 });

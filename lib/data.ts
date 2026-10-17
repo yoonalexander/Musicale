@@ -1,3 +1,8 @@
+import {
+  pageSize,
+  type LeaderSort,
+  type LeaderFilters,
+} from "@/lib/leaderboard-query";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
@@ -7,6 +12,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { currentStreak } from "@/lib/elo";
 import { mapProviders } from "@/lib/providers";
 import { withYouTubeValidation } from "@/lib/youtube-validation";
+import { mapAudio } from "@/lib/audio";
 import type {
   Matchup,
   Profile,
@@ -31,6 +37,9 @@ function mapSong(r: Record<string, unknown>): Song {
     artistName: String(r.artist_name),
     albumName: String(r.album_name ?? "Single"),
     artworkUrl: r.artwork_url as string | null,
+    artworkSourceUrl: r.artwork_source_url as string | null,
+    artworkAttribution: r.artwork_attribution as string | null,
+    audioPreview: mapAudio(r.audio_preview as Record<string, unknown>),
     releaseYear: Number(r.release_year),
     releaseDate: r.release_date as string | null,
     durationMs: r.duration_ms ? Number(r.duration_ms) : null,
@@ -75,9 +84,13 @@ export const getViewerState = cache(async (): Promise<ViewerState> => {
       }
     : null;
   return {
-    user: { id: user.id, email: user.email },
+    user: {
+      id: user.id,
+      email: user.email,
+      isAnonymous: user.is_anonymous === true,
+    },
     profile,
-    isAdmin: profile?.role === "admin",
+    isAdmin: profile?.role === "admin" && !user.is_anonymous,
   };
 });
 
@@ -95,6 +108,17 @@ export async function getTodayMatchup(): Promise<Matchup | null> {
   check(error);
   const row = data?.[0];
   if (!row) return null;
+  const audio = await db!
+    .from("song_audio_sources")
+    .select(
+      "song_id,provider,url,availability,licensing_status,authorization_url,attribution,start_seconds,license_url,provider_recording_id",
+    )
+    .in("song_id", [row.song_a.id, row.song_b.id])
+    .eq("availability", "available")
+    .eq("licensing_status", "authorized");
+  check(audio.error);
+  for (const song of [row.song_a, row.song_b])
+    song.audio_preview = audio.data?.find((a) => a.song_id === song.id);
   const [songA, songB] = await Promise.all([
     withYouTubeValidation(mapSong(row.song_a)),
     withYouTubeValidation(mapSong(row.song_b)),
@@ -114,15 +138,7 @@ export async function getTodayMatchup(): Promise<Matchup | null> {
   };
 }
 
-export const pageSize = 25;
-export type LeaderSort = "rating" | "wins" | "votes" | "movement";
-export type LeaderFilters = {
-  genre?: string;
-  artist?: string;
-  year?: number;
-  decade?: number;
-};
-async function fetchLeaderboard(
+export async function fetchLeaderboard(
   page = 1,
   sort: LeaderSort = "rating",
   minimum = 0,
@@ -155,6 +171,9 @@ async function fetchLeaderboard(
   // This cache contains only public catalog data; never use cookies or a viewer session here.
   const db = createClient(env.supabaseUrl!, env.supabaseAnonKey!, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
+    },
   });
   const column = {
     rating: "elo_rating",
@@ -182,6 +201,12 @@ async function fetchLeaderboard(
     .order(column, { ascending: false })
     .order("id")
     .range((page - 1) * pageSize, page * pageSize - 1);
+  if (error?.code === "PGRST103") {
+    // A live removal can leave the requested page beyond the filtered catalog.
+    const first = await query.range(0, 0);
+    check(first.error);
+    return { songs: [], total: first.count ?? 0 };
+  }
   check(error);
   return { songs: (data ?? []).map(mapSong), total: count ?? 0 };
 }
@@ -190,7 +215,7 @@ export const getLeaderboard = unstable_cache(
   ["public-leaderboard", env.supabaseUrl ?? "preview"],
   { revalidate: 30, tags: ["leaderboard"] },
 );
-export async function getSong(id: string) {
+export const getSong = cache(async (id: string) => {
   if (!isSupabaseConfigured()) {
     const song = demoSongs.find((s) => s.id === id);
     return song
@@ -214,7 +239,7 @@ export async function getSong(id: string) {
         rank: data.global_rank as number | null,
       }
     : null;
-}
+});
 export async function getVoteHistory(): Promise<VoteHistory[]> {
   if (!isSupabaseConfigured()) return [];
   const db = await getSupabaseServerClient();
@@ -247,40 +272,81 @@ export async function getSongHistory(id: string) {
 }
 export async function getAdminData() {
   const db = await getSupabaseServerClient();
-  const [songs, matchups, settings, audit, overview, events] =
-    await Promise.all([
-      db!.from("song_catalog").select("*").order("title").limit(1000),
-      db!
-        .from("daily_matchups")
-        .select("*")
-        .gte(
-          "matchup_day",
-          new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
-        )
-        .order("matchup_day")
-        .limit(90),
-      db!.from("app_settings").select("elo_k_factor").single(),
-      db!
-        .from("admin_audit_log")
-        .select("id,entity,entity_id,operation,created_at")
-        .order("created_at", { ascending: false })
-        .limit(20),
-      db!.rpc("get_admin_overview"),
-      db!
-        .from("product_event_counts")
-        .select("*")
-        .order("event_day", { ascending: false })
-        .limit(240),
-    ]);
-  [songs, matchups, settings, audit, overview, events].forEach((r) =>
-    check(r.error),
-  );
+  const [
+    songs,
+    matchups,
+    settings,
+    audit,
+    overview,
+    readiness,
+    events,
+    sources,
+    audio,
+  ] = await Promise.all([
+    db!.from("song_catalog").select("*").order("title").limit(1000),
+    db!
+      .from("daily_matchups")
+      .select("*")
+      .gte(
+        "matchup_day",
+        new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
+      )
+      .order("matchup_day")
+      .limit(90),
+    db!.from("app_settings").select("elo_k_factor").single(),
+    db!
+      .from("admin_audit_log")
+      .select("id,entity,entity_id,operation,created_at")
+      .order("created_at", { ascending: false })
+      .limit(20),
+    db!.rpc("get_admin_overview"),
+    db!.rpc("get_product_readiness"),
+    db!
+      .from("product_event_counts")
+      .select("*")
+      .order("event_day", { ascending: false })
+      .limit(240),
+    db!
+      .from("catalog_sources")
+      .select(
+        "provider,provider_song_id,song_id,source_url,metadata_license,metadata,isrcs,synced_at",
+      )
+      .order("synced_at", { ascending: false })
+      .limit(1000),
+    db!
+      .from("song_audio_sources")
+      .select(
+        "song_id,provider,url,availability,licensing_status,authorization_url,attribution,start_seconds,license_url,provider_recording_id",
+      ),
+  ]);
+  [
+    songs,
+    matchups,
+    settings,
+    audit,
+    overview,
+    readiness,
+    events,
+    sources,
+    audio,
+  ].forEach((r) => check(r.error));
   return {
     songs: (songs.data ?? []).map(mapSong),
+    sources: sources.data ?? [],
+    audio: (audio.data ?? []).map((a) => ({
+      songId: a.song_id as string,
+      ...mapAudio(a)!,
+    })),
     matchups: matchups.data ?? [],
     kFactor: settings.data!.elo_k_factor,
     audit: audit.data ?? [],
     overview: overview.data as AdminOverview,
+    readiness: readiness.data as {
+      today_playable: boolean;
+      buffer_days: number;
+      scheduled_days: number;
+      utc_day: string;
+    },
     events: (events.data ?? []) as {
       event_day: string;
       event: string;

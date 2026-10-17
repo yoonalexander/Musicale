@@ -16,6 +16,8 @@ export async function POST(request: NextRequest) {
   } catch {
     return new NextResponse(null, { status: 400 });
   }
+  // Older open tabs used this name for outbound clicks, never confirmed playback.
+  if (body?.event === "preview_started") body.event = "listening_link_clicked";
   if (
     !body ||
     typeof body !== "object" ||

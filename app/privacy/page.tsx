@@ -1,3 +1,9 @@
+import Link from "next/link";
+export const metadata = {
+  title: "Privacy and analytics",
+  description:
+    "How Musicale handles accounts, saved votes, optional analytics and external music providers.",
+};
 import { AnalyticsPreference } from "@/components/analytics";
 export default function Privacy() {
   return (
@@ -12,8 +18,30 @@ export default function Privacy() {
           Supabase handles email sign-in and session cookies. Musicale stores
           your display name, account ID, vote history and participation streaks.
           Votes are permanent: their recorded rating changes form the
-          leaderboard’s audit trail. Your profile and vote history are visible
-          to you and authorized administrators.
+          leaderboard’s audit trail. Rank also stores your issued song pairs,
+          their expiry and saved preferences. Rank activity does not change
+          Daily streaks. Your profile and vote history are visible to you and
+          authorized administrators.
+        </p>
+        <h2>Guest play</h2>
+        <p>
+          Playing or voting without an email creates a private guest session
+          with Supabase. It uses essential session cookies and a player ID, so
+          votes and scores can be protected and resumed. Clearing browser data
+          or using another browser loses access to that guest session. A
+          verified new email can keep its activity on the same account; an
+          existing account keeps its own history. Guest votes remain part of the
+          ranking audit trail. We also store a local preference recording
+          whether you dismissed the tutorial.
+        </p>
+        <h2>Play runs</h2>
+        <p>
+          Musicale saves your private game runs, issued song pairs, rating
+          snapshots, guesses and scores. Pending answers are withheld until
+          graded. Public song ratings can still be viewed elsewhere; Play is a
+          casual game with no competitive scoreboard. Your run is available
+          through your own guest or signed-in session and trusted database
+          operations.
         </p>
         <h2>Security and operations</h2>
         <p>
@@ -26,10 +54,21 @@ export default function Privacy() {
         <h2>Music links and artwork</h2>
         <p>
           Opening a music link takes you to its provider, where that provider’s
-          terms and privacy policy apply. No music players load automatically.
-          If supplied by an editor, artwork loads from its source; that host
-          receives the image request. We suppress the referrer on artwork
-          requests.
+          terms and privacy policy apply. Explicitly authorized previews stream
+          when you press play. Four explicitly CC BY licensed excerpts are
+          served by Musicale with attribution; other approved external sources
+          receive the playback request directly. Musicale does not proxy or copy
+          commercial recordings without permission. If supplied by an editor,
+          artwork loads from its source; that host receives the image request.
+          We suppress the referrer on artwork requests.
+        </p>
+      </section>
+      <section className="panel">
+        <h2>Questions about your data?</h2>
+        <p>
+          <Link href="/help">Contact and help</Link> explains how to request
+          assistance. Public song rankings and aggregate counts do not include
+          your account identity.
         </p>
         <h2>YouTube players</h2>
         <p>

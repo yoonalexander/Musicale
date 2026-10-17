@@ -15,21 +15,29 @@ import {
 import { requireAdmin } from "@/lib/auth";
 import { parseCatalog } from "@/lib/import";
 import editorialPairs from "@/data/editorial-pairs.json";
+import { syncAuthorizedPreviews } from "@/lib/sync-previews";
 import { searchYouTubeVideos, type YouTubeVideo } from "@/lib/youtube-data";
 
+const go = (path: string, key: string, value: string): never =>
+  redirect(`${path}?${key}=${encodeURIComponent(value)}` as Route);
 export async function discoverYouTube(
   id: string,
   _previous: { videos: YouTubeVideo[]; error: string },
   fd: FormData,
 ): Promise<{ videos: YouTubeVideo[]; error: string }> {
   await requireAdmin();
-  await requestBudget("admin");
+  const db = await getSupabaseServerClient();
+  const budget = await db!.rpc("reserve_request", { p_action: "admin" });
+  if (budget.error || !budget.data)
+    return {
+      videos: [],
+      error: "Too many admin requests. Please wait a minute.",
+    };
   try {
     songId(id);
     const region = String(fd.get("region") ?? "")
       .trim()
       .toUpperCase();
-    const db = await getSupabaseServerClient();
     const { data, error } = await db!
       .from("songs")
       .select("title,artist_name")
@@ -59,22 +67,6 @@ export async function discoverYouTube(
     };
   }
 }
-
-async function requestBudget(action: "admin" | "profile") {
-  const db = await getSupabaseServerClient();
-  const { data, error } = await db!.rpc("reserve_request", {
-    p_action: action,
-  });
-  if (error || !data)
-    go(
-      action === "admin" ? "/admin" : "/profile",
-      "message",
-      "Too many requests. Try again next minute.",
-    );
-}
-
-const go = (path: string, key: string, value: string): never =>
-  redirect(`${path}?${key}=${encodeURIComponent(value)}` as Route);
 export async function requestMagicLinkAction(fd: FormData) {
   if (!isSupabaseConfigured())
     go("/login", "message", "Configure Supabase to enable sign in.");
@@ -84,10 +76,29 @@ export async function requestMagicLinkAction(fd: FormData) {
   const db = await getSupabaseServerClient();
   let failed = false;
   try {
-    const { error } = await db!.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${getSiteUrl()}/api/auth/callback` },
-    });
+    const {
+      data: { user },
+    } = await db!.auth.getUser();
+    let result;
+    if (user?.is_anonymous) {
+      result = await db!.auth.updateUser(
+        { email },
+        { emailRedirectTo: `${getSiteUrl()}/api/auth/guest-confirm` },
+      );
+    }
+    if (
+      !result ||
+      (result.error &&
+        ["email_exists", "user_already_exists"].includes(
+          result.error.code ?? "",
+        ))
+    ) {
+      result = await db!.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${getSiteUrl()}/api/auth/callback` },
+      });
+    }
+    const { error } = result;
     failed = Boolean(error);
   } catch {
     failed = true;
@@ -181,7 +192,6 @@ export async function submitDailyVote(fd: FormData) {
 }
 export async function scheduleMatchup(fd: FormData) {
   const v = await requireAdmin();
-  await requestBudget("admin");
   let values;
   try {
     const day = String(fd.get("day") ?? "");
@@ -227,7 +237,6 @@ export async function scheduleMatchup(fd: FormData) {
 }
 export async function importSongs(fd: FormData) {
   await requireAdmin();
-  await requestBudget("admin");
   let songs: SongInput[] = [];
   try {
     const file = fd.get("file");
@@ -250,7 +259,16 @@ export async function importSongs(fd: FormData) {
     );
   }
   const db = await getSupabaseServerClient();
-  const { error } = await db!.rpc("save_catalog", { p_songs: songs });
+  const { error, data } = await db!.rpc("save_catalog", { p_songs: songs });
+  let previewNotice = "";
+  if (!error && !data?.error) {
+    try {
+      previewNotice = await syncAuthorizedPreviews();
+    } catch {
+      previewNotice =
+        "Preview discovery unavailable; retry in Audio administration.";
+    }
+  }
   revalidatePath("/admin");
   revalidatePath("/leaderboard");
   revalidateTag("leaderboard");
@@ -259,14 +277,13 @@ export async function importSongs(fd: FormData) {
   go(
     "/admin",
     "message",
-    error
+    error || data?.error
       ? "Import failed; no songs were changed. Check provider IDs for duplicates."
-      : `${songs.length} songs saved.`,
+      : `${songs.length} songs saved. ${previewNotice}`,
   );
 }
 export async function updateSongStatus(fd: FormData) {
   await requireAdmin();
-  await requestBudget("admin");
   const status = String(fd.get("status"));
   if (!["active", "unavailable", "disabled"].includes(status))
     go("/admin", "message", "Invalid status.");
@@ -285,6 +302,7 @@ export async function updateSongStatus(fd: FormData) {
   revalidatePath("/today");
   revalidatePath("/leaderboard");
   revalidateTag("leaderboard");
+  revalidatePath("/songs/[id]", "page");
   go(
     "/admin",
     "message",
@@ -293,7 +311,6 @@ export async function updateSongStatus(fd: FormData) {
 }
 export async function updateKFactor(fd: FormData) {
   await requireAdmin();
-  await requestBudget("admin");
   const k = Number(fd.get("kFactor"));
   if (!Number.isInteger(k) || k < 1 || k > 100)
     go("/admin", "message", "K-factor must be an integer between 1 and 100.");
@@ -311,7 +328,6 @@ export async function updateKFactor(fd: FormData) {
 }
 export async function saveSong(fd: FormData) {
   await requireAdmin();
-  await requestBudget("admin");
   let song!: SongInput;
   try {
     const providers = [
@@ -333,37 +349,48 @@ export async function saveSong(fd: FormData) {
     go("/admin", "message", (error as Error).message);
   }
   const db = await getSupabaseServerClient();
-  const { error } = await db!.rpc("save_catalog", { p_songs: [song] });
+  const { error, data } = await db!.rpc("save_catalog", { p_songs: [song] });
+  let previewNotice = "";
+  if (!error && !data?.error) {
+    try {
+      previewNotice = await syncAuthorizedPreviews();
+    } catch {
+      previewNotice =
+        "Preview discovery unavailable; retry in Audio administration.";
+    }
+  }
   ["/admin", "/today", "/leaderboard"].forEach((p) => revalidatePath(p));
   revalidateTag("leaderboard");
   revalidatePath("/songs/[id]", "page");
   go(
     "/admin",
     "message",
-    error
+    error || data?.error
       ? "Song could not be saved. Check for duplicate provider IDs."
-      : "Song saved.",
+      : `Song saved. ${previewNotice}`,
   );
 }
 export async function updateDisplayName(fd: FormData) {
   const v = await getViewerState();
-  if (!v.user) redirect("/login");
-  await requestBudget("profile");
+  if (!v.user || v.user.isAnonymous) redirect("/login");
   const name = String(fd.get("displayName") ?? "").trim();
   if (!name || name.length > 60 || /[\u0000-\u001f\u007f]/.test(name))
     go("/profile", "message", "Use a name of 1 to 60 characters.");
   const db = await getSupabaseServerClient();
-  const { error } = await db!.rpc("update_my_display_name", { p_name: name });
+  const { error, data } = await db!.rpc("update_my_display_name", {
+    p_name: name,
+  });
   revalidatePath("/profile");
   go(
     "/profile",
     "message",
-    error ? "Could not save display name." : "Display name saved.",
+    error || data?.error
+      ? (data?.error ?? "Could not save display name.")
+      : "Display name saved.",
   );
 }
 export async function manageMatchup(fd: FormData) {
   await requireAdmin();
-  await requestBudget("admin");
   const db = await getSupabaseServerClient();
   const id = String(fd.get("id") ?? "");
   const operation = String(fd.get("operation"));
@@ -403,7 +430,6 @@ export async function manageMatchup(fd: FormData) {
 }
 export async function rebuildRankings(fd: FormData) {
   await requireAdmin();
-  await requestBudget("admin");
   if (fd.get("confirm") !== "on")
     go("/admin", "message", "Confirm the ranking rebuild first.");
   const db = await getSupabaseServerClient();
@@ -416,14 +442,13 @@ export async function rebuildRankings(fd: FormData) {
   go(
     "/admin",
     "message",
-    error
+    error || data?.error
       ? "Rebuild failed. No rankings were changed; inspect the audit records."
       : `Rankings rebuilt from ${data} recorded votes.`,
   );
 }
 export async function scheduleEditorialMonth() {
   await requireAdmin();
-  await requestBudget("admin");
   const today = new Date().toISOString().slice(0, 10);
   const matchups = Array.from({ length: 30 }, (_, i) => {
     const date = new Date(`${today}T00:00:00Z`);
@@ -440,7 +465,7 @@ export async function scheduleEditorialMonth() {
   go(
     "/admin",
     "message",
-    error
+    error || data?.error
       ? "Queue failed; no matchups were added. Import the starter catalog and ensure all selected songs are active with playback links."
       : `${data} editorial matchups added. Existing days were preserved.`,
   );

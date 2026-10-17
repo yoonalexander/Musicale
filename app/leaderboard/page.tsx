@@ -1,49 +1,20 @@
+export const metadata = {
+  title: "Live leaderboard",
+  description:
+    "Explore public Elo rankings, vote counts and weekly movement. Filter by artist, genre and release year.",
+};
 import Link from "next/link";
-import type { Route } from "next";
-import {
-  getLeaderboard,
-  isDemoMode,
-  pageSize,
-  type LeaderSort,
-} from "@/lib/data";
-
+import { getLeaderboard, isDemoMode } from "@/lib/data";
+import { leaderboardQuery } from "@/lib/leaderboard-query";
+import { LiveLeaderboard } from "@/components/live-leaderboard";
 export default async function Leaderboard({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const params = await searchParams;
-  const page = Math.min(
-    10000,
-    Math.max(1, Number.parseInt(params.page ?? "1") || 1),
-  );
-  const sort: LeaderSort = ["rating", "wins", "votes", "movement"].includes(
-    params.sort ?? "",
-  )
-    ? (params.sort as LeaderSort)
-    : "rating";
-  const minimum = Math.min(
-    100000,
-    Math.max(0, Number.parseInt(params.minimum ?? "0") || 0),
-  );
-  const genre = (params.genre ?? "").trim().slice(0, 100),
-    artist = (params.artist ?? "").trim().slice(0, 200);
-  const year = Number(params.year),
-    decade = Number(params.decade);
-  const filters = {
-    genre,
-    artist,
-    year:
-      Number.isInteger(year) && year >= 1860 && year <= 2200 ? year : undefined,
-    decade:
-      Number.isInteger(decade) &&
-      decade >= 1860 &&
-      decade <= 2200 &&
-      decade % 10 === 0
-        ? decade
-        : undefined,
-  };
-  const { songs, total } = await getLeaderboard(page, sort, minimum, filters);
+  const { page, sort, minimum, filters } = leaderboardQuery(await searchParams);
+  const { genre, artist } = filters;
+  const initial = await getLeaderboard(page, sort, minimum, filters);
   const query = new URLSearchParams({
     sort,
     minimum: String(minimum),
@@ -52,7 +23,6 @@ export default async function Leaderboard({
     year: filters.year ? String(filters.year) : "",
     decade: filters.decade ? String(filters.decade) : "",
   });
-  const link = (p: number) => `/leaderboard?${query}&page=${p}` as Route;
   return (
     <section className="page">
       <header className="page-title">
@@ -60,7 +30,9 @@ export default async function Leaderboard({
         <h1>The leaderboard</h1>
         <p>
           Elo rewards proven performance. Songs under five votes are marked
-          provisional.
+          provisional. Equal ratings are tied; display ties use a stable catalog
+          order. Positions follow your selected sort, and unplayed songs have an
+          initial rating.
         </p>
       </header>
       {isDemoMode() ? (
@@ -130,77 +102,14 @@ export default async function Leaderboard({
         <button className="button secondary">Apply</button>
         <Link href="/leaderboard">Clear filters</Link>
       </form>
-      <div className="leaderboard">
-        <div className="leader-head">
-          <span>Position</span>
-          <span>Song</span>
-          <span>Record / win rate</span>
-          <span>Rating</span>
-        </div>
-        {songs.map((s, i) => (
-          <Link className="leader-row" href={`/songs/${s.id}`} key={s.id}>
-            <b>{(page - 1) * pageSize + i + 1}</b>
-            <div className="leader-song">
-              {s.artworkUrl ? (
-                <img
-                  src={s.artworkUrl}
-                  alt=""
-                  width="48"
-                  height="48"
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <span className="mini-art" aria-hidden="true">
-                  {s.title[0]}
-                </span>
-              )}
-              <div>
-                <strong>{s.title}</strong>
-                <small>
-                  {s.artistName} · {s.releaseYear}
-                </small>
-              </div>
-            </div>
-            <span>
-              {s.wins}–{s.losses}
-              <small>
-                {s.matchupCount} votes ·{" "}
-                {s.matchupCount
-                  ? Math.round((100 * s.wins) / s.matchupCount)
-                  : 0}
-                % wins
-              </small>
-            </span>
-            <b>
-              {Math.round(s.eloRating)}
-              {s.matchupCount < 5 ? <small>Provisional</small> : null}
-              {sort === "movement" ? (
-                <small>
-                  {(s.recentMovement ?? 0) > 0 ? "+" : ""}
-                  {Math.round(s.recentMovement ?? 0)} this week
-                </small>
-              ) : null}
-            </b>
-          </Link>
-        ))}
-      </div>
-      {!songs.length ? <p>No songs match these filters.</p> : null}
-      <nav className="pagination" aria-label="Leaderboard pages">
-        {page > 1 ? (
-          <Link className="button secondary" href={link(page - 1)}>
-            Previous
-          </Link>
-        ) : null}
-        <span>
-          Page {page} · {total} songs
-        </span>
-        {page * pageSize < total ? (
-          <Link className="button secondary" href={link(page + 1)}>
-            Next
-          </Link>
-        ) : null}
-      </nav>
+      <LiveLeaderboard
+        key={query.toString() + page}
+        initial={initial}
+        page={page}
+        sort={sort}
+        query={query.toString()}
+        live={!isDemoMode()}
+      />
     </section>
   );
 }

@@ -1,3 +1,9 @@
+import { getSiteUrl } from "@/lib/env";
+export const metadata = {
+  title: "Today’s matchup",
+  description:
+    "Listen to today’s two songs and save one vote before midnight UTC. No sign-up needed.",
+};
 import Link from "next/link";
 import { DailyMatchup } from "@/components/daily-matchup";
 import { getTodayMatchup, getViewerState, isDemoMode } from "@/lib/data";
@@ -30,13 +36,21 @@ export default async function Today({
       </section>
     );
   return (
-    <section className="today">
-      <header>
+    <section className="today game-stage daily-stage">
+      <header className="game-question">
         <p className="kicker">
           Musicale #{m.number} · {m.matchupDay}
         </p>
         <h1>Which song stays with you?</h1>
-        <p>Listen first. Then trust your instinct.</p>
+        <p>
+          Preview a song here or use its official listening link, then choose
+          one song. One saved vote per account, per UTC day.
+        </p>
+        <p>
+          {m.songA.genre ?? "Music"} meets {m.songB.genre ?? "music"}:{" "}
+          {m.songA.artistName} ({m.songA.releaseYear}) and {m.songB.artistName}{" "}
+          ({m.songB.releaseYear}).
+        </p>
         {p.error ? (
           <p className="notice" role="alert">
             {p.error}
@@ -44,7 +58,8 @@ export default async function Today({
         ) : null}
         {!v.user ? (
           <p className="notice">
-            <Link href="/login">Sign in</Link> to record your vote.
+            Vote as a guest. <Link href="/login">Sign in</Link> for your
+            history.
           </p>
         ) : null}
         {isDemoMode() ? (
@@ -54,8 +69,10 @@ export default async function Today({
         ) : null}
       </header>
       <DailyMatchup
+        siteUrl={getSiteUrl()}
         matchup={m}
-        canVote={Boolean(v.user) && !isDemoMode()}
+        canVote={!isDemoMode()}
+        guestEntry={!v.user}
         streak={v.profile?.currentStreak ?? 0}
       />
     </section>

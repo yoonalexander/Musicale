@@ -1,3 +1,10 @@
+import { SubmitButton } from "@/components/submit-button";
+import { scheduleReview } from "@/lib/editorial";
+export const metadata = {
+  title: "Editorial tools",
+  description:
+    "Manage Musicale songs, future matchups, availability and ranking recovery.",
+};
 import {
   importSongs,
   scheduleMatchup,
@@ -10,6 +17,12 @@ import {
 import { getAdminData } from "@/lib/data";
 import { requireAdmin } from "@/lib/auth";
 import { CatalogEditor } from "@/components/catalog-editor";
+import { CatalogDiscovery } from "@/components/catalog-discovery";
+import { AudioEditor } from "@/components/audio-editor";
+import { playablePreview } from "@/lib/audio";
+
+// MusicBrainz batches deliberately space requests; allow time for a reviewed ten-song import.
+export const maxDuration = 60;
 
 const example = [
   {
@@ -39,8 +52,18 @@ export default async function Admin({
   const playable = data.songs.filter(
     (s) =>
       s.status === "active" &&
-      s.providers.some((p) => p.provider !== "musicbrainz"),
+      (s.providers.some((p) => p.provider !== "musicbrainz") ||
+        playablePreview(s.audioPreview)),
   );
+  const songNames = Object.fromEntries(data.songs.map((s) => [s.id, s.title]));
+  const queue = data.matchups.filter(
+    (m) =>
+      m.matchup_day > new Date().toISOString().slice(0, 10) &&
+      m.matchup_day <=
+        new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10) &&
+      m.status !== "cancelled",
+  );
+  const review = scheduleReview(queue.map((m) => [m.song_a_id, m.song_b_id]));
   return (
     <section className="page">
       <header className="page-title">
@@ -56,7 +79,7 @@ export default async function Admin({
         <h2>Participation overview</h2>
         <dl className="stats">
           <div>
-            <dt>Accounts</dt>
+            <dt>Player identities (including guests)</dt>
             <dd>{data.overview.accounts}</dd>
           </div>
           <div>
@@ -82,11 +105,37 @@ export default async function Admin({
       <section className="panel">
         <h2>Schedule or replace a future matchup</h2>
         <p>
-          Build your own pair below, or repeat the ten curated starter pairs
-          across the next 30 UTC days. Existing scheduled days are preserved.
+          Build your own pair below, or queue 30 different curated pairs across
+          the next 30 UTC days. The starter plan connects all twenty songs, with
+          three opponents each. Existing scheduled days are preserved.
         </p>
+        <p className="notice">
+          {data.readiness.today_playable
+            ? "Today is playable."
+            : "Today needs attention: no playable pair."}{" "}
+          {data.readiness.buffer_days} consecutive future days are playable.
+          {data.readiness.buffer_days < 14
+            ? " Replenish or repair the queue to keep at least 14 days ahead."
+            : " The minimum 14-day buffer is covered."}
+        </p>
+        <p>{queue.length} of the next 30 days are scheduled.</p>
+        {queue.length === 30 ? (
+          <p className="notice">
+            {review.duplicates === 0 &&
+            review.fewOpponents === 0 &&
+            review.groups === 1
+              ? "Variety check passed: unique pairs, at least two opponents per song, one connected catalog."
+              : `Review this queue: ${review.duplicates} repeated pairs, ${review.fewOpponents} songs with fewer than two opponents, ${review.groups} comparison groups. Replace future matchups below to improve variety.`}
+          </p>
+        ) : (
+          <p>
+            The full variety check is available when all 30 days are scheduled.
+          </p>
+        )}
         <form action={scheduleEditorialMonth}>
-          <button className="button secondary">Queue next 30 days</button>
+          <SubmitButton className="button secondary">
+            Queue next 30 days
+          </SubmitButton>
         </form>
         <form action={scheduleMatchup} className="admin-form">
           <label>
@@ -131,9 +180,9 @@ export default async function Admin({
               ))}
             </select>
           </label>
-          <button className="button" disabled={playable.length < 2}>
+          <SubmitButton className="button" disabled={playable.length < 2}>
             Save matchup
-          </button>
+          </SubmitButton>
         </form>
       </section>
       <section className="panel">
@@ -142,7 +191,8 @@ export default async function Admin({
           <ul>
             {data.matchups.map((m) => (
               <li key={m.id}>
-                {m.matchup_day} · {m.song_a_id} vs {m.song_b_id} ·{" "}
+                {m.matchup_day} · {songNames[m.song_a_id] ?? m.song_a_id} vs{" "}
+                {songNames[m.song_b_id] ?? m.song_b_id} ·{" "}
                 {m.song_a_votes + m.song_b_votes} votes · {m.status}
                 <form action={manageMatchup} className="inline-form">
                   <input type="hidden" name="id" value={m.id} />
@@ -155,16 +205,18 @@ export default async function Admin({
                     />
                     Feature {m.matchup_day} after voting closes
                   </label>
-                  <button className="button secondary">Save feature</button>
+                  <SubmitButton className="button secondary">
+                    Save feature
+                  </SubmitButton>
                 </form>
                 {Date.parse(m.starts_at) > Date.now() &&
                 m.status !== "cancelled" ? (
                   <form action={manageMatchup}>
                     <input type="hidden" name="id" value={m.id} />
                     <input type="hidden" name="operation" value="cancel" />
-                    <button className="text-button">
+                    <SubmitButton className="text-button">
                       Cancel {m.matchup_day} matchup
-                    </button>
+                    </SubmitButton>
                   </form>
                 ) : null}
               </li>
@@ -175,6 +227,8 @@ export default async function Admin({
         )}
       </section>
       <CatalogEditor songs={data.songs} />
+      <CatalogDiscovery sources={data.sources} />
+      <AudioEditor songs={data.songs} audio={data.audio} />
       <section className="panel">
         <h2>Add, edit or import songs</h2>
         <details>
@@ -202,7 +256,7 @@ export default async function Admin({
               />
             </label>
             <label>
-              Catalog JSON
+              Catalog JSON or CSV
               <textarea
                 name="catalog"
                 rows={12}
@@ -221,7 +275,7 @@ export default async function Admin({
               </a>
               .
             </p>
-            <button className="button">Save catalog</button>
+            <SubmitButton className="button">Save catalog</SubmitButton>
           </form>
           <p>
             <a href="/starter-catalog.json" download>
@@ -240,14 +294,16 @@ export default async function Admin({
         {data.songs.filter(
           (s) =>
             s.status === "active" &&
-            !s.providers.some((p) => p.provider !== "musicbrainz"),
+            !s.providers.some((p) => p.provider !== "musicbrainz") &&
+            !playablePreview(s.audioPreview),
         ).length ? (
           <ul>
             {data.songs
               .filter(
                 (s) =>
                   s.status === "active" &&
-                  !s.providers.some((p) => p.provider !== "musicbrainz"),
+                  !s.providers.some((p) => p.provider !== "musicbrainz") &&
+                  !playablePreview(s.audioPreview),
               )
               .map((s) => (
                 <li key={s.id}>
@@ -315,7 +371,9 @@ export default async function Admin({
             <input name="confirm" type="checkbox" required />
             Rebuild all derived rankings from the recorded events.
           </label>
-          <button className="button secondary">Rebuild rankings</button>
+          <SubmitButton className="button secondary">
+            Rebuild rankings
+          </SubmitButton>
         </form>
       </section>
       <section className="panel">
@@ -336,7 +394,7 @@ export default async function Admin({
                   <option value="disabled">Disabled</option>
                 </select>
               </label>
-              <button className="button secondary">Save</button>
+              <SubmitButton className="button secondary">Save</SubmitButton>
             </form>
           ))}
         </details>
@@ -355,7 +413,7 @@ export default async function Admin({
               defaultValue={data.kFactor}
             />
           </label>
-          <button className="button">Save K-factor</button>
+          <SubmitButton className="button">Save K-factor</SubmitButton>
         </form>
       </section>
       <section className="panel">
