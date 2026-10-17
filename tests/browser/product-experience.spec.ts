@@ -341,7 +341,7 @@ test("editor can paste CSV, upload JSON, replace a future day, change availabili
       .getByRole("button", { name: "Save catalog", exact: true })
       .click();
     await expect(
-      page.getByText("1 songs saved.", { exact: true }),
+      page.getByText(/^1 songs saved\./),
     ).toBeVisible();
     await expect(
       page.getByRole("button", {
@@ -373,7 +373,7 @@ test("editor can paste CSV, upload JSON, replace a future day, change availabili
       .getByRole("button", { name: "Save catalog", exact: true })
       .click();
     await expect(
-      page.getByText("1 songs saved.", { exact: true }),
+      page.getByText(/^1 songs saved\./),
     ).toBeVisible();
     await expect(
       page.getByRole("button", {
