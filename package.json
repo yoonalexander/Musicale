@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx tests/run-tests.ts",
+    "test": "tsx tests/run-tests.ts && node --import tsx --test tests/youtube-data.test.ts",
     "typecheck": "tsc --noEmit",
     "test:db": "node tests/database.mjs",
     "test:ui": "node tests/build-local.mjs && playwright test",

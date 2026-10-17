@@ -6,6 +6,7 @@ import { env, isSupabaseConfigured } from "@/lib/env";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { currentStreak } from "@/lib/elo";
 import { mapProviders } from "@/lib/providers";
+import { withYouTubeValidation } from "@/lib/youtube-validation";
 import type {
   Matchup,
   Profile,
@@ -81,20 +82,31 @@ export const getViewerState = cache(async (): Promise<ViewerState> => {
 });
 
 export async function getTodayMatchup(): Promise<Matchup | null> {
-  if (!isSupabaseConfigured()) return demoMatchup();
+  if (!isSupabaseConfigured()) {
+    const matchup = demoMatchup();
+    const [songA, songB] = await Promise.all([
+      withYouTubeValidation(matchup.songA),
+      withYouTubeValidation(matchup.songB),
+    ]);
+    return { ...matchup, songA, songB };
+  }
   const db = await getSupabaseServerClient();
   const { data, error } = await db!.rpc("get_today_matchup");
   check(error);
   const row = data?.[0];
   if (!row) return null;
+  const [songA, songB] = await Promise.all([
+    withYouTubeValidation(mapSong(row.song_a)),
+    withYouTubeValidation(mapSong(row.song_b)),
+  ]);
   return {
     id: row.matchup_id,
     matchupDay: row.matchup_day,
     number: row.matchup_number,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
-    songA: mapSong(row.song_a),
-    songB: mapSong(row.song_b),
+    songA,
+    songB,
     totalVotes: Number(row.total_votes ?? 0),
     songAVotes: Number(row.song_a_votes ?? 0),
     songBVotes: Number(row.song_b_votes ?? 0),
@@ -181,7 +193,12 @@ export const getLeaderboard = unstable_cache(
 export async function getSong(id: string) {
   if (!isSupabaseConfigured()) {
     const song = demoSongs.find((s) => s.id === id);
-    return song ? { song, rank: demoSongs.indexOf(song) + 1 } : null;
+    return song
+      ? {
+          song: await withYouTubeValidation(song),
+          rank: demoSongs.indexOf(song) + 1,
+        }
+      : null;
   }
   const db = await getSupabaseServerClient();
   const { data, error } = await db!
@@ -192,7 +209,10 @@ export async function getSong(id: string) {
     .maybeSingle();
   check(error);
   return data
-    ? { song: mapSong(data), rank: data.global_rank as number | null }
+    ? {
+        song: await withYouTubeValidation(mapSong(data)),
+        rank: data.global_rank as number | null,
+      }
     : null;
 }
 export async function getVoteHistory(): Promise<VoteHistory[]> {

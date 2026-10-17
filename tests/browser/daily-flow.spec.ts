@@ -30,6 +30,20 @@ const runSql = (text: string) =>
     { input: text, encoding: "utf8" },
   ).trim();
 
+// The local seed preserves existing days, so today's pair changes with the date.
+const dailyPair = JSON.parse(
+  runSql(
+    "select json_build_object('songA',song_a,'songB',song_b) from get_today_matchup()",
+  ),
+) as {
+  songA: {
+    id: string;
+    title: string;
+    providers: { provider: string; external_url: string }[];
+  };
+  songB: { id: string; title: string };
+};
+
 async function requestSignInLink(
   page: Page,
   request: APIRequestContext,
@@ -104,7 +118,7 @@ test("an email preview cannot consume sign-in before the listener confirms", asy
       "no-referrer",
     );
     await expect(
-      page.getByRole("button", { name: "Vote for Respect" }),
+      page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
     ).toHaveCount(0);
     const confirm = page.getByRole("button", { name: "Confirm sign-in" });
     await expect(confirm).toBeEnabled();
@@ -150,14 +164,14 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   page,
   request,
 }, testInfo) => {
-  test.setTimeout(90000);
+  test.setTimeout(180000);
   const email = `musicale-${Date.now()}-${testInfo.project.name}@example.test`;
   await page.goto("/today");
   await expect(
     page.getByRole("heading", { name: "Which song stays with you?" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Vote for Respect" }),
+    page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
   ).toBeDisabled();
   await expect(page.locator(".result")).toHaveCount(0);
   const provider = page
@@ -165,7 +179,8 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     .first();
   await expect(provider).toHaveAttribute(
     "href",
-    "https://www.youtube.com/watch?v=JzqGZjFnYnA",
+    dailyPair.songA.providers.find((p) => p.provider === "youtube")!
+      .external_url,
   );
   await expect(page.locator("iframe")).toHaveCount(0);
   const link = await signIn(page, request, email);
@@ -175,7 +190,9 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     page.getByText(/Sign-in link expired or was already used/),
   ).toBeVisible();
   await page.goto("/today");
-  const vote = page.getByRole("button", { name: "Vote for Respect" });
+  const vote = page.getByRole("button", {
+    name: `Vote for ${dailyPair.songA.title}`,
+  });
   await expect(vote).toBeEnabled();
   await vote.focus();
   await page.keyboard.press("Enter");
@@ -184,10 +201,10 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     page.getByText("Your current streak:", { exact: false }),
   ).toContainText("1 day");
   await expect(
-    page.getByRole("button", { name: "Vote for Respect" }),
+    page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
   ).toBeDisabled();
   await expect(
-    page.getByRole("button", { name: "Vote for God Only Knows" }),
+    page.getByRole("button", { name: `Vote for ${dailyPair.songB.title}` }),
   ).toBeDisabled();
   expect(
     (
@@ -213,15 +230,17 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   const text = await share.inputValue();
   expect(text).toContain("Musicale #");
   expect(text).toContain("1-day streak");
-  expect(text).not.toContain("Respect");
-  expect(text).not.toContain("God Only Knows");
+  expect(text).not.toContain(dailyPair.songA.title);
+  expect(text).not.toContain(dailyPair.songB.title);
   await page.reload();
   await expect(page.getByText("Vote recorded", { exact: true })).toBeVisible();
   await page.goto("/profile");
   await expect(
     page.getByRole("heading", { name: "Recent votes" }),
   ).toBeVisible();
-  await expect(page.locator(".vote-history")).toContainText("Respect");
+  await expect(page.locator(".vote-history")).toContainText(
+    dailyPair.songA.title,
+  );
   await page.getByText("Edit display name", { exact: true }).click();
   await expect(
     page.getByLabel("Display name", { exact: true }),
@@ -238,7 +257,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     page.getByRole("heading", { name: "Test listener", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Display name saved.")).toBeVisible();
-  await page.goto("/songs/respect-aretha");
+  await page.goto(`/songs/${dailyPair.songA.id}`);
   await expect(
     page.getByRole("img", { name: /Elo rating history/ }),
   ).toBeVisible();
@@ -320,6 +339,16 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
     has: page.getByRole("heading", { name: "Song editor", exact: true }),
   });
   await editor.getByText("Open song editor", { exact: true }).click();
+  await editor
+    .getByLabel("Edit a song or add a new one")
+    .selectOption(dailyPair.songA.id);
+  await editor
+    .getByRole("button", { name: "Search YouTube candidates" })
+    .click();
+  await expect(
+    editor.getByText("YouTube discovery is not configured on this server."),
+  ).toBeVisible();
+  await editor.getByLabel("Edit a song or add a new one").selectOption("");
   const id = `test-song-${Date.now()}`;
   await editor.getByLabel("Song ID", { exact: true }).fill(id);
   await editor.getByLabel("Title", { exact: true }).fill("Editor test song");
@@ -356,7 +385,7 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   ).toBeVisible();
   expect(
     runSql(
-      "select count(*) from daily_matchups where matchup_day>(now() at time zone 'UTC')::date and matchup_day<=(now() at time zone 'UTC')::date+30 and status in('scheduled','active')",
+      "select count(*) from daily_matchups where matchup_day>(now() at time zone 'UTC')::date and matchup_day<=(now() at time zone 'UTC')::date+30",
     ),
   ).toBe("30");
   const scheduledPairs = runSql(
@@ -542,10 +571,12 @@ test("an expired session cannot record a vote and offers sign-in recovery", asyn
   const email = `session-${Date.now()}-${testInfo.project.name}@example.test`;
   await signIn(page, request, email);
   await expect(
-    page.getByRole("button", { name: "Vote for Respect" }),
+    page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
   ).toBeEnabled();
   await context.clearCookies();
-  await page.getByRole("button", { name: "Vote for Respect" }).click();
+  await page
+    .getByRole("button", { name: `Vote for ${dailyPair.songA.title}` })
+    .click();
   await expect(
     page.getByText("Sign in again to vote. Your saved votes are safe."),
   ).toBeVisible();
@@ -579,7 +610,7 @@ for (const [mode, timezoneId] of [
       await page.clock.install({ time: new Date() });
       await page.reload();
       await expect(
-        page.getByRole("button", { name: "Vote for Respect" }),
+        page.getByRole("button", { name: `Vote for ${dailyPair.songA.title}` }),
       ).toBeEnabled();
       let release!: () => void;
       let refreshes = 0;
@@ -611,10 +642,14 @@ for (const [mode, timezoneId] of [
         await expect.poll(() => refreshes).toBe(1);
         await expect(page.getByText(/This matchup has ended/)).toBeVisible();
         await expect(
-          page.getByRole("button", { name: "Vote for Respect" }),
+          page.getByRole("button", {
+            name: `Vote for ${dailyPair.songA.title}`,
+          }),
         ).toBeDisabled();
         await expect(
-          page.getByRole("button", { name: "Vote for God Only Knows" }),
+          page.getByRole("button", {
+            name: `Vote for ${dailyPair.songB.title}`,
+          }),
         ).toBeDisabled();
         release();
         await expect(

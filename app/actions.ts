@@ -15,6 +15,50 @@ import {
 import { requireAdmin } from "@/lib/auth";
 import { parseCatalog } from "@/lib/import";
 import editorialPairs from "@/data/editorial-pairs.json";
+import { searchYouTubeVideos, type YouTubeVideo } from "@/lib/youtube-data";
+
+export async function discoverYouTube(
+  id: string,
+  _previous: { videos: YouTubeVideo[]; error: string },
+  fd: FormData,
+): Promise<{ videos: YouTubeVideo[]; error: string }> {
+  await requireAdmin();
+  await requestBudget("admin");
+  try {
+    songId(id);
+    const region = String(fd.get("region") ?? "")
+      .trim()
+      .toUpperCase();
+    const db = await getSupabaseServerClient();
+    const { data, error } = await db!
+      .from("songs")
+      .select("title,artist_name")
+      .eq("id", id)
+      .single();
+    if (error || !data)
+      return {
+        videos: [],
+        error: "Save the song before searching for a recording.",
+      };
+    const videos = await searchYouTubeVideos(
+      data.artist_name,
+      data.title,
+      region,
+    );
+    return {
+      videos,
+      error: videos.length
+        ? ""
+        : "No embeddable candidates were returned for this country. Review another official source or try a different country.",
+    };
+  } catch (error) {
+    return {
+      videos: [],
+      error:
+        error instanceof Error ? error.message : "YouTube discovery failed.",
+    };
+  }
+}
 
 async function requestBudget(action: "admin" | "profile") {
   const db = await getSupabaseServerClient();

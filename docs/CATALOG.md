@@ -9,7 +9,7 @@ The following external playback destinations were checked against primary artist
 | Respect — Aretha Franklin                     | [Official upload](https://www.youtube.com/watch?v=JzqGZjFnYnA)                                                                                                                  |
 | God Only Knows — The Beach Boys               | [Official video](https://www.youtube.com/watch?v=NADx3-qRxek)                                                                                                                   |
 | Dreams — Fleetwood Mac                        | [Artist's video page](https://www.fleetwoodmacofficial.com/video/fleetwood-mac-dreams-official-music-video?page=0), [video](https://www.youtube.com/watch?v=Y3ywicffOj4)        |
-| Superstition — Stevie Wonder                  | [Official artist / UMG recording](https://www.youtube.com/watch?v=egqv1mtos6A)                                                                                                  |
+| Superstition — Stevie Wonder                  | [Official artist / UMG Talking Book recording](https://www.youtube.com/watch?v=ftdZ363R9kQ)                                                                                    |
 | Fast Car — Tracy Chapman                      | [Official artist video](https://www.youtube.com/watch?v=AIOAlaACuv4)                                                                                                            |
 | Juicy — The Notorious B.I.G.                  | [Official video](https://www.youtube.com/watch?v=_JZom_gVfuw)                                                                                                                   |
 | Crazy in Love — Beyoncé                       | [Artist video](https://www.youtube.com/watch?v=ViwtNLUqkMY)                                                                                                                     |
@@ -30,3 +30,20 @@ The following external playback destinations were checked against primary artist
 Release years describe the song's original release, not the later upload date. Genre labels are broad editorial classifications. Music videos may contain additional intros, edits or performance footage; duration is left unset unless an editor verifies the intended recording. Album artwork remains a letter placeholder by default. The editor supports permission-confirmed HTTPS artwork URLs without proxying or caching images.
 
 `data/songs.json` is the source for preview mode and the downloadable starter import. Run `node scripts/generate-seed.mjs` after changing it to regenerate `supabase/seed.sql`. Repeat seeding preserves existing metadata, availability, providers, ratings and scheduled days.
+
+## October 17 YouTube validation
+
+The Data API reports all twenty original videos as embeddable, but the previous
+Superstition source `egqv1mtos6A` has an allowed-country list excluding Canada.
+The starter catalog now selects `ftdZ363R9kQ`: the Stevie Wonder Topic channel's
+UMG-provided Talking Book recording, with 1972 Motown attribution and a 4:27
+duration. The API explicitly permits Canada, and a native-player diagnostic on
+Musicale's HTTPS origin reached PLAYING. This approves one new starter source;
+song identity and vote data are preserved. Existing databases keep their current
+provider when reseeded; an editor must save/import the reviewed change there.
+
+All nineteen other saved videos and this replacement reached PLAYING in that
+same HTTPS-origin diagnostic. This is player-state evidence, not proof of audible
+music or universal regional availability. The earlier local HTTP failures do not
+establish that the uploaders disabled embedding. The 99 Luftballons source is
+marked Made for Kids; custom player tracking is disabled for it.

@@ -31,6 +31,31 @@ export default function Privacy() {
           receives the image request. We suppress the referrer on artwork
           requests.
         </p>
+        <h2>YouTube players</h2>
+        <p>
+          Musicale uses the YouTube IFrame Player API. No YouTube script or
+          player loads until you choose “Load YouTube player”. Loading connects
+          your browser directly to YouTube and Google, which receive information
+          such as your IP address, browser details and site origin. They may
+          access cookies or similar device storage, serve ads, and process
+          playback activity under the{" "}
+          <a href="https://policies.google.com/privacy">
+            Google Privacy Policy
+          </a>
+          . You can unload each player at any time.
+        </p>
+        <p>
+          By using these players you agree to the{" "}
+          <a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a>
+          . Musicale does not request access to your Google account or YouTube
+          credentials. Optional Musicale analytics count player ready,
+          play-state and error events in aggregate only when recent metadata
+          explicitly identifies the video as not Made for Kids. Player tracking
+          stays off for unknown, stale or Made for Kids sources. These events do
+          not prove audible music or any listening duration. The server uses the
+          YouTube Data API to check public video metadata; your browser does not
+          receive the server API key.
+        </p>
       </section>
       <AnalyticsPreference />
     </section>

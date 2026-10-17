@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getSong, getSongHistory } from "@/lib/data";
 import { providerLabels } from "@/lib/providers";
 import { RatingHistory } from "@/components/rating-history";
+import { SongVideoPreview } from "@/components/song-video-preview";
 
 export default async function SongPage({
   params,
@@ -55,6 +56,7 @@ export default async function SongPage({
             </a>
           ))}
         </div>
+        <SongVideoPreview song={song} />
         <dl className="stats">
           <div>
             <dt>Elo</dt>

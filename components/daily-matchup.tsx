@@ -7,6 +7,8 @@ import { providerLabels } from "@/lib/providers";
 import { resultMessage, shareResult } from "@/lib/share";
 import type { Matchup, Song } from "@/types/domain";
 import { track } from "@/lib/analytics";
+import { SongVideoPreview } from "@/components/song-video-preview";
+import { canTrackYouTube, youtubeVideoId } from "@/lib/youtube";
 
 function VoteButton({ title, disabled }: { title: string; disabled: boolean }) {
   const { pending } = useFormStatus();
@@ -58,6 +60,7 @@ function Card({
         </p>
       ) : null}
       {chosen ? <p className="selected-label">Your pick ✓</p> : null}
+      <SongVideoPreview song={song} />
       <div className="card-actions">
         {song.providers.length ? (
           song.providers.map((p) => (
@@ -68,7 +71,13 @@ function Card({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
-                if (p.provider !== "musicbrainz") track("preview_started");
+                if (
+                  p.provider === "youtube" &&
+                  !canTrackYouTube(song, youtubeVideoId(p.externalUrl) ?? "")
+                )
+                  return;
+                if (p.provider !== "musicbrainz")
+                  track("listening_link_clicked");
               }}
             >
               {p.provider === "musicbrainz" ? "View on" : "Listen on"}{" "}

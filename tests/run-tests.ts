@@ -6,6 +6,14 @@ import {
   expectedScore,
 } from "../lib/elo.ts";
 import { safeProviderUrl, mapProviders } from "../lib/providers.ts";
+import {
+  youtubeVideoId,
+  youtubeError,
+  registerYouTubePlayer,
+  pauseOtherYouTubePlayers,
+  type YouTubePlayer,
+  canTrackYouTube,
+} from "../lib/youtube.ts";
 import { shareResult, resultMessage } from "../lib/share.ts";
 import {
   validateSong,
@@ -16,10 +24,103 @@ import {
 import { parseCatalog, parseCsv } from "../lib/import.ts";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { demoSongs } from "../lib/catalog.ts";
 const run = (name: string, fn: () => void) => {
   fn();
   console.log(`PASS ${name}`);
 };
+run(
+  "player tracking requires matching, fresh metadata explicitly excluding Made for Kids",
+  () => {
+    const videoId = "JzqGZjFnYnA",
+      now = Date.parse("2026-10-17T12:00:00Z");
+    const song = {
+      ...demoSongs[0],
+      youtubeValidation: {
+        videoId,
+        madeForKids: false,
+        checkedAt: new Date(now).toISOString(),
+      },
+    };
+    assert.equal(canTrackYouTube(song, videoId, now), true);
+    for (const madeForKids of [true, null])
+      assert.equal(
+        canTrackYouTube(
+          {
+            ...song,
+            youtubeValidation: { ...song.youtubeValidation, madeForKids },
+          },
+          videoId,
+          now,
+        ),
+        false,
+      );
+    assert.equal(canTrackYouTube(demoSongs[0], videoId, now), false);
+    assert.equal(canTrackYouTube(song, "NADx3-qRxek", now), false);
+    assert.equal(canTrackYouTube(song, videoId, now + 86400000), false);
+    assert.equal(canTrackYouTube(song, videoId, now - 1), false);
+  },
+);
+run("YouTube IDs normalize only supported official video URLs", () => {
+  const id = "JzqGZjFnYnA";
+  for (const url of [
+    id,
+    `https://youtu.be/${id}?t=20`,
+    `https://www.youtube.com/watch?v=${id}&list=test`,
+    `https://music.youtube.com/watch?v=${id}`,
+    `https://youtube.com/embed/${id}`,
+    `https://youtube.com/shorts/${id}`,
+  ])
+    assert.equal(youtubeVideoId(url), id);
+  for (const url of [
+    "short",
+    "https://youtube.com.evil.test/watch?v=" + id,
+    "https://user:pass@youtube.com/watch?v=" + id,
+    "http://youtube.com/watch?v=" + id,
+    "https://youtube.com/playlist?list=" + id,
+    "https://youtube.com/watch?v=bad",
+    "https://youtube.com/watch?v=" + id + "%22",
+  ])
+    assert.equal(youtubeVideoId(url), null);
+  const songs = JSON.parse(readFileSync("data/songs.json", "utf8"));
+  assert.equal(songs.length, 20);
+  for (const song of songs) {
+    const provider = song.providers.find(
+      (p: { provider: string }) => p.provider === "youtube",
+    );
+    assert.equal(
+      youtubeVideoId(provider.externalUrl),
+      provider.providerSongId,
+      song.id,
+    );
+  }
+});
+run(
+  "YouTube coordination pauses all other mounted players and unregisters disposed ones",
+  () => {
+    const paused: number[] = [];
+    const players = [0, 1, 2].map((id): YouTubePlayer => ({
+      pauseVideo: () => {
+        paused.push(id);
+      },
+      destroy() {},
+      getIframe() {
+        throw new Error("This coordination test does not use an iframe.");
+      },
+    }));
+    const unregister = players.map(registerYouTubePlayer);
+    pauseOtherYouTubePlayers(players[1]);
+    assert.deepEqual(paused, [0, 2]);
+    paused.length = 0;
+    unregister[0]();
+    pauseOtherYouTubePlayers(players[2]);
+    assert.deepEqual(paused, [1]);
+    unregister.forEach((remove) => remove());
+    assert.match(youtubeError(100), /private/);
+    assert.match(youtubeError(150), /cannot be embedded/);
+    assert.match(youtubeError(153), /identify/);
+  },
+);
 run("email token hashes reject malformed and oversized form inputs", () => {
   for (const value of [
     null,

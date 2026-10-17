@@ -24,5 +24,6 @@ export function localAppEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: settings.ANON_KEY,
     NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3100",
     MUSICALE_TIMEZONE: "UTC",
+    YOUTUBE_API_KEY: "", // Browser regressions must not consume real API quota.
   };
 }

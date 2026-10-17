@@ -25,7 +25,7 @@ insert into public.song_providers(song_id,provider,provider_song_id,external_url
 ('respect-aretha','youtube','JzqGZjFnYnA','https://www.youtube.com/watch?v=JzqGZjFnYnA'),
 ('god-only-knows','youtube','NADx3-qRxek','https://www.youtube.com/watch?v=NADx3-qRxek'),
 ('dreams-fleetwood-mac','youtube','Y3ywicffOj4','https://www.youtube.com/watch?v=Y3ywicffOj4'),
-('superstition-stevie-wonder','youtube','egqv1mtos6A','https://www.youtube.com/watch?v=egqv1mtos6A'),
+('superstition-stevie-wonder','youtube','ftdZ363R9kQ','https://www.youtube.com/watch?v=ftdZ363R9kQ'),
 ('fast-car-tracy-chapman','youtube','AIOAlaACuv4','https://www.youtube.com/watch?v=AIOAlaACuv4'),
 ('juicy-notorious-big','youtube','_JZom_gVfuw','https://www.youtube.com/watch?v=_JZom_gVfuw'),
 ('crazy-in-love-beyonce','youtube','ViwtNLUqkMY','https://www.youtube.com/watch?v=ViwtNLUqkMY'),

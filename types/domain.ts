@@ -24,6 +24,11 @@ export interface Song {
   matchupCount: number;
   status: SongStatus;
   providers: SongProvider[];
+  youtubeValidation?: {
+    videoId: string;
+    madeForKids: boolean | null;
+    checkedAt: string;
+  } | null;
 }
 
 export interface Matchup {

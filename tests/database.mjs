@@ -456,6 +456,20 @@ try {
   });
   await test("product events store only aggregate counts and reject anonymous or invalid writes", async () => {
     await sql(asUser(2, "select record_product_event('share_copied')"));
+    for (const event of [
+      "listening_link_clicked",
+      "youtube_player_ready",
+      "youtube_play_started",
+      "youtube_player_error",
+    ]) {
+      await sql(asUser(2, `select record_product_event('${event}')`));
+      assert.equal(
+        await sql(
+          `select count from product_event_counts where event='${event}'`,
+        ),
+        "1",
+      );
+    }
     assert.equal(
       await sql(
         "select count from product_event_counts where event='share_copied'",
@@ -476,7 +490,7 @@ try {
     );
     assert.equal(
       await sql(asUser(1, "select count(*) from product_event_counts")),
-      "1",
+      "5",
     );
   });
   await test("catalog saves full metadata and rejects inconsistent dates and invalid duration atomically", async () => {

@@ -4,6 +4,7 @@ import { useFormStatus } from "react-dom";
 import { saveSong } from "@/app/actions";
 import type { Song } from "@/types/domain";
 import { providerLabels } from "@/lib/providers";
+import { YouTubeDiscovery } from "@/components/youtube-discovery";
 function Save() {
   const { pending } = useFormStatus();
   return (
@@ -14,6 +15,7 @@ function Save() {
 }
 export function CatalogEditor({ songs }: { songs: Song[] }) {
   const [id, setId] = useState("");
+  const [youtubeId, setYouTubeId] = useState<string | null>(null);
   const song = songs.find((s) => s.id === id);
   return (
     <section className="panel">
@@ -22,7 +24,13 @@ export function CatalogEditor({ songs }: { songs: Song[] }) {
         <summary>Open song editor</summary>
         <label>
           Edit a song or add a new one
-          <select value={id} onChange={(e) => setId(e.target.value)}>
+          <select
+            value={id}
+            onChange={(e) => {
+              setId(e.target.value);
+              setYouTubeId(null);
+            }}
+          >
             <option value="">Add new song</option>
             {songs.map((s) => (
               <option key={s.id} value={s.id}>
@@ -31,6 +39,17 @@ export function CatalogEditor({ songs }: { songs: Song[] }) {
             ))}
           </select>
         </label>
+        {song ? (
+          <YouTubeDiscovery key={id} songId={song.id} onChoose={setYouTubeId} />
+        ) : (
+          <p>Save a new song first to search for YouTube recordings.</p>
+        )}
+        {youtubeId ? (
+          <p role="status">
+            Selected candidate {youtubeId}. Review its link and save the song to
+            publish the change.
+          </p>
+        ) : null}
         <form key={id} action={saveSong} className="admin-form">
           <label>
             Song ID
@@ -131,14 +150,24 @@ export function CatalogEditor({ songs }: { songs: Song[] }) {
             (provider) => {
               const p = song?.providers.find((p) => p.provider === provider);
               return (
-                <fieldset key={provider}>
+                <fieldset
+                  key={
+                    provider === "youtube"
+                      ? `youtube:${youtubeId ?? "saved"}`
+                      : provider
+                  }
+                >
                   <legend>{providerLabels[provider]} (optional)</legend>
                   <label>
                     Provider ID
                     <input
                       name={`${provider}Id`}
                       maxLength={200}
-                      defaultValue={p?.providerSongId}
+                      defaultValue={
+                        provider === "youtube" && youtubeId
+                          ? youtubeId
+                          : p?.providerSongId
+                      }
                     />
                   </label>
                   <label>
@@ -146,7 +175,11 @@ export function CatalogEditor({ songs }: { songs: Song[] }) {
                     <input
                       name={`${provider}Url`}
                       type="url"
-                      defaultValue={p?.externalUrl}
+                      defaultValue={
+                        provider === "youtube" && youtubeId
+                          ? `https://www.youtube.com/watch?v=${youtubeId}`
+                          : p?.externalUrl
+                      }
                     />
                   </label>
                 </fieldset>
