@@ -7,6 +7,23 @@ const originalFetch = globalThis.fetch;
 // Loaded only by the local Playwright server; product builds contain no fixture switch.
 globalThis.fetch = async (input, init) => {
   const url = new URL(String(input instanceof Request ? input.url : input));
+  if (url.hostname === "coverartarchive.org") {
+    const release = "44444444-4444-4444-8444-444444444444";
+    return url.pathname === `/release/${release}`
+      ? Response.json({
+          images: [
+            {
+              id: 123,
+              front: true,
+              approved: true,
+              thumbnails: {
+                500: `https://coverartarchive.org/release/${release}/123-500.jpg`,
+              },
+            },
+          ],
+        })
+      : new Response(null, { status: 404 });
+  }
   if (
     url.origin === "https://www.googleapis.com" &&
     url.pathname.startsWith("/youtube/v3/")

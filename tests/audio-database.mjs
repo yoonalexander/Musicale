@@ -44,7 +44,7 @@ try {
   await db.migrate(migrations().slice(audioIndex));
   await test("audio migration preserves all twenty catalog records, ratings and existing provider links", async () => {
     assert.equal(
-      await sql("select jsonb_agg(to_jsonb(s) order by id) from songs s"),
+      await sql("select jsonb_agg(to_jsonb(s)-'metadata_details' order by id) from songs s"),
       before,
     );
     assert.equal(await sql("select count(*) from song_providers"), "20");

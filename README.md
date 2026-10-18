@@ -1,5 +1,7 @@
 # Musicale
 
+MusicBrainz enrichment and artwork rights review: see [metadata integration](docs/METADATA_ENRICHMENT.md) for worker verification, coverage, licensing boundaries and the daily schedule.
+
 Visible YouTube players are integrated across Play, Rank, Daily and song pages. The welcome Play button saves permission to load players automatically, with named terms/privacy links and a reversible Privacy setting. Videos still wait for a native play gesture; optional analytics remain separate. Existing authorized 15-second audio previews and external listening links remain available. See [YouTube integration and verification](docs/YOUTUBE_PLAYBACK.md) and [audio coverage and licenses](docs/AUDIO_PREVIEWS.md). Set the server-only `YOUTUBE_API_KEY` for metadata validation and admin candidate discovery; never prefix it with `NEXT_PUBLIC_`.
 
 **Trust your music instinct.** Play, Rank and Daily work without signing up. Optional accounts add full history and profile details. Guess the higher-rated song in Play, compare favorites continuously in Rank, or join the shared Daily matchup. Play points, preference-driven Elo, and Daily streaks have separate rules.

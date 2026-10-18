@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { submitDailyVote } from "@/app/actions";
 import { SongListening } from "@/components/song-listening";
 import { ArtworkCredit } from "@/components/artwork-credit";
+import { SongArtwork } from "@/components/song-artwork";
 import { resultMessage, shareResult } from "@/lib/share";
 import type { Matchup, Song } from "@/types/domain";
 import { track } from "@/lib/analytics";
@@ -47,17 +48,7 @@ function Card({
       className={`song-choice ${chosen ? "chosen" : matchup.selectedSongId ? "unselected" : ""}`}
     >
       <div className="art">
-        {song.artworkUrl ? (
-          <img
-            src={song.artworkUrl}
-            alt={`${song.title} album artwork`}
-            width="600"
-            referrerPolicy="no-referrer"
-            height="600"
-          />
-        ) : (
-          <span aria-hidden="true">{song.title[0]}</span>
-        )}
+        <SongArtwork url={song.artworkUrl} title={song.title} />
       </div>
       <p className="kicker">
         {song.albumName} · {song.releaseYear}

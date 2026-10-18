@@ -19,7 +19,12 @@
         "id": "44444444-4444-4444-8444-444444444444",
         "title": "I Never Loved a Man the Way I Love You",
         "date": "1967-03-10",
-        "status": "Official"
+        "status": "Official",
+        "release-group": {
+          "id": "77777777-7777-4777-8777-777777777777",
+          "primary-type": "Album",
+          "secondary-types": []
+        }
       }
     ],
     "relations": [
@@ -49,7 +54,12 @@
         "id": "66666666-6666-4666-8666-666666666666",
         "title": "Fixture Album",
         "date": "2000-02-29",
-        "status": "Official"
+        "status": "Official",
+        "release-group": {
+          "id": "88888888-8888-4888-8888-888888888888",
+          "primary-type": "Album",
+          "secondary-types": []
+        }
       }
     ],
     "relations": []

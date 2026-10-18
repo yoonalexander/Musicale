@@ -46,7 +46,7 @@ const resetBudget = (n) =>
     `delete from request_budgets where user_id='${user(n)}' and action='rank'`,
   );
 const core = () =>
-  sql(`select jsonb_build_object('songs',(select jsonb_agg(to_jsonb(s) order by id) from songs s),
+  sql(`select jsonb_build_object('songs',(select jsonb_agg(to_jsonb(s)-'metadata_details' order by id) from songs s),
  'providers',(select jsonb_agg(to_jsonb(p) order by id) from song_providers p),
  'votes',(select jsonb_agg(to_jsonb(v) order by id) from votes v),
  'events',(select jsonb_agg(to_jsonb(e)-array['event_order','rank_vote_id'] order by id) from rating_events e),

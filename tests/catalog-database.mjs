@@ -70,7 +70,7 @@ try {
     assert.equal(await core(), before);
     assert.equal(
       await sql(
-        "select jsonb_agg(to_jsonb(s)-array['catalog_managed_fields','artwork_source_url','artwork_attribution'] order by id) from songs s",
+        "select jsonb_agg(to_jsonb(s)-array['catalog_managed_fields','artwork_source_url','artwork_attribution','metadata_details'] order by id) from songs s",
       ),
       songs,
     );

@@ -18,6 +18,11 @@ export interface Song {
   audioPreview?: import("@/lib/audio").AudioPreview | null;
   releaseYear: number;
   releaseDate?: string | null;
+  metadataDetails?: {
+    originalDate: string | null;
+    albumDate: string | null;
+    recordingId: string;
+  } | null;
   durationMs?: number | null;
   recentMovement?: number;
   genre: string | null;

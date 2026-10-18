@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { RankSong } from "@/lib/rank";
 import { SongListening } from "@/components/song-listening";
 import { ArtworkCredit } from "@/components/artwork-credit";
+import { SongArtwork } from "@/components/song-artwork";
 
 export function SongChoice({
   song,
@@ -13,17 +14,7 @@ export function SongChoice({
   return (
     <article className="song-choice">
       <div className="art">
-        {song.artworkUrl ? (
-          <img
-            src={song.artworkUrl}
-            alt={`${song.title} artwork`}
-            width="600"
-            height="600"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <span aria-hidden="true">{song.title[0]}</span>
-        )}
+        <SongArtwork url={song.artworkUrl} title={song.title} />
       </div>
       <p className="kicker">
         {song.albumName} · {song.releaseYear}

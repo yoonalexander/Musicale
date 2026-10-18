@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getSong, getSongHistory } from "@/lib/data";
 import { SongListening } from "@/components/song-listening";
 import { ArtworkCredit } from "@/components/artwork-credit";
+import { SongArtwork } from "@/components/song-artwork";
 import { RatingHistory } from "@/components/rating-history";
 
 export async function generateMetadata({
@@ -34,17 +35,7 @@ export default async function SongPage({
   return (
     <section className="song-detail">
       <div className="detail-art">
-        {song.artworkUrl ? (
-          <img
-            src={song.artworkUrl}
-            alt={`${song.title} artwork`}
-            referrerPolicy="no-referrer"
-            width="600"
-            height="600"
-          />
-        ) : (
-          <span aria-hidden="true">{song.title[0]}</span>
-        )}
+        <SongArtwork url={song.artworkUrl} title={song.title} />
       </div>
       <div>
         <p className="kicker">
@@ -64,6 +55,20 @@ export default async function SongPage({
             ? ` · ${Math.floor(song.durationMs / 60000)}:${String(Math.floor(song.durationMs / 1000) % 60).padStart(2, "0")}`
             : ""}
         </p>
+        {song.metadataDetails ? (
+          <p>
+            Original recording release:{" "}
+            {song.metadataDetails.originalDate ?? "Unknown"} · Album edition:{" "}
+            {song.metadataDetails.albumDate ?? "Unknown"}.{" "}
+            <a
+              href={`https://musicbrainz.org/recording/${song.metadataDetails.recordingId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              MusicBrainz metadata
+            </a>
+          </p>
+        ) : null}
         <div className="actions">
           <SongListening song={song} />
         </div>

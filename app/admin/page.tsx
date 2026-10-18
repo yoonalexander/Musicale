@@ -18,6 +18,7 @@ import { getAdminData } from "@/lib/data";
 import { requireAdmin } from "@/lib/auth";
 import { CatalogEditor } from "@/components/catalog-editor";
 import { CatalogDiscovery } from "@/components/catalog-discovery";
+import { MetadataEnrichment } from "@/components/metadata-enrichment";
 import { AudioEditor } from "@/components/audio-editor";
 import { playablePreview } from "@/lib/audio";
 
@@ -228,6 +229,7 @@ export default async function Admin({
       </section>
       <CatalogEditor songs={data.songs} />
       <CatalogDiscovery sources={data.sources} />
+      <MetadataEnrichment names={songNames} />
       <AudioEditor songs={data.songs} audio={data.audio} />
       <section className="panel">
         <h2>Add, edit or import songs</h2>

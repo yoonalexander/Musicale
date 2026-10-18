@@ -42,6 +42,7 @@ function mapSong(r: Record<string, unknown>): Song {
     audioPreview: mapAudio(r.audio_preview as Record<string, unknown>),
     releaseYear: Number(r.release_year),
     releaseDate: r.release_date as string | null,
+    metadataDetails: r.metadata_details as Song["metadataDetails"],
     durationMs: r.duration_ms ? Number(r.duration_ms) : null,
     recentMovement: Number(r.recent_movement ?? 0),
     genre: r.genre as string | null,
