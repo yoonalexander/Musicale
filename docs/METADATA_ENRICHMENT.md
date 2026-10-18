@@ -27,9 +27,13 @@ No commercial cover was automatically authorized, and no unverified cover was pu
 
 Provider alternatives were checked rather than assumed to solve permissions. [Apple's Search API terms](https://performance-partners.apple.com/search-api) restrict assets to store promotion with purchase badges and prohibit independent entertainment use; this is not a blanket license for Musicale's game cards. [Spotify's developer policy](https://developer.spotify.com/policy) prohibits games/trivia and imposes content/linking restrictions. Neither was added as an artwork workaround. No artist/label was contacted on the user's behalf.
 
+A bounded [licensed-provider review](ARTWORK_PROVIDER_RESEARCH.md) identifies Music Story as a possible artwork-only supplier: its own offer lists licensed covers and its API supports MusicBrainz/ISRC identifiers. Default editorial terms do not establish game permission. A written, game-specific agreement and representative coverage test would be needed before integrating or publishing supplier assets. No quote, contract, trial or provider contact was made, and a supplier agreement would not automatically license the existing CAA copies.
+
 MusicBrainz core metadata is CC0. Supplementary genre suggestions remain separately marked CC BY-NC-SA 3.0 and do not replace editorial genres. Commercial API usage needs its own terms review. [MusicBrainz data license](https://musicbrainz.org/doc/About/Data_License), [API terms](https://musicbrainz.org/doc/MusicBrainz_API).
 
 ## Coverage snapshot after controlled backfill
+
+Confirmed against production at 23:12 UTC on October 18, 2026.
 
 | Measure | Result |
 | --- | ---: |
@@ -55,8 +59,12 @@ Local Docker stopped responding during the follow-up: the local Supabase status 
 
 Runtime commit `6d804722c6c32d607fc2fc8f5aa7b7b8b7671d45` was pushed to `main` and [successfully deployed by Vercel](https://vercel.com/yoonalexanders-projects/musicale/7UZAjN8zFg7fZ8xy3UDGfysR3yzZ). The metadata frontend and admin review workflow are published at [Musicale](https://musicale.alexyoon.com). [Full regression CI](https://github.com/yoonalexander/musicale/actions/runs/39153209111) tests this runtime commit.
 
-That initial CI run passed the unit and database suites and 224 browser cases, with four optional real-YouTube cases skipped. Twelve browser failures identified two fixes: keep `metadataDetails` out of the existing leaderboard API response contract, and use the correct partial label locator for the admin queue dropdown (its nested options contribute to the label text). Both failures reproduced before correction; the API fix also passes typecheck and the production build. A subsequent full CI run verifies the corrected runtime. Local `npm audit` reports zero vulnerabilities.
+That initial CI run passed the unit and database suites and 224 browser cases, with four optional real-YouTube cases skipped. Twelve browser failures identified two fixes: keep `metadataDetails` out of the existing leaderboard API response contract, and use the correct partial label locator for the admin queue dropdown (its nested options contribute to the label text). Both failures reproduced before correction.
+
+Corrected runtime commit `445c76ced1b5ab180740ec512d94e1964ec7b0e0` is [successfully deployed](https://vercel.com/yoonalexanders-projects/musicale/4fQhuNeJu5Pq2nWjREGALGhsVRiw). Its [complete CI run passed](https://github.com/yoonalexander/musicale/actions/runs/39155421813): unit/API tests, all database integration suites, production build, **236 browser cases passed across desktop Chromium, Firefox, WebKit and mobile Chromium**, logical backup/restore rehearsal, typecheck and `npm audit` with zero vulnerabilities. Four optional external real-YouTube browser cases were skipped in CI; a real production iframe reached `PLAYING` separately as described below. Both metadata admin cases passed in every browser project, including reviewed candidate selection and rejecting a CAA source-only rights claim. The deployed leaderboard response contract and song-page provenance were also rechecked after the fix.
 
 At 18:16 UTC, a clean production browser verified HTTP 200 for `/`, `/play`, `/rank`, `/today`, `/leaderboard`, `/songs/africa-toto`, `/api/health`, and `/api/readiness`. Africa's detail page displayed the original recording date and album edition separately. Its real native YouTube iframe reached `PLAYING` after the user-style load/play actions. Its unpermitted artwork remained a letter placeholder. `/admin` redirected the unauthenticated browser to sign-in. This smoke test submitted no votes or guesses; authenticated admin decisions and voting are exercised in the isolated regression environment.
+
+Remaining human work: 21 recording/release decisions, four unmatched performances, and all image-specific permissions. No supplier contract, quote or real-cover license was obtained. The existing production browser had no admin session, so owner acceptance of the published admin interface was not exercised there. The first automatic cron execution is due October 19 at 07:00 UTC; authenticated production dispatch, idle behavior and the active daily schedule were verified, but that future timed execution has not yet occurred.
 
 Applied migration history must retain the hosted versions: `20261018080521`, `20261018081732`, `20261018174735`, `20261018175951`, and `20261018180409`. The latter three provide private dispatch, reviewed metadata/image permissions, and the verified daily schedule. No seed/reset is part of production rollout.
