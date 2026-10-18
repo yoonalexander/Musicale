@@ -35,15 +35,15 @@ MusicBrainz core metadata is CC0. Supplementary genre suggestions remain separat
 | --- | ---: |
 | Catalog songs | 64 |
 | Saved MusicBrainz associations | 39 (previously 36) |
-| Manual review | 20 |
-| Unmatched | 3 |
-| Retryable provider failures | 2 |
+| Manual review | 21 (previously 19) |
+| Unmatched | 4 (previously 9) |
+| Retryable provider failures | 0 |
 | Discovered cover images | 28 (previously 25) |
 | Published/approved artwork permissions | 0 |
 | Songs still without artwork | 64 |
 | Empty/placeholder album names | 0 (previously 2) |
 
-New automatic associations: Despacito, Dynamite and Hey Ya!. Previously unmatched translations/credits can now appear for review instead of disappearing. God Only Knows and Gymnopedie No. 3 encountered MusicBrainz 503 responses after bounded retries; their jobs retain errors/backoff for the daily worker or explicit admin retry. Coverage is not a claim that every accepted community-sourced date has been independently verified by a human.
+New automatic associations: Despacito, Dynamite and Hey Ya!. Previously unmatched translations/credits can now appear for review instead of disappearing. God Only Knows and Gymnopedie No. 3 initially encountered MusicBrainz 503 responses. After their normal backoff, production dispatches 5 and 6 both returned 200: the former now requires review and the latter is unmatched. No failed jobs remain. All four unmatched songs are the three open Gymnopedie recordings and In the Hall of the Mountain King; the matcher did not substitute another performance of the same composition. Coverage is not a claim that every accepted community-sourced date has been independently verified by a human.
 
 Production checks retain ratings hash `94bc53512a03e8c67c2fd94feb5ac0a6`, provider hash `372d12954d8d7e094968ef0458b19bdc`, and Daily schedule hash `e25bea8fc7a58ed49b16275f4f3e800a`. No production votes/guesses were submitted or ranking data rewritten. No recording ID is associated with more than one catalog song.
 
@@ -51,6 +51,12 @@ Production checks retain ratings hash `94bc53512a03e8c67c2fd94feb5ac0a6`, provid
 
 The unit/API suite and production build/typecheck pass, including explicit remixes, featured artists, incorrect years, translation review, shared request slots and exact-image source handling. The new database/browser regressions cover permission decisions/withdrawal, manual-art preservation, candidate selection without copying IDs, and rejecting source-only rights claims.
 
-Local Docker stopped responding during the follow-up: the local Supabase status call timed out and the disposable metadata database test could not finish. Docker and unrelated project containers were not restarted. Fresh database/browser regressions must be confirmed in CI; earlier initial-pass suites are documented separately and are not a substitute for fresh follow-up results. Publication and final live/CI verification are recorded below when complete.
+Local Docker stopped responding during the follow-up: the local Supabase status call timed out and the disposable metadata database test could not finish. Docker and unrelated project containers were not restarted. Fresh database/browser regressions run in GitHub's isolated environment; earlier initial-pass suites are documented separately and are not a substitute for fresh follow-up results.
+
+Runtime commit `6d804722c6c32d607fc2fc8f5aa7b7b8b7671d45` was pushed to `main` and [successfully deployed by Vercel](https://vercel.com/yoonalexanders-projects/musicale/7UZAjN8zFg7fZ8xy3UDGfysR3yzZ). The metadata frontend and admin review workflow are published at [Musicale](https://musicale.alexyoon.com). [Full regression CI](https://github.com/yoonalexander/musicale/actions/runs/39153209111) tests this runtime commit.
+
+That initial CI run passed the unit and database suites and 224 browser cases, with four optional real-YouTube cases skipped. Twelve browser failures identified two fixes: keep `metadataDetails` out of the existing leaderboard API response contract, and use the correct partial label locator for the admin queue dropdown (its nested options contribute to the label text). Both failures reproduced before correction; the API fix also passes typecheck and the production build. A subsequent full CI run verifies the corrected runtime. Local `npm audit` reports zero vulnerabilities.
+
+At 18:16 UTC, a clean production browser verified HTTP 200 for `/`, `/play`, `/rank`, `/today`, `/leaderboard`, `/songs/africa-toto`, `/api/health`, and `/api/readiness`. Africa's detail page displayed the original recording date and album edition separately. Its real native YouTube iframe reached `PLAYING` after the user-style load/play actions. Its unpermitted artwork remained a letter placeholder. `/admin` redirected the unauthenticated browser to sign-in. This smoke test submitted no votes or guesses; authenticated admin decisions and voting are exercised in the isolated regression environment.
 
 Applied migration history must retain the hosted versions: `20261018080521`, `20261018081732`, `20261018174735`, `20261018175951`, and `20261018180409`. The latter three provide private dispatch, reviewed metadata/image permissions, and the verified daily schedule. No seed/reset is part of production rollout.

@@ -33,7 +33,7 @@ test("broken covers fall back and metadata administration reports saved work", a
     await expect(
       panel.getByRole("button", { name: "Enrich next 5 songs", exact: true }),
     ).toBeVisible();
-    await panel.getByLabel("Review queue", { exact: true }).selectOption("all");
+    await panel.getByLabel("Review queue").selectOption("all");
     await expect(
       panel.getByText("Respect · queued · 0 attempts", { exact: true }),
     ).toBeVisible();
@@ -98,7 +98,7 @@ test("review a candidate without copying IDs and reject source-only artwork perm
       .click();
     await expect(panel.getByRole("status")).toHaveText("Metadata work saved.");
     await panel
-      .getByLabel("Review queue", { exact: true })
+      .getByLabel("Review queue")
       .selectOption("enriched");
     await panel.getByText("Respect · enriched", { exact: false }).click();
     await panel.getByLabel("Rights basis").selectOption("open_license");

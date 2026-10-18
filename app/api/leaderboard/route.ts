@@ -7,9 +7,14 @@ export async function GET(request: Request) {
   );
   const headers = { "Cache-Control": "no-store" };
   try {
-    return Response.json(await fetchLeaderboard(page, sort, minimum, filters), {
-      headers,
-    });
+    const result = await fetchLeaderboard(page, sort, minimum, filters);
+    return Response.json(
+      {
+        ...result,
+        songs: result.songs.map(({ metadataDetails, ...song }) => song),
+      },
+      { headers },
+    );
   } catch {
     return Response.json(
       { error: "Rankings are temporarily unavailable." },
