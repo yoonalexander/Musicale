@@ -147,6 +147,39 @@ Mobile rectangle checks account for 0.001px floating-point rounding while the
 player's 200px CSS minima remain unchanged. No hosted data or schema change is
 needed for consent.
 
+## Same-URL entry overlay
+
+The welcome design now appears as a shared modal before Play, Rank, Daily,
+song details, the leaderboard and archive, including direct links. Music
+content stays hidden and inert until entry, and YouTube initialization is held
+even when permission was saved previously. Escape and backdrop clicks do not
+dismiss the notice; keyboard focus cycles through Play and its policy/help links. Privacy, Help and account routes
+remain accessible. No third-party player loads beneath the modal.
+
+The root URL renders Play itself. Choosing Play starts or resumes the guest run
+on `/`; guesses, error recovery and restart stay there. Existing `/play` links
+still work in place. Both routes reuse the same game component and server actions;
+the actions allow only `/` and `/play` as destinations. Ratings, voting rules,
+guest authorization and all three modes are unchanged.
+
+Entry acknowledgement uses `musicale-entry-session-v1` in session storage, once
+per tab session. If storage is blocked, it lasts through client navigation and
+is requested again after a reload. This is separate from the saved YouTube
+preference and optional analytics. Explicit YouTube opt-outs are preserved.
+The notice names the current YouTube terms and privacy policies; it does not
+claim agreement to unspecified future terms or establish a compliance audit.
+No hosted data or migration changes are required.
+Song metadata also rejects missing IDs. Keeping server-rendered content mounted
+preserves HTTP 404 responses and pending controls.
+
+Overlay verification on October 18: 44 unit/API checks, TypeScript and the
+production build passed. The complete 174-case Chromium/WebKit/mobile run
+finished with 171 passes and three intentional native-network skips. The final
+entry, guest and YouTube regression run finished with 93 passes and three native
+skips across the same browsers. This covers first-click initialization, direct
+links, retained opt-outs, cross-tab revocation, blocked storage and all modes.
+Real native playback is verified separately on the production HTTPS origin.
+
 ## Database and rollout
 
 `supabase/migrations/20261018001728_youtube_playback_events.sql` only expands

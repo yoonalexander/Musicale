@@ -71,10 +71,19 @@ export default function Privacy() {
           assistance. Public song rankings and aggregate counts do not include
           your account identity.
         </p>
+        <h2>Welcome screen</h2>
+        <p>
+          Before music pages open, the welcome overlay explains YouTube loading
+          and asks you to choose Play. This acknowledgement lasts for this
+          browser tab's session. Direct links show the same notice, and gameplay
+          stays at the URL you opened. Privacy and Help remain accessible before
+          entry. If session storage is unavailable, a reload shows the notice
+          again.
+        </p>
         <h2>YouTube players</h2>
         <p>
           Musicale uses the YouTube IFrame Player API. Choosing Play on the
-          welcome page enables automatic player loading across Musicale. This
+          welcome overlay enables automatic player loading across Musicale. This
           choice is saved in this browser’s local storage, or just for the
           current visit if storage is unavailable. Until you enable it, players
           load only when you choose “Load YouTube player”. Loading connects your

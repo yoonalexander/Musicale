@@ -23,9 +23,16 @@ function Choice({ song }: { song: RankSong }) {
     </SongChoice>
   );
 }
-export function PlayPair({ pair }: { pair: RankPair }) {
+export function PlayPair({
+  pair,
+  returnTo,
+}: {
+  pair: RankPair;
+  returnTo: "/" | "/play";
+}) {
   return (
     <form className="matchup" action={submitPlayGuess}>
+      <input type="hidden" name="returnTo" value={returnTo} />
       <input type="hidden" name="roundId" value={pair.id} />
       <Choice key={pair.songA.id} song={pair.songA} />
       <div className="versus" aria-hidden="true">

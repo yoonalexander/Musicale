@@ -58,7 +58,7 @@ export default async function ProfilePage({
             : "No saved Play run yet."}{" "}
           Play points are separate from Elo and Daily streaks.
         </p>
-        <Link className="button secondary" href="/play">
+        <Link className="button secondary" href="/">
           {play && play.run.status !== "ended"
             ? "Resume Play"
             : "Play higher rated"}

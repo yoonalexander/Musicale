@@ -182,6 +182,7 @@ export async function saveAudioSource(form: FormData) {
     revalidatePath("/admin");
     revalidatePath("/today");
     revalidatePath("/rank");
+    revalidatePath("/");
     revalidatePath("/play");
     revalidatePath("/songs/[id]", "page");
     return { error: null };
@@ -193,7 +194,14 @@ export async function discoverAuthorizedAudio() {
   await requireAdmin();
   try {
     const message = await syncAuthorizedPreviews();
-    for (const path of ["/admin", "/rank", "/play", "/today", "/songs/[id]"])
+    for (const path of [
+      "/admin",
+      "/",
+      "/rank",
+      "/play",
+      "/today",
+      "/songs/[id]",
+    ])
       revalidatePath(path, path.includes("[") ? "page" : undefined);
     revalidateTag("leaderboard");
     return { message, error: null };

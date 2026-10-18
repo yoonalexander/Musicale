@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { runSql, signIn } from "../browser-helpers";
 import AxeBuilder from "@axe-core/playwright";
 const respectId = "11111111-1111-4111-8111-111111111111";
@@ -329,13 +329,9 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
         }),
       );
       await early.goto("/songs/respect-aretha", { waitUntil: "commit" });
-      // No media request or playback is possible before hydration and an explicit click.
-      await expect(
-        early.getByRole("region", {
-          name: "15-second preview of Respect",
-          exact: true,
-        }),
-      ).toHaveAttribute("data-state", "ready");
+      // Music remains hidden and inert until hydration reads this tab's acknowledgement.
+      await expect(early.locator(".youtube-consent-notice")).toBeVisible();
+      await expect(early.locator(".audio-preview")).not.toBeVisible();
       expect(earlyEvents).toEqual([]);
       releaseScripts();
       await early

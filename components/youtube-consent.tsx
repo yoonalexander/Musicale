@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { startPlay } from "@/app/play/actions";
 import { GuestForm } from "@/components/guest-form";
 import { SubmitButton } from "@/components/submit-button";
 import {
@@ -11,22 +10,31 @@ import {
   useYouTubeConsent,
 } from "@/lib/youtube-consent";
 
-export function YouTubePlayEntry({ disabled }: { disabled: boolean }) {
+export function YouTubePlayEntry({
+  action,
+  startRun,
+  returnTo,
+}: {
+  action: (form: FormData) => Promise<void>;
+  startRun: boolean;
+  returnTo: string;
+}) {
+  const Form = startRun ? GuestForm : "form";
   return (
     <>
-      <GuestForm
-        action={startPlay}
+      <Form
+        action={action}
         className="welcome-start"
         onSubmit={enableYouTubeOnEntry}
       >
+        <input type="hidden" name="returnTo" value={returnTo} />
         <SubmitButton
-          disabled={disabled}
           busyText="Getting your songs…"
           aria-describedby="youtube-entry-notice"
         >
           Play <span aria-hidden="true">↗</span>
         </SubmitButton>
-      </GuestForm>
+      </Form>
       <p className="youtube-consent-notice" id="youtube-entry-notice">
         By choosing Play, you allow YouTube players to load automatically across
         Musicale unless you’ve turned this off in Privacy, and agree to the{" "}

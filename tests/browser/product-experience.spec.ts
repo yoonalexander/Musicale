@@ -1,4 +1,4 @@
-import { test, expect as baseExpect, type Page } from "@playwright/test";
+import { test, expect as baseExpect, type Page } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import { runSql, signIn } from "../browser-helpers";
 import { readFileSync } from "node:fs";
@@ -27,9 +27,11 @@ test("onboarding, honest initial ratings, support, metadata and missing pages", 
   page,
 }, info) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Musicale" })).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Play", exact: true }),
+    page.getByRole("heading", { name: "Which song is higher rated?" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Start a run", exact: true }),
   ).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(
@@ -340,9 +342,7 @@ test("editor can paste CSV, upload JSON, replace a future day, change availabili
     await page
       .getByRole("button", { name: "Save catalog", exact: true })
       .click();
-    await expect(
-      page.getByText(/^1 songs saved\./),
-    ).toBeVisible();
+    await expect(page.getByText(/^1 songs saved\./)).toBeVisible();
     await expect(
       page.getByRole("button", {
         name: "Save catalog",
@@ -372,9 +372,7 @@ test("editor can paste CSV, upload JSON, replace a future day, change availabili
     await page
       .getByRole("button", { name: "Save catalog", exact: true })
       .click();
-    await expect(
-      page.getByText(/^1 songs saved\./),
-    ).toBeVisible();
+    await expect(page.getByText(/^1 songs saved\./)).toBeVisible();
     await expect(
       page.getByRole("button", {
         name: "Save catalog",

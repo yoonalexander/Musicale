@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "./fixtures";
 import { createClient } from "@supabase/supabase-js";
 import { runSql, signIn } from "../browser-helpers";
 // @ts-expect-error Node-only local helper refuses hosted URLs.
@@ -61,6 +61,9 @@ test("two browsers: app vote and direct RPC bypass warm cache through public pus
     recordVideo: { dir: "output/live-demo" },
   });
   const other = await watcher.newPage();
+  await other.addInitScript(() =>
+    sessionStorage.setItem("musicale-entry-session-v1", "yes"),
+  );
   const frames: string[] = [];
   other.on("websocket", (socket) =>
     socket.on("framereceived", (frame) => frames.push(String(frame.payload))),
@@ -98,7 +101,11 @@ test("two browsers: app vote and direct RPC bypass warm cache through public pus
       javaScriptEnabled: false,
     });
     const cachedPage = await cachedContext.newPage();
+    await cachedPage.addInitScript(() =>
+      sessionStorage.setItem("musicale-entry-session-v1", "yes"),
+    );
     await cachedPage.goto("/leaderboard");
+    await expect(cachedPage.locator(".youtube-consent-notice")).toBeVisible();
     await expect(row(cachedPage)).toContainText(Number(before) + 1 + " votes");
     const rpcStarted = Date.now();
     await voteRpc();
@@ -108,6 +115,7 @@ test("two browsers: app vote and direct RPC bypass warm cache through public pus
     const rpcLatency = Date.now() - rpcStarted;
     expect(rpcLatency).toBeLessThan(5000);
     await cachedPage.reload();
+    await expect(cachedPage.locator(".youtube-consent-notice")).toBeVisible();
     await expect(row(cachedPage)).toContainText(Number(before) + 1 + " votes");
     await cachedContext.close();
     expect(

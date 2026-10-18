@@ -1,17 +1,19 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { useSiteEntry } from "@/lib/site-entry";
 
 export function HowToPlay({ autoOpen = false }: { autoOpen?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLButtonElement>(null);
+  const entered = useSiteEntry();
   useEffect(() => {
-    if (!autoOpen) return;
+    if (!autoOpen || !entered) return;
     let seen = false;
     try {
       seen = localStorage.getItem("musicale-play-tutorial-v1") === "seen";
     } catch {}
     if (!seen && !dialog.current?.open) dialog.current?.showModal();
-  }, [autoOpen]);
+  }, [autoOpen, entered]);
   function close() {
     dialog.current?.close();
   }

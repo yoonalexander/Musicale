@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, firstVisit as it, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import {
   runSql,
@@ -27,7 +27,7 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test("guest welcome: first-visit tutorial, compact cards, keyboard, scoring, persistence and private account history", async ({
+it("guest welcome: first-visit tutorial, compact cards, keyboard, scoring, persistence and private account history", async ({
   page,
 }, info) => {
   test.setTimeout(150000);
@@ -53,7 +53,11 @@ test("guest welcome: first-visit tutorial, compact cards, keyboard, scoring, per
     fullPage: true,
   });
   await play.click();
-  await expect(page).toHaveURL(/\/play$/);
+  await expect(page.locator(".welcome-overlay")).toHaveCount(0, {
+    timeout: 15000,
+  });
+  await expect(page.locator("form.matchup, .play-ready").first()).toBeVisible();
+  await expect(page).toHaveURL("/");
   const uid = latestGuest();
   expect(uid).toBeTruthy();
   seedRankEvidence(uid);
@@ -114,9 +118,21 @@ test("guest welcome: first-visit tutorial, compact cards, keyboard, scoring, per
       .locator(".site-header")
       .getByRole("link", { name: "Sign in", exact: true }),
   ).toBeVisible();
+  await form
+    .locator('input[name="roundId"]')
+    .evaluate((input: HTMLInputElement) => {
+      input.value = "invalid";
+    });
+  await form.locator(`button[value="${chosen}"]`).click();
+  await expect(page.locator(".play-stage").getByRole("alert")).toContainText(
+    "Invalid choice. Reload your round.",
+  );
+  expect(new URL(page.url()).pathname).toBe("/");
+  await expect(form.locator('input[name="roundId"]')).toHaveValue(r.id);
   await form.locator(`button[value="${chosen}"]`).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("Run score")).toContainText("1");
+  expect(new URL(page.url()).pathname).toBe("/");
   await expect(
     page.getByRole("heading", { name: "Correct!", exact: true }),
   ).toBeFocused();
@@ -213,7 +229,7 @@ test("guests rank and vote Daily, then a verified new email preserves their acti
   ).toContainText("Respect");
 });
 
-test("guest signup failure is honest and retryable; guest metadata never grants admin or exposes another run", async ({
+it("guest signup failure is honest and retryable; guest metadata never grants admin or exposes another run", async ({
   page,
   request,
 }, info) => {
@@ -242,7 +258,11 @@ test("guest signup failure is honest and retryable; guest metadata never grants 
   ).toBeEnabled();
   await page.unroute("**/auth/v1/signup");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(page).toHaveURL(/\/play$/);
+  await expect(page.locator(".welcome-overlay")).toHaveCount(0, {
+    timeout: 15000,
+  });
+  await expect(page.locator("form.matchup, .play-ready").first()).toBeVisible();
+  await expect(page).toHaveURL("/");
   await dismissPlayTutorial(page);
   const owner = latestGuest(),
     r = latestRound(owner);
@@ -279,6 +299,9 @@ test("guest signup failure is honest and retryable; guest metadata never grants 
     "0",
   );
   const identities = runSql("select count(*) from auth.users");
+  await page.evaluate(() =>
+    sessionStorage.removeItem("musicale-entry-session-v1"),
+  );
   await page.goto("/");
   await page.route("**/auth/v1/user", (route) =>
     route.fulfill({
@@ -313,6 +336,9 @@ test("signing into an existing account preserves its history without silently me
   const other = await browser.newContext({ baseURL });
   try {
     const guest = await other.newPage();
+    await guest.addInitScript(() =>
+      sessionStorage.setItem("musicale-entry-session-v1", "yes"),
+    );
     await guest.goto("/rank");
     await guest
       .getByRole("button", { name: "Get a pair", exact: true })

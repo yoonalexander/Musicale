@@ -10,17 +10,15 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const data = await getSong((await params).id);
+  if (!data) notFound();
   return {
-    title: data
-      ? data.song.title + " · " + data.song.artistName
-      : "Song not found",
-    description: data
-      ? "Explore " +
-        data.song.title +
-        " by " +
-        data.song.artistName +
-        ": official listening links, recorded votes and Elo history."
-      : "This song is not available in Musicale.",
+    title: data.song.title + " · " + data.song.artistName,
+    description:
+      "Explore " +
+      data.song.title +
+      " by " +
+      data.song.artistName +
+      ": official listening links, recorded votes and Elo history.",
   };
 }
 export default async function SongPage({

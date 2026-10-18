@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signOutAction } from "@/app/actions";
 import type { ViewerState } from "@/types/domain";
 import { isDemoMode } from "@/lib/data";
+import { WelcomeGate } from "@/components/welcome-gate";
 export function AppShell({
   children,
   viewer,
@@ -19,7 +20,7 @@ export function AppShell({
           Musicale
         </Link>
         <nav aria-label="Main navigation">
-          <Link href="/play">Play</Link>
+          <Link href="/">Play</Link>
           <Link href="/rank">Rank</Link>
           <Link href="/today">Daily</Link>
           <Link href="/leaderboard">Leaderboard</Link>
@@ -44,7 +45,7 @@ export function AppShell({
             Preview catalog — sign-in and persistent voting are disabled.
           </p>
         ) : null}
-        {children}
+        <WelcomeGate demo={isDemoMode()}>{children}</WelcomeGate>
       </main>
       <footer>
         <span>Musicale</span>

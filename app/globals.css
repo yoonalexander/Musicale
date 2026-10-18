@@ -716,25 +716,28 @@ audio {
   max-width: 100%;
 }
 /* Game-first entry and compact Play surface. */
-body:has(.game-welcome) .site-header {
-  grid-template-columns: 1fr auto;
-  background: #edf1e9;
-  border-bottom: 0;
-}
-body:has(.game-welcome) .site-header nav {
-  display: none;
-}
-body:has(.game-welcome) footer {
-  background: #edf1e9;
-  border-color: #d6ded1;
-}
 .game-welcome {
-  min-height: calc(100svh - 76px);
+  min-height: 100svh;
   display: grid;
   place-items: center;
   background: #edf1e9;
   padding: 38px 20px 48px;
   text-align: center;
+}
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  border: 0;
+  overflow-y: auto;
+  color: var(--ink);
+}
+body:has(.welcome-overlay) {
+  overflow: hidden;
 }
 .welcome-inner {
   width: min(100%, 540px);
@@ -1175,11 +1178,8 @@ body:has(.game-welcome) footer {
   text-decoration: underline;
 }
 @media (max-width: 760px) {
-  body:has(.game-welcome) .site-header {
-    padding-bottom: 8px;
-  }
   .game-welcome {
-    min-height: calc(100svh - 68px);
+    min-height: 100svh;
     padding-top: 28px;
   }
   .game-stage {

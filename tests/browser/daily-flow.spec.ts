@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { runSql, signIn, requestSignInLink } from "../browser-helpers";
 import AxeBuilder from "@axe-core/playwright";
 // @ts-expect-error Node-only local test helper.
@@ -56,7 +56,9 @@ test("an email preview cannot consume sign-in before the listener confirms", asy
       await page.getByRole("button", { name: "Sign out" }).click();
       await expect(page).toHaveURL("/");
       await expect(
-        page.getByRole("link", { name: "Sign in", exact: true }),
+        page
+          .getByRole("banner")
+          .getByRole("link", { name: "Sign in", exact: true }),
       ).toBeVisible();
     }
   }
@@ -469,7 +471,9 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:3100/");
   await expect(
-    page.getByRole("link", { name: "Sign in", exact: true }),
+    page
+      .getByRole("banner")
+      .getByRole("link", { name: "Sign in", exact: true }),
   ).toBeVisible();
   await page.goto("/today");
   await expect(page.locator(".result")).toHaveCount(0);

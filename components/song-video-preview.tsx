@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
 import { pauseAudioPreview } from "@/components/audio-preview-player";
 import { useYouTubeConsent } from "@/lib/youtube-consent";
+import { useSiteEntry } from "@/lib/site-entry";
 import {
   loadYouTubeAPI,
   pauseOtherYouTubePlayers,
@@ -58,15 +59,16 @@ function Video({
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const consent = useYouTubeConsent();
+  const entered = useSiteEntry();
 
   useEffect(() => {
-    setEnabled(consent);
+    setEnabled(consent && entered);
     setError("");
     setStatus("");
-  }, [consent]);
+  }, [consent, entered]);
 
   useEffect(() => {
-    if (!enabled || !host.current) return;
+    if (!entered || !enabled || !host.current) return;
     let disposed = false;
     let player: YouTubePlayer | undefined;
     let unregister: (() => void) | undefined;
@@ -162,7 +164,7 @@ function Video({
       player?.destroy();
       container.replaceChildren();
     };
-  }, [enabled, attempt, videoId, title, trackingUntil]);
+  }, [entered, enabled, attempt, videoId, title, trackingUntil]);
 
   return (
     <section

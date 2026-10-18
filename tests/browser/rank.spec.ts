@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import { runSql, signIn } from "../browser-helpers";
 
@@ -46,6 +46,9 @@ test("Rank: repeated pairs, shared pending controls, live Elo, private paginated
     viewport: page.viewportSize(),
   });
   const board = await watcher.newPage();
+  await board.addInitScript(() =>
+    sessionStorage.setItem("musicale-entry-session-v1", "yes"),
+  );
   try {
     await board.goto("/leaderboard");
     await expect(board.getByRole("status")).toContainText(
@@ -218,6 +221,9 @@ test("Rank: expired and unavailable pairs recover honestly; another account cann
   );
   const other = await browser.newContext({ baseURL });
   const stranger = await other.newPage();
+  await stranger.addInitScript(() =>
+    sessionStorage.setItem("musicale-entry-session-v1", "yes"),
+  );
   try {
     await signIn(
       stranger,

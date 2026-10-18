@@ -1,9 +1,4 @@
-import {
-  test,
-  expect,
-  type Page,
-  type APIRequestContext,
-} from "@playwright/test";
+import { test, expect, type Page, type APIRequestContext } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import { runSql, signIn, dismissPlayTutorial } from "../browser-helpers";
 
@@ -42,7 +37,7 @@ async function rank(page: Page) {
   await expect(page.locator(".audio-preview")).toHaveCount(2);
 }
 
-import type { BrowserContext } from "@playwright/test";
+import type { BrowserContext } from "./fixtures";
 async function observeAudio(context: BrowserContext) {
   await context.addInitScript(() => {
     (window as any).__audioProbes = [];

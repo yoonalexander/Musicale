@@ -44,9 +44,9 @@ export default function Help() {
         </p>
         <h2>Play higher rated</h2>
         <p>
-          In <Link href="/play">Play</Link>, guess the higher Elo rating
-          captured when the round was issued. A correct guess earns one point
-          and randomly replaces either card with a different song. A wrong guess
+          In <Link href="/">Play</Link>, guess the higher Elo rating captured
+          when the round was issued. A correct guess earns one point and
+          randomly replaces either card with a different song. A wrong guess
           ends your run. Ties and songs without a recorded Daily or Rank
           preference are excluded. Runs are saved to your guest session or
           account; refreshing resumes your round. After thirty minutes, resume

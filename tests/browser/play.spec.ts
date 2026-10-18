@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import {
   runSql,
@@ -58,7 +58,7 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
   let release!: () => void, observed!: () => void;
   const held = new Promise<void>((resolve) => (release = resolve)),
     intercepted = new Promise<void>((resolve) => (observed = resolve));
-  await page.route("**/play", async (route) => {
+  await page.route("**/", async (route) => {
     if (route.request().method() === "POST") {
       observed();
       await held;
@@ -71,7 +71,7 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
   await expect(buttons.nth(1)).toBeDisabled();
   release();
   await click;
-  await page.unroute("**/play");
+  await page.unroute("**/");
   await expect(
     page.getByRole("heading", { name: "Correct!", exact: true }),
   ).toBeFocused();
@@ -156,12 +156,14 @@ test("Play: expiry/unavailability preserves points; server-action retries and ot
   const captured = page.waitForRequest(
     (req) => req.method() === "POST" && new URL(req.url()).pathname === "/play",
   );
-  // Extra browser score fields have no authority.
+  // Browser score fields and an external redirect destination have no authority.
   await form.evaluate((node) => {
     const input = document.createElement("input");
     input.name = "score";
     input.value = "999";
     node.append(input);
+    node.querySelector<HTMLInputElement>('[name="returnTo"]')!.value =
+      "https://example.invalid/";
   });
   await form.locator(`button[value="${higher(r)}"]`).click();
   const post = await captured;
@@ -176,6 +178,7 @@ test("Play: expiry/unavailability preserves points; server-action retries and ot
     data: post.postDataBuffer()!,
   });
   expect(duplicate.headers()["x-action-redirect"]).toContain(r.id);
+  expect(duplicate.headers()["x-action-redirect"]).toMatch(/^\/play\?/);
   expect(runSql(`select score from play_runs where id='${r.run_id}'`)).toBe(
     "1",
   );
@@ -189,6 +192,9 @@ test("Play: expiry/unavailability preserves points; server-action retries and ot
   const other = await browser.newContext({ baseURL });
   try {
     const stranger = await other.newPage();
+    await stranger.addInitScript(() =>
+      sessionStorage.setItem("musicale-entry-session-v1", "yes"),
+    );
     await signIn(
       stranger,
       request,

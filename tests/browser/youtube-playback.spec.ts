@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, firstVisit as it, expect } from "./fixtures";
 import {
   runSql,
   signIn,
@@ -30,7 +30,7 @@ window.YT = { Player: class {
 window.onYouTubeIframeAPIReady();
 `;
 
-test("welcome Play remembers YouTube consent across every mode and Privacy can revoke it in other tabs", async ({
+it("welcome Play remembers YouTube consent across every mode and Privacy can revoke it in other tabs", async ({
   page,
   context,
 }) => {
@@ -53,7 +53,11 @@ test("welcome Play remembers YouTube consent across every mode and Privacy can r
   ).toHaveAttribute("aria-describedby", "youtube-entry-notice");
   expect(scripts).toBe(0);
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(page).toHaveURL(/\/play$/);
+  await expect(page.locator(".welcome-overlay")).toHaveCount(0, {
+    timeout: 15000,
+  });
+  await expect(page.locator("form.matchup, .play-ready").first()).toBeVisible();
+  await expect(page).toHaveURL("/");
   const uid = runSql(
     "select id from auth.users where is_anonymous order by created_at desc limit 1",
   );
@@ -103,6 +107,8 @@ test("welcome Play remembers YouTube consent across every mode and Privacy can r
   ).toBe(true);
 
   await page.getByRole("link", { name: "Daily", exact: true }).click();
+  await expect(page).toHaveURL(/\/today$/);
+  await expect(page.locator('input[name="matchupId"]')).toHaveCount(1);
   await expect(page.locator(".video-preview iframe")).toHaveCount(2);
   await page.reload();
   await expect(page.locator(".video-preview iframe")).toHaveCount(2);
@@ -135,9 +141,16 @@ test("welcome Play remembers YouTube consent across every mode and Privacy can r
     page.getByRole("button", { name: "Load YouTube player", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".video-preview iframe")).toHaveCount(0);
+  await page.evaluate(() =>
+    sessionStorage.removeItem("musicale-entry-session-v1"),
+  );
   await page.goto("/");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(page).toHaveURL(/\/play$/);
+  await expect(page.locator(".welcome-overlay")).toHaveCount(0, {
+    timeout: 15000,
+  });
+  await expect(page.locator("form.matchup, .play-ready").first()).toBeVisible();
+  await expect(page).toHaveURL("/");
   await expect(
     page.getByRole("button", { name: "Load YouTube player", exact: true }),
   ).toHaveCount(2);
@@ -149,7 +162,7 @@ test("welcome Play remembers YouTube consent across every mode and Privacy can r
   expect(analytics).toBe(0);
 });
 
-test("YouTube consent works for the current visit when browser storage is blocked", async ({
+it("YouTube consent works for the current visit when browser storage is blocked", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -171,9 +184,15 @@ test("YouTube consent works for the current visit when browser storage is blocke
   );
   await page.goto("/");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(page).toHaveURL(/\/play$/);
+  await expect(page.locator(".welcome-overlay")).toHaveCount(0, {
+    timeout: 15000,
+  });
+  await expect(page.locator("form.matchup, .play-ready").first()).toBeVisible();
+  await expect(page).toHaveURL("/");
   await dismissPlayTutorial(page);
   await page.getByRole("link", { name: "Daily", exact: true }).click();
+  await expect(page).toHaveURL(/\/today$/);
+  await expect(page.locator('input[name="matchupId"]')).toHaveCount(1);
   await expect(page.locator(".video-preview iframe")).toHaveCount(2);
   await page.reload();
   await expect(
@@ -208,6 +227,8 @@ test("YouTube permission can be revoked for this visit even if storage becomes r
     ),
   ).toBeVisible();
   await page.getByRole("link", { name: "Daily", exact: true }).click();
+  await expect(page).toHaveURL(/\/today$/);
+  await expect(page.locator('input[name="matchupId"]')).toHaveCount(1);
   await expect(
     page.getByRole("button", { name: "Load YouTube player", exact: true }),
   ).toHaveCount(2);
@@ -283,7 +304,7 @@ test("saved-video validation is reused after a Daily vote revalidates the page",
   expect(requests()).toBe(before);
 });
 
-test("current welcome keeps Play, Rank and Daily entry points", async ({
+it("current welcome keeps Play and access to Privacy and Help", async ({
   page,
 }, info) => {
   await page.goto("/");
@@ -295,11 +316,11 @@ test("current welcome keeps Play, Rank and Daily entry points", async ({
     page.getByRole("button", { name: "Play", exact: true }),
   ).toBeEnabled();
   await expect(
-    page.getByRole("link", { name: /Help rank the music/ }),
-  ).toHaveAttribute("href", "/rank");
+    page.getByRole("link", { name: "Privacy & preferences" }),
+  ).toHaveAttribute("href", "/privacy");
   await expect(
-    page.getByRole("link", { name: "Try Daily", exact: true }),
-  ).toHaveAttribute("href", "/today");
+    page.getByRole("link", { name: "Help & music credits", exact: true }),
+  ).toHaveAttribute("href", "/help");
   await page.screenshot({
     path: `output/${info.project.name}-youtube-current-welcome.png`,
     fullPage: true,
