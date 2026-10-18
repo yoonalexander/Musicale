@@ -30,6 +30,232 @@ window.YT = { Player: class {
 window.onYouTubeIframeAPIReady();
 `;
 
+test("welcome Play remembers YouTube consent across every mode and Privacy can revoke it in other tabs", async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(120000);
+  let scripts = 0;
+  let analytics = 0;
+  await context.route("https://www.youtube.com/iframe_api", (route) => {
+    scripts++;
+    return route.fulfill({ contentType: "text/javascript", body: api });
+  });
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/analytics") analytics++;
+  });
+  await page.goto("/");
+  await expect(page.locator(".youtube-consent-notice")).toContainText(
+    "allow YouTube players to load automatically across Musicale",
+  );
+  await expect(
+    page.getByRole("button", { name: "Play", exact: true }),
+  ).toHaveAttribute("aria-describedby", "youtube-entry-notice");
+  expect(scripts).toBe(0);
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page).toHaveURL(/\/play$/);
+  const uid = runSql(
+    "select id from auth.users where is_anonymous order by created_at desc limit 1",
+  );
+  seedRankEvidence(uid);
+  if (!(await page.locator('input[name="roundId"]').count()))
+    await page.getByRole("button", { name: "Resume run", exact: true }).click();
+  await dismissPlayTutorial(page);
+  await expect(page.locator(".video-preview iframe")).toHaveCount(2);
+  await expect(
+    page.getByRole("button", { name: "Load YouTube player", exact: true }),
+  ).toHaveCount(0);
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("musicale-youtube-consent-v1"),
+    ),
+  ).toBe("yes");
+  expect(
+    await page.evaluate(() => localStorage.getItem("musicale-analytics")),
+  ).toBeNull();
+
+  await page.getByRole("link", { name: "Rank", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Listen and rank", exact: true })
+    .click();
+  await expect(page.locator(".video-preview iframe")).toHaveCount(2);
+  const pair = await page.locator('input[name="comparisonId"]').inputValue();
+  const oldPlayers = await page.evaluate("window.__youtubePlayers.length");
+  await page
+    .locator('form.matchup button[name="selectedSongId"]')
+    .first()
+    .click();
+  await expect(page.locator('input[name="comparisonId"]')).not.toHaveValue(
+    pair,
+  );
+  await expect(page.locator(".video-preview iframe")).toHaveCount(2);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        `window.__youtubePlayers.slice(0,${oldPlayers}).every(player => player.destroyed)`,
+      ),
+    )
+    .toBe(true);
+  expect(
+    await page.evaluate(
+      "window.__youtubePlayers.filter(player => !player.destroyed).every(player => player.options.playerVars.autoplay === 0)",
+    ),
+  ).toBe(true);
+
+  await page.getByRole("link", { name: "Daily", exact: true }).click();
+  await expect(page.locator(".video-preview iframe")).toHaveCount(2);
+  await page.reload();
+  await expect(page.locator(".video-preview iframe")).toHaveCount(2);
+  await page.goto("/songs/dynamite-bts");
+  await expect(page.locator(".video-preview iframe")).toHaveCount(1);
+  await page
+    .getByRole("button", { name: "Unload YouTube player", exact: true })
+    .click();
+  await expect(page.locator(".video-preview iframe")).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator(".video-preview iframe")).toHaveCount(1);
+
+  const privacy = await context.newPage();
+  await privacy.goto("/privacy");
+  const choice = privacy.getByRole("checkbox", {
+    name: "Allow YouTube players to load automatically",
+    exact: true,
+  });
+  await expect(choice).toBeChecked();
+  await choice.uncheck();
+  await expect(page.locator(".video-preview iframe")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Load YouTube player", exact: true }),
+  ).toBeVisible();
+  await choice.check();
+  await expect(page.locator(".video-preview iframe")).toHaveCount(1);
+  await choice.uncheck();
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Load YouTube player", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".video-preview iframe")).toHaveCount(0);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page).toHaveURL(/\/play$/);
+  await expect(
+    page.getByRole("button", { name: "Load YouTube player", exact: true }),
+  ).toHaveCount(2);
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("musicale-youtube-consent-v1"),
+    ),
+  ).toBe("no");
+  expect(analytics).toBe(0);
+});
+
+test("YouTube consent works for the current visit when browser storage is blocked", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const get = Storage.prototype.getItem;
+    const set = Storage.prototype.setItem;
+    Storage.prototype.getItem = function (key) {
+      if (key === "musicale-youtube-consent-v1")
+        throw new Error("Storage blocked");
+      return get.call(this, key);
+    };
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "musicale-youtube-consent-v1")
+        throw new Error("Storage blocked");
+      return set.call(this, key, value);
+    };
+  });
+  await page.route("https://www.youtube.com/iframe_api", (route) =>
+    route.fulfill({ contentType: "text/javascript", body: api }),
+  );
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page).toHaveURL(/\/play$/);
+  await dismissPlayTutorial(page);
+  await page.getByRole("link", { name: "Daily", exact: true }).click();
+  await expect(page.locator(".video-preview iframe")).toHaveCount(2);
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Load YouTube player", exact: true }),
+  ).toHaveCount(2);
+  await expect(page.locator(".video-preview iframe")).toHaveCount(0);
+});
+
+test("YouTube permission can be revoked for this visit even if storage becomes read-only", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("musicale-youtube-consent-v1", "yes");
+    const set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "musicale-youtube-consent-v1")
+        throw new Error("Read-only storage");
+      return set.call(this, key, value);
+    };
+  });
+  await page.goto("/privacy");
+  const choice = page.getByRole("checkbox", {
+    name: "Allow YouTube players to load automatically",
+    exact: true,
+  });
+  await expect(choice).toBeChecked();
+  await choice.uncheck();
+  await expect(choice).not.toBeChecked();
+  await expect(
+    page.getByText(
+      "Preference changed for this visit. This browser could not save it.",
+    ),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Daily", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Load YouTube player", exact: true }),
+  ).toHaveCount(2);
+  await expect(page.locator(".video-preview iframe")).toHaveCount(0);
+});
+
+test("revoking YouTube consent cancels players still waiting for the API", async ({
+  page,
+  context,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("musicale-youtube-consent-v1", "yes"),
+  );
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("https://www.youtube.com/iframe_api", async (route) => {
+    await pending;
+    await route.fulfill({ contentType: "text/javascript", body: api });
+  });
+  try {
+    await page.goto("/today", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByText("Loading YouTube player…", { exact: true }),
+    ).toHaveCount(2);
+    const privacy = await context.newPage();
+    await privacy.goto("/privacy");
+    await privacy
+      .getByRole("checkbox", {
+        name: "Allow YouTube players to load automatically",
+        exact: true,
+      })
+      .uncheck();
+    await expect(
+      page.getByRole("button", { name: "Load YouTube player", exact: true }),
+    ).toHaveCount(2);
+    release();
+    await expect
+      .poll(() => page.evaluate("Boolean(window.YT?.Player)"))
+      .toBe(true);
+    await expect(page.locator(".video-preview iframe")).toHaveCount(0);
+    expect(await page.evaluate("window.__youtubePlayers.length")).toBe(0);
+  } finally {
+    release();
+  }
+});
+
 test("saved-video validation is reused after a Daily vote revalidates the page", async ({
   page,
   request,
@@ -146,8 +372,9 @@ for (const mode of ["today", "rank", "play"] as const) {
     for (const width of [320, 390, 768, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       const box = await form.locator(".video-preview iframe").boundingBox();
-      expect(box!.width).toBeGreaterThanOrEqual(200);
-      expect(box!.height).toBeGreaterThanOrEqual(200);
+      // Mobile DOM rectangles can round a 200px CSS minimum just below 200.
+      expect(box!.width + 0.001).toBeGreaterThanOrEqual(200);
+      expect(box!.height + 0.001).toBeGreaterThanOrEqual(200);
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
@@ -284,20 +511,20 @@ test("YouTube and authorized audio previews pause each other", async ({
   await signIn(page, request, email);
   const uid = runSql(`select id from auth.users where email='${email}'`);
   runSql(`update profiles set role='admin' where user_id='${uid}'`);
-  await page.goto("/admin");
-  await page
-    .getByRole("button", {
-      name: "Import four open-license recordings",
-      exact: true,
-    })
-    .click();
-  await expect(
-    page.getByText("4 authorized previews connected", { exact: false }),
-  ).toBeVisible();
   const previous = runSql(
-    "select status from songs where id='open-gymnopedie-1'",
+    "select coalesce(jsonb_object_agg(id,status),'{}') from songs where id like 'open-%'",
   );
   try {
+    await page.goto("/admin");
+    await page
+      .getByRole("button", {
+        name: "Import four open-license recordings",
+        exact: true,
+      })
+      .click();
+    await expect(
+      page.getByText("4 authorized previews connected", { exact: false }),
+    ).toBeVisible();
     runSql(
       "update songs set status='active' where id='open-gymnopedie-1'; insert into song_providers(song_id,provider,provider_song_id,external_url) values('open-gymnopedie-1','youtube','fixture0001','https://www.youtube.com/watch?v=fixture0001')",
     );
@@ -332,7 +559,7 @@ test("YouTube and authorized audio previews pause each other", async ({
     await expect(page.getByText("Paused.", { exact: true })).toBeVisible();
   } finally {
     runSql(
-      `delete from song_providers where song_id='open-gymnopedie-1' and provider='youtube'; update songs set status='${previous}' where id='open-gymnopedie-1'`,
+      `delete from song_providers where song_id='open-gymnopedie-1' and provider='youtube'; update songs s set status=coalesce('${previous.replaceAll("'", "''")}'::jsonb->>s.id,'disabled')::song_status where s.id like 'open-%'`,
     );
   }
 });
@@ -386,8 +613,8 @@ test("players share one API, pause each other, recover errors and dispose on nav
   expect(await page.evaluate("window.__youtubePlayers[0].pauses")).toBe(1);
   for (const iframe of await page.locator(".video-preview iframe").all()) {
     const box = await iframe.boundingBox();
-    expect(box!.width).toBeGreaterThanOrEqual(200);
-    expect(box!.height).toBeGreaterThanOrEqual(200);
+    expect(box!.width + 0.001).toBeGreaterThanOrEqual(200);
+    expect(box!.height + 0.001).toBeGreaterThanOrEqual(200);
     await expect(iframe).toHaveAttribute("title", /^YouTube player:/);
     await expect(iframe).toHaveAttribute(
       "referrerpolicy",

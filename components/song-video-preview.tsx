@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
 import { pauseAudioPreview } from "@/components/audio-preview-player";
+import { useYouTubeConsent } from "@/lib/youtube-consent";
 import {
   loadYouTubeAPI,
   pauseOtherYouTubePlayers,
@@ -56,6 +57,13 @@ function Video({
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const consent = useYouTubeConsent();
+
+  useEffect(() => {
+    setEnabled(consent);
+    setError("");
+    setStatus("");
+  }, [consent]);
 
   useEffect(() => {
     if (!enabled || !host.current) return;

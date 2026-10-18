@@ -5,6 +5,7 @@ export const metadata = {
     "How Musicale handles accounts, saved votes, optional analytics and external music providers.",
 };
 import { AnalyticsPreference } from "@/components/analytics";
+import { YouTubePreference } from "@/components/youtube-consent";
 export default function Privacy() {
   return (
     <section className="page">
@@ -72,12 +73,15 @@ export default function Privacy() {
         </p>
         <h2>YouTube players</h2>
         <p>
-          Musicale uses the YouTube IFrame Player API. No YouTube script or
-          player loads until you choose “Load YouTube player”. Loading connects
-          your browser directly to YouTube and Google, which receive information
-          such as your IP address, browser details and site origin. They may
-          access cookies or similar device storage, serve ads, and process
-          playback activity under the{" "}
+          Musicale uses the YouTube IFrame Player API. Choosing Play on the
+          welcome page enables automatic player loading across Musicale. This
+          choice is saved in this browser’s local storage, or just for the
+          current visit if storage is unavailable. Until you enable it, players
+          load only when you choose “Load YouTube player”. Loading connects your
+          browser directly to YouTube and Google, which receive information such
+          as your IP address, browser details and site origin. They may access
+          cookies or similar device storage, serve ads, and process playback
+          activity under the{" "}
           <a href="https://policies.google.com/privacy">
             Google Privacy Policy
           </a>
@@ -96,6 +100,7 @@ export default function Privacy() {
           receive the server API key.
         </p>
       </section>
+      <YouTubePreference />
       <AnalyticsPreference />
     </section>
   );

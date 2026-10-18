@@ -20,6 +20,13 @@ const latestRound = (uid: string) =>
     ),
   );
 
+// Guest/auth checks use the honest outage fallback; player lifecycle has its own suite.
+test.beforeEach(async ({ page }) => {
+  await page.route("https://www.youtube.com/iframe_api", (route) =>
+    route.abort(),
+  );
+});
+
 test("guest welcome: first-visit tutorial, compact cards, keyboard, scoring, persistence and private account history", async ({
   page,
 }, info) => {
@@ -162,9 +169,9 @@ test("guests rank and vote Daily, then a verified new email preserves their acti
   await expect(buttons).toHaveCount(2);
   const uid = latestGuest();
   await buttons.first().click();
-  await expect(page.getByRole("status")).toContainText(
-    "Your preference is saved.",
-  );
+  await expect(
+    page.getByRole("status").filter({ hasText: "Your preference is saved." }),
+  ).toContainText("Your preference is saved.");
   expect(runSql(`select count(*) from rank_votes where user_id='${uid}'`)).toBe(
     "1",
   );

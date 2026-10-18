@@ -798,6 +798,17 @@ body:has(.game-welcome) footer {
   color: #555e51;
   margin: 13px 0 28px;
 }
+.youtube-consent-notice {
+  max-width: 36rem;
+  margin: 16px auto 0;
+  color: #555e51;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+.youtube-consent-notice a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .welcome-alternatives {
   display: flex;
   flex-wrap: wrap;

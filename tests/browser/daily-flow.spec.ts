@@ -227,7 +227,10 @@ test("daily vote: magic link, keyboard vote, result, sharing and persistence", a
   await expect(page).toHaveURL("http://127.0.0.1:3100/leaderboard");
   await expect(page.locator(".leader-row")).toHaveCount(20);
   await page.goto("/privacy");
-  const consent = page.getByRole("checkbox");
+  const consent = page.getByRole("checkbox", {
+    name: "Allow anonymous aggregate product counts when I’m signed in",
+    exact: true,
+  });
   await expect(consent).not.toBeChecked();
   await consent.check();
   await expect(

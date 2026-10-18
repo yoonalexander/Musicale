@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { startPlay } from "@/app/play/actions";
-import { GuestForm } from "@/components/guest-form";
-import { SubmitButton } from "@/components/submit-button";
+import { YouTubePlayEntry } from "@/components/youtube-consent";
 import { isDemoMode } from "@/lib/data";
 
 export default function Home() {
@@ -53,11 +51,7 @@ export default function Home() {
           <br />
           See how far your taste takes you.
         </p>
-        <GuestForm action={startPlay} className="welcome-start">
-          <SubmitButton disabled={isDemoMode()} busyText="Getting your songs…">
-            Play <span aria-hidden="true">↗</span>
-          </SubmitButton>
-        </GuestForm>
+        <YouTubePlayEntry disabled={isDemoMode()} />
         <p className="welcome-reassurance">
           No sign-up. Unlimited runs. Just music.
         </p>

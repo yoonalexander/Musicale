@@ -100,10 +100,24 @@ No production migration, push or deployment has been performed.
 - Saved provider URLs supply the video ID. All starter records normalize to
   their stored IDs. The one reviewed Superstition starter association changed
   as described above; existing database associations and votes were preserved.
-- Each player requires an explicit load click accepting the linked privacy
-  policy and YouTube terms. No YouTube script, thumbnail or iframe loads first.
-  The listener then uses YouTube's native play control. No page-load or
-  next-matchup autoplay is enabled.
+- The welcome Play action includes a linked notice for YouTube's terms,
+  Google's privacy policy and Musicale's privacy policy. It records permission
+  to load players automatically across Play, Rank, Daily and song pages in
+  `musicale-youtube-consent-v1` on this browser. Before permission, players still
+  require an individual Load click; no YouTube script, thumbnail or iframe loads
+  first. New cards and reloads use the saved choice. Blocked storage retains
+  permission only during the current client visit, then returns to manual loading
+  after a full reload. Optional analytics remain a separate choice.
+  An explicit opt-out is preserved when using the welcome Play button again.
+  A failed storage write still respects the new choice during the current visit;
+  Privacy reports that the change could not be saved for a later visit.
+- The Privacy page can enable or revoke automatic loading. Changes synchronize
+  across Musicale tabs, disposing mounted or pending players on revocation.
+  Unloading one player keeps it closed until revisiting that card. The listener
+  still uses YouTube's native play control; no page-load or next-matchup autoplay
+  is enabled. Consent concerns the named policies and player connections, not
+  unspecified future terms or unrelated data processing. See the current
+  [YouTube privacy/player guidance](https://developers.google.com/youtube/terms/developer-policies-guide).
 - One shared API script and player registry coordinate playback. Other ready
   players pause on PLAYING or BUFFERING; hidden-tab playback pauses. Unloading,
   navigation and changed song/video identity destroy the old player. Pending
@@ -115,6 +129,23 @@ No production migration, push or deployment has been performed.
   retain existing provider links. Voting is never gated by player state.
 - No forced 15-second cutoff, suggested timestamp/replay behavior, audio
   extraction, hidden video, public playback search or new dependencies.
+
+## Consent follow-up verification
+
+The saved-consent change passes 44 unit/API checks, TypeScript and the production
+build. A clean 69-case Chromium/WebKit/mobile Chromium run completed with 66
+passes and three deliberately skipped native-network cases. Coverage includes
+all modes, next-pair loading, reload persistence, cross-tab revocation, pending
+initialization cancellation, read-only/blocked storage, preserved opt-outs,
+separate analytics consent, guest upgrades, playback coordination and retry.
+The existing Daily vote/privacy flow and the public-page accessibility checks
+at 320px also passed in Chromium.
+The earlier local run exposed a restored Daily fixture with a different pair
+and an audio test that left imported songs active. The task-owned backend was
+backed up and refreshed, and the audio test now restores all source statuses.
+Mobile rectangle checks account for 0.001px floating-point rounding while the
+player's 200px CSS minima remain unchanged. No hosted data or schema change is
+needed for consent.
 
 ## Database and rollout
 

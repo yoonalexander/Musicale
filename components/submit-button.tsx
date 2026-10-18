@@ -5,11 +5,13 @@ export function SubmitButton({
   busyText = "Saving…",
   className = "button",
   disabled = false,
+  "aria-describedby": describedBy,
 }: {
   children: React.ReactNode;
   busyText?: string;
   className?: string;
   disabled?: boolean;
+  "aria-describedby"?: string;
 }) {
   const { pending } = useFormStatus();
   return (
@@ -17,6 +19,7 @@ export function SubmitButton({
       className={className}
       disabled={disabled || pending}
       aria-busy={pending}
+      aria-describedby={describedBy}
     >
       {pending ? busyText : children}
     </button>
