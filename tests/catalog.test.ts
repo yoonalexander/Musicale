@@ -11,6 +11,10 @@ import { createHash } from "node:crypto";
 import provenance from "../data/audio-provenance.json";
 import { normalizeRecording, musicBrainzAdapter } from "../lib/music-catalog";
 import { playablePreview, mapAudio } from "../lib/audio";
+import { validateSong } from "../lib/validation";
+import { youtubeVideoId } from "../lib/youtube";
+import expansion from "../data/catalog-expansion-2026-10-17.json";
+import starter from "../data/songs.json";
 const records = JSON.parse(readFileSync("tests/fixtures/catalog.json", "utf8"));
 let passed = 0;
 async function test(name: string, run: () => unknown) {
@@ -289,6 +293,25 @@ await test("reviewed open recordings match exact identities, reject ambiguous me
     await assert.rejects(discoverPreviews([song]), /unavailable/);
   } finally {
     globalThis.fetch = original;
+  }
+});
+await test("reviewed YouTube expansion has forty unique validated songs and new video identities", () => {
+  assert.equal(expansion.length, 40);
+  const ids = new Set(starter.map((song) => song.id));
+  const videos = new Set(
+    starter.flatMap((song) => song.providers.map((p) => p.providerSongId)),
+  );
+  for (const row of expansion) {
+    const song = validateSong(row);
+    assert(!ids.has(song.id));
+    ids.add(song.id);
+    assert.equal(song.providers.length, 1);
+    const source = song.providers[0];
+    assert.equal(source.provider, "youtube");
+    assert.equal(youtubeVideoId(source.externalUrl), source.providerSongId);
+    assert(!videos.has(source.providerSongId));
+    videos.add(source.providerSongId);
+    assert.equal(song.artworkUrl, null);
   }
 });
 console.log(`${passed} catalog and audio unit cases passed.`);

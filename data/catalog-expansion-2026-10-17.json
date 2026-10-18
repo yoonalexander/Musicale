@@ -1,0 +1,642 @@
+[
+  {
+    "id": "blinding-lights-the-weeknd",
+    "title": "Blinding Lights",
+    "artistName": "The Weeknd",
+    "albumName": "After Hours",
+    "releaseYear": 2019,
+    "genre": "Synth-pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "4NRXx6U8ABQ",
+        "externalUrl": "https://www.youtube.com/watch?v=4NRXx6U8ABQ"
+      }
+    ]
+  },
+  {
+    "id": "shape-of-you-ed-sheeran",
+    "title": "Shape of You",
+    "artistName": "Ed Sheeran",
+    "albumName": "Divide",
+    "releaseYear": 2017,
+    "genre": "Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "JGwWNGJdvx8",
+        "externalUrl": "https://www.youtube.com/watch?v=JGwWNGJdvx8"
+      }
+    ]
+  },
+  {
+    "id": "rolling-in-the-deep-adele",
+    "title": "Rolling in the Deep",
+    "artistName": "Adele",
+    "albumName": "21",
+    "releaseYear": 2010,
+    "genre": "Soul",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "rYEDA3JcQqw",
+        "externalUrl": "https://www.youtube.com/watch?v=rYEDA3JcQqw"
+      }
+    ]
+  },
+  {
+    "id": "hello-adele",
+    "title": "Hello",
+    "artistName": "Adele",
+    "albumName": "25",
+    "releaseYear": 2015,
+    "genre": "Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "YQHsXMglC9A",
+        "externalUrl": "https://www.youtube.com/watch?v=YQHsXMglC9A"
+      }
+    ]
+  },
+  {
+    "id": "blank-space-taylor-swift",
+    "title": "Blank Space",
+    "artistName": "Taylor Swift",
+    "albumName": "1989",
+    "releaseYear": 2014,
+    "genre": "Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "e-ORhEE9VVg",
+        "externalUrl": "https://www.youtube.com/watch?v=e-ORhEE9VVg"
+      }
+    ]
+  },
+  {
+    "id": "shake-it-off-taylor-swift",
+    "title": "Shake It Off",
+    "artistName": "Taylor Swift",
+    "albumName": "1989",
+    "releaseYear": 2014,
+    "genre": "Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "nfWlot6h_JM",
+        "externalUrl": "https://www.youtube.com/watch?v=nfWlot6h_JM"
+      }
+    ]
+  },
+  {
+    "id": "flowers-miley-cyrus",
+    "title": "Flowers",
+    "artistName": "Miley Cyrus",
+    "albumName": "Endless Summer Vacation",
+    "releaseYear": 2023,
+    "genre": "Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "G7KNmW9a75Y",
+        "externalUrl": "https://www.youtube.com/watch?v=G7KNmW9a75Y"
+      }
+    ]
+  },
+  {
+    "id": "as-it-was-harry-styles",
+    "title": "As It Was",
+    "artistName": "Harry Styles",
+    "albumName": "Harry’s House",
+    "releaseYear": 2022,
+    "genre": "Synth-pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "H5v3kku4y6Q",
+        "externalUrl": "https://www.youtube.com/watch?v=H5v3kku4y6Q"
+      }
+    ]
+  },
+  {
+    "id": "dont-start-now-dua-lipa",
+    "title": "Don't Start Now",
+    "artistName": "Dua Lipa",
+    "albumName": "Future Nostalgia",
+    "releaseYear": 2019,
+    "genre": "Disco",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "oygrmJFKYZY",
+        "externalUrl": "https://www.youtube.com/watch?v=oygrmJFKYZY"
+      }
+    ]
+  },
+  {
+    "id": "levitating-dua-lipa",
+    "title": "Levitating (feat. DaBaby)",
+    "artistName": "Dua Lipa feat. DaBaby",
+    "albumName": "Future Nostalgia (The Moonlight Edition)",
+    "releaseYear": 2020,
+    "genre": "Disco",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "TUVcZfQe-Kw",
+        "externalUrl": "https://www.youtube.com/watch?v=TUVcZfQe-Kw"
+      }
+    ]
+  },
+  {
+    "id": "get-lucky-daft-punk",
+    "title": "Get Lucky",
+    "artistName": "Daft Punk feat. Pharrell Williams and Nile Rodgers",
+    "albumName": "Random Access Memories",
+    "releaseYear": 2013,
+    "genre": "Disco",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "5NV6Rdv1a3I",
+        "externalUrl": "https://www.youtube.com/watch?v=5NV6Rdv1a3I"
+      }
+    ]
+  },
+  {
+    "id": "take-on-me-a-ha",
+    "title": "Take On Me",
+    "artistName": "a-ha",
+    "albumName": "Hunting High and Low",
+    "releaseYear": 1985,
+    "genre": "Synth-pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "djV11Xbc914",
+        "externalUrl": "https://www.youtube.com/watch?v=djV11Xbc914"
+      }
+    ]
+  },
+  {
+    "id": "billie-jean-michael-jackson",
+    "title": "Billie Jean",
+    "artistName": "Michael Jackson",
+    "albumName": "Thriller",
+    "releaseYear": 1982,
+    "genre": "Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "Zi_XLOBDo_Y",
+        "externalUrl": "https://www.youtube.com/watch?v=Zi_XLOBDo_Y"
+      }
+    ]
+  },
+  {
+    "id": "beat-it-michael-jackson",
+    "title": "Beat It",
+    "artistName": "Michael Jackson",
+    "albumName": "Thriller",
+    "releaseYear": 1982,
+    "genre": "Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "oRdxUFDoQe0",
+        "externalUrl": "https://www.youtube.com/watch?v=oRdxUFDoQe0"
+      }
+    ]
+  },
+  {
+    "id": "smells-like-teen-spirit-nirvana",
+    "title": "Smells Like Teen Spirit",
+    "artistName": "Nirvana",
+    "albumName": "Nevermind",
+    "releaseYear": 1991,
+    "genre": "Grunge",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "hTWKbfoikeg",
+        "externalUrl": "https://www.youtube.com/watch?v=hTWKbfoikeg"
+      }
+    ]
+  },
+  {
+    "id": "bohemian-rhapsody-queen",
+    "title": "Bohemian Rhapsody",
+    "artistName": "Queen",
+    "albumName": "A Night at the Opera",
+    "releaseYear": 1975,
+    "genre": "Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "fJ9rUzIMcZQ",
+        "externalUrl": "https://www.youtube.com/watch?v=fJ9rUzIMcZQ"
+      }
+    ]
+  },
+  {
+    "id": "dont-stop-me-now-queen",
+    "title": "Don't Stop Me Now",
+    "artistName": "Queen",
+    "albumName": "Jazz",
+    "releaseYear": 1978,
+    "genre": "Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "HgzGwKwLmgM",
+        "externalUrl": "https://www.youtube.com/watch?v=HgzGwKwLmgM"
+      }
+    ]
+  },
+  {
+    "id": "in-the-end-linkin-park",
+    "title": "In the End",
+    "artistName": "Linkin Park",
+    "albumName": "Hybrid Theory",
+    "releaseYear": 2000,
+    "genre": "Alternative Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "eVTXPUF4Oz4",
+        "externalUrl": "https://www.youtube.com/watch?v=eVTXPUF4Oz4"
+      }
+    ]
+  },
+  {
+    "id": "numb-linkin-park",
+    "title": "Numb",
+    "artistName": "Linkin Park",
+    "albumName": "Meteora",
+    "releaseYear": 2003,
+    "genre": "Alternative Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "kXYiU_JCYtU",
+        "externalUrl": "https://www.youtube.com/watch?v=kXYiU_JCYtU"
+      }
+    ]
+  },
+  {
+    "id": "viva-la-vida-coldplay",
+    "title": "Viva la Vida",
+    "artistName": "Coldplay",
+    "albumName": "Viva la Vida or Death and All His Friends",
+    "releaseYear": 2008,
+    "genre": "Alternative Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "dvgZkm1xWPE",
+        "externalUrl": "https://www.youtube.com/watch?v=dvgZkm1xWPE"
+      }
+    ]
+  },
+  {
+    "id": "yellow-coldplay",
+    "title": "Yellow",
+    "artistName": "Coldplay",
+    "albumName": "Parachutes",
+    "releaseYear": 2000,
+    "genre": "Alternative Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "yKNxeF4KMsY",
+        "externalUrl": "https://www.youtube.com/watch?v=yKNxeF4KMsY"
+      }
+    ]
+  },
+  {
+    "id": "creep-radiohead",
+    "title": "Creep",
+    "artistName": "Radiohead",
+    "albumName": "Pablo Honey",
+    "releaseYear": 1992,
+    "genre": "Alternative Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "XFkzRNyygfk",
+        "externalUrl": "https://www.youtube.com/watch?v=XFkzRNyygfk"
+      }
+    ]
+  },
+  {
+    "id": "karma-police-radiohead",
+    "title": "Karma Police",
+    "artistName": "Radiohead",
+    "albumName": "OK Computer",
+    "releaseYear": 1997,
+    "genre": "Alternative Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "1uYWYWPc9HU",
+        "externalUrl": "https://www.youtube.com/watch?v=1uYWYWPc9HU"
+      }
+    ]
+  },
+  {
+    "id": "dancing-queen-abba",
+    "title": "Dancing Queen",
+    "artistName": "ABBA",
+    "albumName": "Arrival",
+    "releaseYear": 1976,
+    "genre": "Disco",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "xFrGuyw1V8s",
+        "externalUrl": "https://www.youtube.com/watch?v=xFrGuyw1V8s"
+      }
+    ]
+  },
+  {
+    "id": "mamma-mia-abba",
+    "title": "Mamma Mia",
+    "artistName": "ABBA",
+    "albumName": "ABBA",
+    "releaseYear": 1975,
+    "genre": "Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "unfzfe8f9NI",
+        "externalUrl": "https://www.youtube.com/watch?v=unfzfe8f9NI"
+      }
+    ]
+  },
+  {
+    "id": "i-wanna-dance-whitney-houston",
+    "title": "I Wanna Dance with Somebody (Who Loves Me)",
+    "artistName": "Whitney Houston",
+    "albumName": "Whitney",
+    "releaseYear": 1987,
+    "genre": "Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "eH3giaIzONA",
+        "externalUrl": "https://www.youtube.com/watch?v=eH3giaIzONA"
+      }
+    ]
+  },
+  {
+    "id": "i-will-always-love-you-whitney-houston",
+    "title": "I Will Always Love You",
+    "artistName": "Whitney Houston",
+    "albumName": "The Bodyguard",
+    "releaseYear": 1992,
+    "genre": "Soul",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "3JWTaaS7LdU",
+        "externalUrl": "https://www.youtube.com/watch?v=3JWTaaS7LdU"
+      }
+    ]
+  },
+  {
+    "id": "africa-toto",
+    "title": "Africa",
+    "artistName": "Toto",
+    "albumName": "Toto IV",
+    "releaseYear": 1982,
+    "genre": "Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "FTQbiNvZqaY",
+        "externalUrl": "https://www.youtube.com/watch?v=FTQbiNvZqaY"
+      }
+    ]
+  },
+  {
+    "id": "everybody-wants-to-rule-tears-for-fears",
+    "title": "Everybody Wants to Rule the World",
+    "artistName": "Tears for Fears",
+    "albumName": "Songs from the Big Chair",
+    "releaseYear": 1985,
+    "genre": "New Wave",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "aGCdLKXNF3w",
+        "externalUrl": "https://www.youtube.com/watch?v=aGCdLKXNF3w"
+      }
+    ]
+  },
+  {
+    "id": "september-earth-wind-fire",
+    "title": "September",
+    "artistName": "Earth, Wind & Fire",
+    "albumName": "The Best of Earth, Wind & Fire, Vol. 1",
+    "releaseYear": 1978,
+    "genre": "Funk",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "Gs069dndIYk",
+        "externalUrl": "https://www.youtube.com/watch?v=Gs069dndIYk"
+      }
+    ]
+  },
+  {
+    "id": "fantasy-mariah-carey",
+    "title": "Fantasy",
+    "artistName": "Mariah Carey",
+    "albumName": "Daydream",
+    "releaseYear": 1995,
+    "genre": "R&B",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "qq09UkPRdFY",
+        "externalUrl": "https://www.youtube.com/watch?v=qq09UkPRdFY"
+      }
+    ]
+  },
+  {
+    "id": "hey-ya-outkast",
+    "title": "Hey Ya!",
+    "artistName": "Outkast",
+    "albumName": "Speakerboxxx/The Love Below",
+    "releaseYear": 2003,
+    "genre": "Hip-Hop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "PWgvGjAhvIw",
+        "externalUrl": "https://www.youtube.com/watch?v=PWgvGjAhvIw"
+      }
+    ]
+  },
+  {
+    "id": "uptown-funk-mark-ronson",
+    "title": "Uptown Funk",
+    "artistName": "Mark Ronson feat. Bruno Mars",
+    "albumName": "Uptown Special",
+    "releaseYear": 2014,
+    "genre": "Funk",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "OPf0YbXqDm0",
+        "externalUrl": "https://www.youtube.com/watch?v=OPf0YbXqDm0"
+      }
+    ]
+  },
+  {
+    "id": "mr-brightside-the-killers",
+    "title": "Mr. Brightside",
+    "artistName": "The Killers",
+    "albumName": "Hot Fuss",
+    "releaseYear": 2003,
+    "genre": "Alternative Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "gGdGFtwCNBE",
+        "externalUrl": "https://www.youtube.com/watch?v=gGdGFtwCNBE"
+      }
+    ]
+  },
+  {
+    "id": "do-i-wanna-know-arctic-monkeys",
+    "title": "Do I Wanna Know?",
+    "artistName": "Arctic Monkeys",
+    "albumName": "AM",
+    "releaseYear": 2013,
+    "genre": "Alternative Rock",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "bpOSxM0rNPM",
+        "externalUrl": "https://www.youtube.com/watch?v=bpOSxM0rNPM"
+      }
+    ]
+  },
+  {
+    "id": "gangnam-style-psy",
+    "title": "Gangnam Style",
+    "artistName": "PSY",
+    "albumName": "Psy 6 (Six Rules), Part 1",
+    "releaseYear": 2012,
+    "genre": "K-Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "9bZkp7q19f0",
+        "externalUrl": "https://www.youtube.com/watch?v=9bZkp7q19f0"
+      }
+    ]
+  },
+  {
+    "id": "ddu-du-ddu-du-blackpink",
+    "title": "DDU-DU DDU-DU",
+    "artistName": "BLACKPINK",
+    "albumName": "Square Up",
+    "releaseYear": 2018,
+    "genre": "K-Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "IHNzOHi8sJs",
+        "externalUrl": "https://www.youtube.com/watch?v=IHNzOHi8sJs"
+      }
+    ]
+  },
+  {
+    "id": "super-shy-newjeans",
+    "title": "Super Shy",
+    "artistName": "NewJeans",
+    "albumName": "Get Up",
+    "releaseYear": 2023,
+    "genre": "K-Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "ArmDp-zijuc",
+        "externalUrl": "https://www.youtube.com/watch?v=ArmDp-zijuc"
+      }
+    ]
+  },
+  {
+    "id": "fancy-twice",
+    "title": "FANCY",
+    "artistName": "TWICE",
+    "albumName": "Fancy You",
+    "releaseYear": 2019,
+    "genre": "K-Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "kOHB85vDuow",
+        "externalUrl": "https://www.youtube.com/watch?v=kOHB85vDuow"
+      }
+    ]
+  },
+  {
+    "id": "despecha-rosalia",
+    "title": "DESPECHÁ",
+    "artistName": "Rosalía",
+    "albumName": "Motomami +",
+    "releaseYear": 2022,
+    "genre": "Latin Pop",
+    "status": "active",
+    "providers": [
+      {
+        "provider": "youtube",
+        "providerSongId": "5g2hT4GmAGU",
+        "externalUrl": "https://www.youtube.com/watch?v=5g2hT4GmAGU"
+      }
+    ]
+  }
+]

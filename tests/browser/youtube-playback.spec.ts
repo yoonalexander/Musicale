@@ -80,6 +80,28 @@ test("current welcome keeps Play, Rank and Daily entry points", async ({
   });
 });
 
+test("Listen and rank includes YouTube songs rather than the audio-only subset", async ({
+  page,
+  request,
+}, info) => {
+  await signIn(
+    page,
+    request,
+    `youtube-listen-${Date.now()}-${info.project.name}@example.test`,
+  );
+  await page.goto("/rank");
+  await page
+    .getByRole("button", { name: "Listen and rank", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Load YouTube player", exact: true }),
+  ).toHaveCount(2);
+  const pair = await page.locator('input[name="comparisonId"]').inputValue();
+  expect(
+    runSql(`select preview_only from rank_comparisons where id='${pair}'`),
+  ).toBe("f");
+});
+
 for (const mode of ["today", "rank", "play"] as const) {
   test(`YouTube in ${mode}: controls never submit votes and saved progression disposes players`, async ({
     page,

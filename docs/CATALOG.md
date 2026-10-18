@@ -1,5 +1,9 @@
 # Starter catalog sources
 
+Production additionally includes [forty reviewed YouTube songs](CATALOG_EXPANSION_2026_10_17.md),
+for 64 songs total with the four licensed recordings. The starter file below
+remains the small preview/test fixture; it is not the full production catalog.
+
 The twenty-song starter file remains curated and unchanged. Admin can additionally discover and import MusicBrainz recordings into the database without replacing this file; see [catalog automation](CATALOG_AUTOMATION.md) for duplicate review, editorial preservation and separate audio authorization.
 
 Twenty curated entries span the 1960s–2020s, multiple languages, genres and regions. This is the modest verified launch catalog; a larger library is optional ongoing curation. Admin can import up to 100 entries per atomic batch and queue thirty distinct curated daily pairs from `data/editorial-pairs.json`. Editors should keep adding verified recordings for their audience.

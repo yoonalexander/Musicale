@@ -60,20 +60,23 @@ export default async function Rank({
       </header>
       {!isDemoMode() ? (
         <div className="share-actions rank-listening-mode">
-          <Form action={startPreviewRank}>
-            <SubmitButton busyText="Finding previews…">
+          <Form action={startRank}>
+            <SubmitButton busyText="Finding songs…">
               Listen and rank
             </SubmitButton>
           </Form>
-          {pair?.previewOnly ? (
-            <Form action={startRank}>
-              <SubmitButton busyText="Preparing…">Use all songs</SubmitButton>
-            </Form>
-          ) : null}
+          <Form action={startPreviewRank}>
+            <SubmitButton
+              className="button secondary"
+              busyText="Finding previews…"
+            >
+              15-second previews only
+            </SubmitButton>
+          </Form>
           <p>
             {pair?.previewOnly
               ? "Comparing recordings with authorized in-page previews."
-              : "Choose Listen and rank for songs you can preview here."}
+              : "Listen with YouTube or an available audio preview, then pick your favorite."}
           </p>
         </div>
       ) : null}

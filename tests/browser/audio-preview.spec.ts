@@ -37,7 +37,7 @@ const cleanup = () =>
 async function rank(page: Page) {
   await page.goto("/rank");
   await page
-    .getByRole("button", { name: "Listen and rank", exact: true })
+    .getByRole("button", { name: "15-second previews only", exact: true })
     .click();
   await expect(page.locator(".audio-preview")).toHaveCount(2);
 }

@@ -60,7 +60,7 @@ The final local unit/API suite passes 43 checks and TypeScript passes. Full
 database/browser/restore evidence for the same runtime implementation is in
 [the integration report](YOUTUBE_PLAYBACK.md). The
 [new main CI run](https://github.com/yoonalexander/musicale/actions/runs/39082294094)
-was still running at publication and is not claimed green. The earlier main
+completed successfully, verified after publication. The earlier main
 run failed its WebKit offline Realtime server-subscription cleanup assertion
 (seven rows remaining after 45 seconds; 123 other browser cases passed).
 That inherited failure is separate from the successful native production
