@@ -116,7 +116,7 @@ No production migration, push or deployment has been performed.
 
 ## Database and rollout
 
-`supabase/migrations/20261017182638_youtube_playback_events.sql` only expands
+`supabase/migrations/20261018001728_youtube_playback_events.sql` only expands
 the aggregate analytics event constraint and existing recording function. It
 keeps existing permissions, retention and request limits. Apply it before
 deploying clients that send new event names. No catalog/data migration is needed.
