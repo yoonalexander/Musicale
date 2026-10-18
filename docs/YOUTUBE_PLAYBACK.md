@@ -4,8 +4,10 @@ Integrated on `codex/youtube-playback` with current `main` (`7e86ffc`). The
 original Daily-only work is preserved in recovery commit `edecfb0`; its old
 validation did not establish compatibility with the current product.
 
-The current-product correction is complete for local review. Hosted rollout
-and physical-device acceptance remain separate gates below.
+The current-product correction is merged into `main` and deployed to
+[musicale.alexyoon.com](https://musicale.alexyoon.com). See
+[the production rollout evidence](YOUTUBE_PRODUCTION_2026_10_17.md).
+Physical-device and broader account/voting acceptance remain separate gates.
 
 The shared `SongListening` now hosts `SongVideoPreview` in Play, Rank, Daily and
 song details. Main's newer welcome, guest sessions, tutorials, private Play
@@ -130,8 +132,9 @@ Events retain the existing analytics opt-in and Do Not Track behavior, plus the
 Made for Kids and freshness safeguards described above. PLAYING
 can include ads and is not evidence of audible music or listening duration.
 
-The migration has only been exercised in a disposable local database. No
-production migration, push or deployment is part of this change.
+The migration was applied to production before the client deployment. The
+Supabase connector assigned version `20261018001728`; the repository filename
+matches that applied history. Existing canonical versions were preserved.
 
 ## Local development
 
@@ -163,8 +166,9 @@ and cleanup. They are not playback or availability evidence.
 
 ## Remaining design milestones
 
-Production rollout and deployed-app acceptance remain pending. An injected
-native-player diagnostic is not deployed-app sign-in/voting/player acceptance.
+Production rollout and deployed-app playback smoke checks are recorded in the
+[production evidence](YOUTUBE_PRODUCTION_2026_10_17.md). Broader physical-device,
+real account, voting and operational acceptance remain open.
 Persisted candidate/rejection history, backup source selection, curated start
 timestamps/replay and scheduled validation of inactive sources remain design
 work. Current metadata refresh runs on access, with a 24-hour cache.
@@ -175,9 +179,9 @@ context and server rendering, including one corrected field-selector request.
 No automatic search retries were made. Google Cloud's quota counters remain the
 authoritative usage total. The IFrame player itself requires no Data API key.
 
-Before rollout, configure the server key in the hosting environment and review
-data retention/refresh, privacy implementation, regional availability and actual
-device playback. This is engineering evidence, not YouTube or legal approval.
+The owner configured the server key for Vercel Production. Continue reviewing
+data retention/refresh, regional availability and actual device playback.
+This is engineering evidence, not YouTube or legal approval.
 
 The current [IFrame API reference](https://developers.google.com/youtube/iframe_api_reference)
 informs lifecycle, sizing, error and origin handling. The
@@ -231,8 +235,8 @@ No new dependency was added. Main's homepage, navigation, mode route files,
 Daily component and Play/Rank pair components compare unchanged against main;
 the shared listening component supplies the integration. The original design
 and initial implementation remain recoverable in edecfb0. User environment
-values were preserved. No hosted database, deployment or remote Git branch was
-changed by this correction.
+values were preserved. The local correction did not change hosted state;
+the subsequent owner-authorized production publication is recorded separately.
 
 The temporary Firefox service and only the task-owned verification backend
 were stopped after the checks. Backend data volumes, private restore evidence

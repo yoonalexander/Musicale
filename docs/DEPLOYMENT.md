@@ -1,5 +1,10 @@
 # Production deployment
 
+**October 17 YouTube publication:** the current-product integration is on `main`
+and live on the canonical domain, preserving the newer frontend and Play, Rank
+and Daily. Production now includes migration `20261018001728` and the reviewed
+Superstition source correction. See [YouTube production evidence](YOUTUBE_PRODUCTION_2026_10_17.md).
+
 **October 17 publication:** integrated `main` is now deployed to [musicale.alexyoon.com](https://musicale.alexyoon.com), with migrations through `0016`, guest authentication, four authorized audio sources, updated confirmation templates and a thirty-day Daily buffer. Play still needs genuine preference ratings; owner administration and hosted human acceptance remain open. See [the current rollout evidence](PRODUCTION_2026_10_17.md). Older dated sections below are historical records.
 
 October 17 local integration: the current candidate combines all branches. Canonical migrations are `0001`–`0016`: catalog `0010`, operations `0011` (renamed from its unapplied parallel `0010`), Rank `0012`, Play `0013`, audio `0014`–`0015`, and audio-aware readiness `0016`. Apply only unapplied versions after inspecting the target history and taking a private backup. A local operations-only database tracking the older `0010_product_readiness` needs an explicit forward reconciliation; never silently rename applied history. No hosted changes or push occurred during integration. See [integration evidence](INTEGRATION.md).
