@@ -82,7 +82,7 @@ export async function reviewMetadata(form: FormData) {
         releaseId,
       },
     );
-    if (result.status !== "enriched")
+    if (!result.metadataSaved)
       throw new Error(
         result.error ??
           "The recording was not saved. Refresh progress and review the result.",

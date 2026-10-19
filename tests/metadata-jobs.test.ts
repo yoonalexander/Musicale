@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import { runMetadataJob } from "../lib/metadata-jobs";
 const id = "11111111-1111-4111-8111-111111111111",
   release = "22222222-2222-4222-8222-222222222222",
@@ -85,6 +86,67 @@ test("an empty queue makes no provider request", async () => {
       await runMetadataJob({ rpc: async () => ({ data: null }) }),
       { status: "idle" },
     );
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("an artwork outage reports a saved review and keeps the job retryable", async () => {
+  const original = globalThis.fetch;
+  const record = JSON.parse(
+    readFileSync("tests/fixtures/catalog.json", "utf8"),
+  )[0];
+  let saved: any;
+  const db = {
+    rpc: async (name: string, args: any) => {
+      if (name === "claim_song_metadata")
+        return {
+          data: {
+            song: {
+              id: "respect-aretha",
+              title: "Respect",
+              artist_name: "Aretha Franklin",
+              album_name: record.releases[0].title,
+              release_year: 1967,
+              metadata_details: saved?.p_selected,
+            },
+            lease: id,
+          },
+        };
+      if (name === "reserve_catalog_provider_call") return { data: true };
+      if (name === "finish_song_metadata") {
+        saved = args;
+        return { error: null };
+      }
+      throw new Error(`Unexpected RPC ${name}`);
+    },
+  };
+  globalThis.fetch = async (input) => {
+    if (new URL(String(input)).hostname === "coverartarchive.org")
+      throw new DOMException(
+        "The operation was aborted due to timeout",
+        "TimeoutError",
+      );
+    return Response.json(record);
+  };
+  try {
+    const result = await runMetadataJob(db, "respect-aretha", {
+      recordingId: record.id,
+      releaseId: record.releases[0].id,
+    });
+    assert.equal(result.metadataSaved, true);
+    assert.equal(result.status, "failed");
+    assert.equal(result.error, null);
+    assert.match(result.warning!, /match saved.*artwork.*retry/i);
+    assert.equal(saved.p_selected.reviewedByAdmin, true);
+    assert.equal(saved.p_selected.recordingId, record.id);
+    assert.equal(saved.p_status, "failed");
+    assert.match(saved.p_error, /Artwork lookup failed/);
+    assert.equal(saved.p_selected.artwork, null);
+    const retry = await runMetadataJob(db);
+    assert.equal(retry.metadataSaved, true);
+    assert.equal(saved.p_selected.recordingId, record.id);
+    assert.equal(saved.p_selected.reviewedByAdmin, true);
   } finally {
     globalThis.fetch = original;
   }

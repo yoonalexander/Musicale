@@ -115,5 +115,14 @@ export async function runMetadataJob(
     throw new Error(
       "Could not save metadata work; its lease will expire for retry.",
     );
-  return { songId: job.song.id, status, error: failure };
+  return {
+    songId: job.song.id,
+    status,
+    metadataSaved: selected !== null,
+    error: selected ? null : failure,
+    warning:
+      selected && failure
+        ? "Recording match saved. Artwork lookup failed; retry artwork without reviewing this match again."
+        : null,
+  };
 }

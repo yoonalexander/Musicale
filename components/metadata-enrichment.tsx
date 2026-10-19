@@ -55,7 +55,13 @@ function JobReview({
         {job.songs.artwork_url ? "published" : "not published"}; rights:{" "}
         {permission?.status ?? "pending"}.
       </p>
-      {job.error ? <p role="alert">{job.error}</p> : null}
+      {job.error ? (
+        <p role="alert">
+          {job.error.startsWith("Artwork lookup failed:")
+            ? `Recording match saved. No need to review this match again. ${job.error}`
+            : job.error}
+        </p>
+      ) : null}
       <button
         disabled={pending}
         onClick={() => run(() => retryMetadata(job.song_id))}
@@ -67,7 +73,7 @@ function JobReview({
         onClick={() =>
           run(async () => {
             await retryMetadata(job.song_id);
-            await enrichSongMetadata(job.song_id);
+            return enrichSongMetadata(job.song_id);
           })
         }
       >
@@ -274,7 +280,14 @@ export function MetadataEnrichment({
         )
           throw new Error(String(result.error));
         await reload();
-        setNotice("Metadata work saved.");
+        setNotice(
+          result &&
+            typeof result === "object" &&
+            "warning" in result &&
+            result.warning
+            ? String(result.warning)
+            : "Metadata work saved.",
+        );
       } catch (error) {
         setNotice(
           error instanceof Error ? error.message : "Metadata work failed.",
