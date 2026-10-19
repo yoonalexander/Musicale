@@ -1,9 +1,9 @@
 :root {
-  --paper: #f7f6f1;
-  --ink: #171713;
-  --muted: #6f6d64;
-  --line: #d9d7cf;
-  --accent: #b94332;
+  --paper: #f5eedb;
+  --ink: #211d35;
+  --muted: #716b79;
+  --line: #d9cfb9;
+  --accent: #de583e;
   --serif: Georgia, "Times New Roman", serif;
   --sans: Inter, ui-sans-serif, system-ui, sans-serif;
 }
@@ -1293,6 +1293,194 @@ body:has(.game-stage) .site-header {
 .audio-error {
   font-size: 12px;
   margin: 8px 0 0;
+}
+
+/* Indie Record Shop visual system */
+html {
+  background: var(--paper);
+  color: var(--ink);
+}
+body {
+  background: var(--paper);
+}
+.site-header {
+  position: relative;
+  z-index: 1;
+  background: #211d35;
+  color: #fff6de;
+  border-color: #443d5d;
+  grid-template-columns: auto 1fr auto;
+  padding-inline: clamp(20px, 6vw, 92px);
+}
+.site-header .wordmark {
+  color: #f4cd58;
+  font: 900 1.55rem ui-monospace, monospace;
+  letter-spacing: -.09em;
+}
+.site-header nav {
+  justify-content: center;
+  gap: clamp(14px, 3vw, 42px);
+  font-weight: 650;
+}
+.site-header nav a:hover {
+  color: #f4cd58;
+}
+.site-header > .button {
+  border-radius: 999px;
+  color: #211d35;
+  background: #f4cd58;
+  border-color: #f4cd58;
+  font-weight: 750;
+}
+.site-header > form .text-button {
+  color: #fff6de;
+}
+main > .notice[role="status"] {
+  border: 0;
+  margin: 0;
+  background: #f4cd58;
+  color: #211d35;
+  text-align: center;
+  font-size: .8rem;
+  font-weight: 650;
+}
+.today,
+.page,
+.song-detail,
+.auth,
+.empty {
+  max-width: 1180px;
+}
+.page-title h1,
+.today h1,
+.song-detail h1,
+.auth h1,
+.empty h1 {
+  color: #211d35;
+  font-family: ui-monospace, monospace;
+  font-weight: 850;
+  letter-spacing: -.075em;
+}
+.kicker {
+  color: #de583e;
+}
+.button {
+  border-radius: 8px;
+  font-weight: 750;
+  box-shadow: 3px 3px 0 #211d35;
+}
+.button:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #211d35;
+}
+.button.secondary {
+  box-shadow: none;
+  border: 1px solid #bcb29c;
+  color: #211d35;
+}
+.panel,
+.notice,
+.result,
+.chart-empty {
+  border: 2px solid #211d35;
+  border-radius: 14px;
+  background: #fffaf0;
+  box-shadow: 5px 5px 0 #d5c9b0;
+}
+.song-choice,
+.leader-row,
+.leader-head,
+.onboarding li {
+  border-color: #cfc4ad;
+}
+.game-stage .song-choice {
+  background: #fffaf0;
+  border: 3px solid #211d35;
+  border-radius: 12px;
+  box-shadow: 5px 5px 0 #211d35;
+}
+.game-stage .song-choice h2 {
+  color: #211d35;
+  font-family: ui-monospace, monospace;
+  font-weight: 800;
+  letter-spacing: -.055em;
+}
+.game-stage .card-actions > .button:not(.secondary) {
+  background: #de583e;
+  border-color: #211d35;
+  box-shadow: 3px 3px 0 #211d35;
+}
+.game-stage .versus {
+  border: 3px solid #211d35;
+  border-radius: 8px;
+  background: #f4cd58;
+  color: #211d35;
+  box-shadow: 3px 3px 0 #211d35;
+}
+.leader-row,
+.leader-head {
+  padding-block: 18px;
+}
+.leader-row:hover {
+  background: #fffaf0;
+}
+.leader-row .mini-art {
+  border: 1px solid #211d35;
+  border-radius: 8px;
+  background: #f4cd58;
+  color: #211d35;
+}
+input,
+select,
+textarea,
+fieldset {
+  border-radius: 8px;
+  border-color: #bcb29c;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-color: #de583e;
+}
+footer {
+  background: #211d35;
+  color: #e8dcbf;
+  border: 0;
+}
+footer a:hover {
+  color: #f4cd58;
+}
+.welcome-overlay {
+  background: #f5eedb;
+}
+.welcome-overlay .music-mark {
+  background: #211d35;
+  color: #f4cd58;
+  border: 3px solid #211d35;
+  border-radius: 50%;
+  box-shadow: 5px 5px 0 #d5c9b0;
+  transform: none;
+}
+.welcome-overlay h1 {
+  color: #211d35;
+  font-family: ui-monospace, monospace;
+  font-weight: 900;
+  letter-spacing: -.1em;
+}
+.welcome-overlay .welcome-promise {
+  color: #de583e;
+  font-weight: 700;
+}
+.welcome-overlay .welcome-start .button {
+  background: #de583e;
+  border-color: #211d35;
+  color: white;
+  box-shadow: 4px 4px 0 #211d35;
+}
+@media (max-width: 760px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+  }
 }
 @media (max-width: 760px) {
   .audio-preview {
