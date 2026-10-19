@@ -26,6 +26,10 @@ test("Rank: repeated pairs, shared pending controls, live Elo, private paginated
   const form = page.locator("form.matchup"),
     buttons = form.locator('button[name="selectedSongId"]');
   await expect(buttons).toHaveCount(2);
+  await expect(form.locator(".art, img[alt$='album artwork']")).toHaveCount(0);
+  await page.screenshot({
+    path: `output/artwork-removed-cards-${info.project.name}.png`,
+  });
   await expect(form).not.toContainText(/Elo|1500|wins|losses/);
   const originalId = await form
     .locator('input[name="comparisonId"]')

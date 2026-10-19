@@ -1,4 +1,4 @@
-import { readFileSync, mkdirSync, appendFileSync, existsSync } from "node:fs";
+import { readFileSync, mkdirSync, appendFileSync } from "node:fs";
 mkdirSync(new URL("../tmp/", import.meta.url), { recursive: true });
 const records = JSON.parse(
   readFileSync(new URL("./fixtures/catalog.json", import.meta.url), "utf8"),
@@ -7,25 +7,8 @@ const originalFetch = globalThis.fetch;
 // Loaded only by the local Playwright server; product builds contain no fixture switch.
 globalThis.fetch = async (input, init) => {
   const url = new URL(String(input instanceof Request ? input.url : input));
-  if (url.hostname === "coverartarchive.org") {
-    if (existsSync(new URL("../tmp/metadata-artwork-outage", import.meta.url)))
-      throw new DOMException("Artwork fixture timeout", "TimeoutError");
-    const release = "44444444-4444-4444-8444-444444444444";
-    return url.pathname === `/release/${release}`
-      ? Response.json({
-          images: [
-            {
-              id: 123,
-              front: true,
-              approved: true,
-              thumbnails: {
-                500: `https://coverartarchive.org/release/${release}/123-500.jpg`,
-              },
-            },
-          ],
-        })
-      : new Response(null, { status: 404 });
-  }
+  if (url.hostname === "coverartarchive.org")
+    throw new Error("Album artwork requests are disabled.");
   if (
     url.origin === "https://musicbrainz.org" &&
     url.pathname.startsWith("/ws/2/release/")

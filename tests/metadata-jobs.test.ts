@@ -5,7 +5,7 @@ import { runMetadataJob } from "../lib/metadata-jobs";
 const id = "11111111-1111-4111-8111-111111111111",
   release = "22222222-2222-4222-8222-222222222222",
   group = "33333333-3333-4333-8333-333333333333";
-test("a claimed song is verified, its artwork stays unapproved, and metadata reaches the save RPC", async () => {
+test("a claimed song is verified and saved without artwork requests", async () => {
   const original = globalThis.fetch;
   const record = {
     id,
@@ -58,12 +58,11 @@ test("a claimed song is verified, its artwork stays unapproved, and metadata rea
   };
   globalThis.fetch = async (input) => {
     const url = new URL(String(input));
+    assert.equal(url.hostname, "musicbrainz.org");
     return Response.json(
-      url.hostname === "coverartarchive.org"
-        ? { images: [{ front: true, approved: true }] }
-        : url.searchParams.has("query")
-          ? { count: 1, recordings: [record] }
-          : record,
+      url.searchParams.has("query")
+        ? { count: 1, recordings: [record] }
+        : record,
     );
   };
   try {
@@ -71,7 +70,7 @@ test("a claimed song is verified, its artwork stays unapproved, and metadata rea
     assert.equal(slots, 2);
     assert.equal(saved.p_lease, id);
     assert.equal(saved.p_selected.recordingId, id);
-    assert.equal(saved.p_selected.artwork.status, "permission_required");
+    assert.equal(saved.p_selected.artwork, undefined);
   } finally {
     globalThis.fetch = original;
   }
@@ -91,7 +90,7 @@ test("an empty queue makes no provider request", async () => {
   }
 });
 
-test("an artwork outage reports a saved review and keeps the job retryable", async () => {
+test("reviewing and refreshing metadata never calls the artwork provider", async () => {
   const original = globalThis.fetch;
   const record = JSON.parse(
     readFileSync("tests/fixtures/catalog.json", "utf8"),
@@ -135,14 +134,13 @@ test("an artwork outage reports a saved review and keeps the job retryable", asy
       releaseId: record.releases[0].id,
     });
     assert.equal(result.metadataSaved, true);
-    assert.equal(result.status, "failed");
+    assert.equal(result.status, "enriched");
     assert.equal(result.error, null);
-    assert.match(result.warning!, /match saved.*artwork.*retry/i);
     assert.equal(saved.p_selected.reviewedByAdmin, true);
     assert.equal(saved.p_selected.recordingId, record.id);
-    assert.equal(saved.p_status, "failed");
-    assert.match(saved.p_error, /Artwork lookup failed/);
-    assert.equal(saved.p_selected.artwork, null);
+    assert.equal(saved.p_status, "enriched");
+    assert.equal(saved.p_error, null);
+    assert.equal(saved.p_selected.artwork, undefined);
     const retry = await runMetadataJob(db);
     assert.equal(retry.metadataSaved, true);
     assert.equal(saved.p_selected.recordingId, record.id);

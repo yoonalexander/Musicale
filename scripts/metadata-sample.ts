@@ -36,7 +36,6 @@ for (const song of data) {
         selected.recordingId,
         selected.releaseId,
       );
-      if (selected) selected.artwork = await api.artwork(selected);
     }
     results.push({
       songId: song.id,

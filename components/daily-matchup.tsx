@@ -5,8 +5,6 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { submitDailyVote } from "@/app/actions";
 import { SongListening } from "@/components/song-listening";
-import { ArtworkCredit } from "@/components/artwork-credit";
-import { SongArtwork } from "@/components/song-artwork";
 import { resultMessage, shareResult } from "@/lib/share";
 import type { Matchup, Song } from "@/types/domain";
 import { track } from "@/lib/analytics";
@@ -47,16 +45,12 @@ function Card({
     <article
       className={`song-choice ${chosen ? "chosen" : matchup.selectedSongId ? "unselected" : ""}`}
     >
-      <div className="art">
-        <SongArtwork url={song.artworkUrl} title={song.title} />
-      </div>
       <p className="kicker">
         {song.albumName} · {song.releaseYear}
         {song.genre ? ` · ${song.genre}` : ""}
       </p>
       <h2>{song.title}</h2>
       <p>{song.artistName}</p>
-      <ArtworkCredit song={song} />
       {song.durationMs ? (
         <p>
           {Math.floor(song.durationMs / 60000)}:

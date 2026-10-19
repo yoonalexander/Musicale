@@ -24,7 +24,7 @@ export async function metadataProgress() {
   const { data, error } = await db
     .from("song_metadata_jobs")
     .select(
-      "song_id,status,attempts,candidates,error,updated_at,artwork_permission,songs(title,artist_name,album_name,release_year,artwork_url)",
+      "song_id,status,attempts,candidates,error,updated_at,songs(title,artist_name,album_name,release_year)",
     )
     .order("song_id");
   if (error) throw new Error("Could not load metadata progress.");
@@ -110,35 +110,6 @@ export async function reviewMetadata(form: FormData) {
     refresh();
     return {
       error: error instanceof Error ? error.message : "Metadata review failed.",
-    };
-  }
-}
-export async function authorizeMetadataArtwork(form: FormData) {
-  await requireAdmin();
-  try {
-    const decision = String(form.get("decision") ?? "authorized");
-    if (decision === "authorized" && form.get("permission") !== "on")
-      throw new Error("Confirm permission to display this cover.");
-    const { error } = await (await getSupabaseServerClient())!.rpc(
-      "review_metadata_artwork",
-      {
-        p_song_id: songId(String(form.get("songId"))),
-        p_status: decision,
-        p_basis: String(form.get("basis") ?? ""),
-        p_scope: String(form.get("scope") ?? ""),
-        p_evidence: String(form.get("evidence") ?? ""),
-        p_attribution: String(form.get("attribution") ?? ""),
-      },
-    );
-    if (error)
-      throw new Error(
-        "Supply image-specific rights evidence, scope and attribution. Refresh artwork first if its image ID is missing. Existing manual artwork is preserved.",
-      );
-    refresh();
-    return { error: null };
-  } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : "Artwork review failed.",
     };
   }
 }

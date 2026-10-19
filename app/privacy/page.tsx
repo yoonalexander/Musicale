@@ -52,16 +52,14 @@ export default function Privacy() {
           addresses. Hosting and authentication providers may keep their own
           operational logs under their policies.
         </p>
-        <h2>Music links and artwork</h2>
+        <h2>Music links and playback</h2>
         <p>
           Opening a music link takes you to its provider, where that provider’s
           terms and privacy policy apply. Explicitly authorized previews stream
           when you press play. Four explicitly CC BY licensed excerpts are
           served by Musicale with attribution; other approved external sources
           receive the playback request directly. Musicale does not proxy or copy
-          commercial recordings without permission. If supplied by an editor,
-          artwork loads from its source; that host receives the image request.
-          We suppress the referrer on artwork requests.
+          commercial recordings without permission.
         </p>
       </section>
       <section className="panel">

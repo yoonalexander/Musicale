@@ -80,25 +80,12 @@ export async function runMetadataJob(
       }
     }
     if (selected) {
-      try {
-        selected.artwork = await api.artwork(selected);
-      } catch (error) {
-        selected.artwork =
-          previous?.releaseId === selected.releaseId ? previous.artwork : null;
-        failure = `Artwork lookup failed: ${error instanceof Error ? error.message : "Provider unavailable"}`;
-      }
       candidates = [
         selected,
         ...candidates.filter((c) => c.recordingId !== selected!.recordingId),
       ].slice(0, 20);
     }
-    status = selected
-      ? failure
-        ? "failed"
-        : "enriched"
-      : candidates.length
-        ? "review"
-        : "unmatched";
+    status = selected ? "enriched" : candidates.length ? "review" : "unmatched";
   } catch (error) {
     failure =
       error instanceof Error ? error.message : "Metadata lookup failed.";
@@ -119,10 +106,6 @@ export async function runMetadataJob(
     songId: job.song.id,
     status,
     metadataSaved: selected !== null,
-    error: selected ? null : failure,
-    warning:
-      selected && failure
-        ? "Recording match saved. Artwork lookup failed; retry artwork without reviewing this match again."
-        : null,
+    error: failure,
   };
 }

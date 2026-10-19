@@ -251,53 +251,6 @@ test("throttled requests reserve a new slot before retry", async () => {
     globalThis.fetch = original;
   }
 });
-test("CAA 404 is absent art; an approved front still needs permission", async () => {
-  const original = globalThis.fetch;
-  try {
-    const candidate = rankMetadata(song, [record])[0];
-    globalThis.fetch = async () => new Response("", { status: 404 });
-    assert.equal(await metadataApi(async () => {}).artwork(candidate), null);
-    globalThis.fetch = async () =>
-      Response.json({ images: [{ front: true, approved: true }] });
-    assert.equal(
-      (await metadataApi(async () => {}).artwork(candidate))?.status,
-      "permission_required",
-    );
-  } finally {
-    globalThis.fetch = original;
-  }
-});
-test("cover discovery pins the image and retains the source release on release-group fallback", async () => {
-  const original = globalThis.fetch;
-  const candidate = rankMetadata(song, [record])[0];
-  globalThis.fetch = async (input) =>
-    String(input).includes("/release-group/")
-      ? Response.json({
-          release: `https://musicbrainz.org/release/${groupId}`,
-          images: [
-            {
-              id: 123,
-              front: true,
-              approved: true,
-              thumbnails: {
-                500: `http://coverartarchive.org/release/${groupId}/123-500.jpg`,
-              },
-            },
-          ],
-        })
-      : new Response("", { status: 404 });
-  try {
-    const art = await metadataApi(async () => {}).artwork(candidate);
-    assert.equal(
-      art?.url,
-      `https://coverartarchive.org/release/${groupId}/123-500.jpg`,
-    );
-    assert.equal(art?.imageId, "123");
-    assert.equal(art?.status, "permission_required");
-  } finally {
-    globalThis.fetch = original;
-  }
-});
 test("a unique original single can fill an unknown album; an unqualified live version cannot", () => {
   const single = {
     ...record,

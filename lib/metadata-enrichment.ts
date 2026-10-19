@@ -246,11 +246,11 @@ export function chooseMetadata(
 }
 export function metadataApi(reserve: () => Promise<void>) {
   const cache = new Map<string, Promise<RecordData>>();
-  async function request(url: string, musicbrainz = true): Promise<RecordData> {
+  async function request(url: string): Promise<RecordData> {
     if (cache.has(url)) return cache.get(url)!;
     const pending = (async () => {
       for (let attempt = 0; attempt < 3; attempt++) {
-        if (musicbrainz) await reserve();
+        await reserve();
         const response = await fetch(url, {
           headers: {
             "User-Agent":
@@ -260,7 +260,6 @@ export function metadataApi(reserve: () => Promise<void>) {
           signal: AbortSignal.timeout(10000),
           cache: "no-store",
         });
-        if (!musicbrainz && response.status === 404) return { images: [] };
         if (
           [429, 500, 502, 503, 504].includes(response.status) &&
           attempt < 2
@@ -374,54 +373,6 @@ export function metadataApi(reserve: () => Promise<void>) {
               .slice(0, 10) as string[])
           : [],
         genreLicense: "CC-BY-NC-SA-3.0",
-      };
-    },
-    async artwork(candidate: MetadataCandidate) {
-      let result = await request(
-        `https://coverartarchive.org/release/${metadataId(candidate.releaseId)}`,
-        false,
-      );
-      if (
-        !(result.images ?? []).some(
-          (i: RecordData) => i.front === true && i.approved === true,
-        )
-      )
-        result = await request(
-          `https://coverartarchive.org/release-group/${metadataId(candidate.releaseGroupId)}`,
-          false,
-        );
-      const front = (result.images ?? []).find(
-        (i: RecordData) => i.front === true && i.approved === true,
-      );
-      if (!front) return null;
-      const releaseMatch = String(
-        result.release ??
-          `https://musicbrainz.org/release/${candidate.releaseId}`,
-      ).match(/^https?:\/\/musicbrainz\.org\/release\/([a-f0-9-]{36})\/?$/i);
-      if (!releaseMatch) return null;
-      const releaseId = metadataId(releaseMatch[1]);
-      const imageId = /^\d+$/.test(String(front.id)) ? String(front.id) : null;
-      const thumbnail = String(front.thumbnails?.["500"] ?? "").replace(
-        /^http:/,
-        "https:",
-      );
-      const pinned =
-        imageId &&
-        new RegExp(
-          `^https://coverartarchive\\.org/release/${releaseId}/${imageId}-500\\.(?:jpg|jpeg|png)$`,
-          "i",
-        ).test(thumbnail)
-          ? thumbnail
-          : null;
-      // CAA availability and community approval are not permission to reuse the image.
-      return {
-        url:
-          pinned ??
-          `https://coverartarchive.org/release/${releaseId}/front-500`,
-        sourceUrl: `https://musicbrainz.org/release/${releaseId}`,
-        releaseId,
-        imageId: pinned ? imageId : null,
-        status: "permission_required" as const,
       };
     },
   };

@@ -1,2 +1,2 @@
-id,title,artistName,albumName,releaseYear,genre,status,releaseDate,durationMs,artworkUrl,providers
-respect-aretha,Respect,Aretha Franklin,I Never Loved a Man the Way I Love You,1967,Soul,active,,,,"[{""provider"":""youtube"",""providerSongId"":""JzqGZjFnYnA"",""externalUrl"":""https://www.youtube.com/watch?v=JzqGZjFnYnA""}]"
+id,title,artistName,albumName,releaseYear,genre,status,releaseDate,durationMs,providers
+respect-aretha,Respect,Aretha Franklin,I Never Loved a Man the Way I Love You,1967,Soul,active,,,"[{""provider"":""youtube"",""providerSongId"":""JzqGZjFnYnA"",""externalUrl"":""https://www.youtube.com/watch?v=JzqGZjFnYnA""}]"

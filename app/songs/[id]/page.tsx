@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import { getSong, getSongHistory } from "@/lib/data";
 import { SongListening } from "@/components/song-listening";
-import { ArtworkCredit } from "@/components/artwork-credit";
-import { SongArtwork } from "@/components/song-artwork";
 import { RatingHistory } from "@/components/rating-history";
 
 export async function generateMetadata({
@@ -34,9 +32,6 @@ export default async function SongPage({
   const history = await getSongHistory(id);
   return (
     <section className="song-detail">
-      <div className="detail-art">
-        <SongArtwork url={song.artworkUrl} title={song.title} />
-      </div>
       <div>
         <p className="kicker">
           {song.status !== "active"
@@ -47,7 +42,6 @@ export default async function SongPage({
           · {song.genre ?? "Music"}
         </p>
         <h1>{song.title}</h1>
-        <ArtworkCredit song={song} />
         <p className="subtitle">
           {song.artistName} · {song.albumName} ·{" "}
           {song.releaseDate ?? song.releaseYear}

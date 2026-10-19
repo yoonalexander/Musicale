@@ -246,9 +246,14 @@ export async function importSongs(fd: FormData) {
       file instanceof File && file.size
         ? await file.text()
         : String(fd.get("catalog") ?? "");
-    songs = parseCatalog(text, String(fd.get("format") ?? "json"));
-    if (songs.some((s) => s.artworkUrl) && fd.get("artworkPermission") !== "on")
-      throw new Error("Confirm permission to display supplied artwork.");
+    songs = parseCatalog(text, String(fd.get("format") ?? "json")).map(
+      (song) => ({
+        ...song,
+        artworkUrl: null,
+        artworkSourceUrl: null,
+        artworkAttribution: null,
+      }),
+    );
   } catch (error) {
     go(
       "/admin",
@@ -342,9 +347,13 @@ export async function saveSong(fd: FormData) {
         ? [{ provider, externalUrl, providerSongId }]
         : [];
     });
-    song = validateSong({ ...Object.fromEntries(fd), providers });
-    if (song.artworkUrl && fd.get("artworkPermission") !== "on")
-      throw new Error("Confirm permission to display supplied artwork.");
+    song = validateSong({
+      ...Object.fromEntries(fd),
+      providers,
+      artworkUrl: null,
+      artworkSourceUrl: null,
+      artworkAttribution: null,
+    });
   } catch (error) {
     go("/admin", "message", (error as Error).message);
   }

@@ -74,8 +74,7 @@ export function CatalogDiscovery({
       <p>
         Search MusicBrainz core metadata (CC0). Imported songs remain
         unavailable until you review their listening links and activate them in
-        the song editor. Genres remain editorial; artwork needs separate
-        permission.
+        the song editor. Genres remain editorial.
       </p>
       <form
         className="admin-form"
@@ -139,18 +138,7 @@ export function CatalogDiscovery({
                 </p>
                 <p>
                   Audio: {c.preview.availability}; permission:{" "}
-                  {c.preview.licensingStatus}.{" "}
-                  {c.artwork ? (
-                    <a
-                      href={c.artwork.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Review release artwork (permission unreviewed)
-                    </a>
-                  ) : (
-                    "No artwork source."
-                  )}
+                  {c.preview.licensingStatus}.
                 </p>
                 {c.matches.length ? (
                   <p>
@@ -227,7 +215,7 @@ export function CatalogDiscovery({
         <p>
           Refresh updates only fields still managed by discovery. Saving a song
           through the editor or manual import makes its metadata editorial.
-          Existing listening links and artwork are preserved.
+          Existing listening links are preserved.
         </p>
         <ul>
           {sources.map((s) => (

@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { SongArtwork } from "@/components/song-artwork";
 import type { Route } from "next";
 import { useEffect, useState } from "react";
 import { pageSize, type LeaderSort } from "@/lib/leaderboard-query";
@@ -144,15 +143,11 @@ export function LiveLeaderboard({
           <Link className="leader-row" href={`/songs/${s.id}`} key={s.id}>
             <b>{s.matchupCount ? (page - 1) * pageSize + i + 1 : "—"}</b>
             <div className="leader-song">
-              <SongArtwork url={s.artworkUrl} title={s.title} size={48} decorative />
               <div>
                 <strong>{s.title}</strong>
                 <small>
                   {s.artistName} · {s.releaseYear}
                 </small>
-                {s.artworkAttribution ? (
-                  <small>{s.artworkAttribution}</small>
-                ) : null}
               </div>
             </div>
             <span>

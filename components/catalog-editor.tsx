@@ -125,36 +125,6 @@ export function CatalogEditor({ songs }: { songs: Song[] }) {
               <option value="disabled">Disabled</option>
             </select>
           </label>
-          <label>
-            Artwork HTTPS URL (optional)
-            <input
-              name="artworkUrl"
-              type="url"
-              maxLength={2000}
-              defaultValue={song?.artworkUrl ?? ""}
-            />
-          </label>
-          <label className="checkbox-label">
-            <input name="artworkPermission" type="checkbox" />I have permission
-            to display this artwork.
-          </label>
-          <label>
-            Artwork source HTTPS URL (optional)
-            <input
-              name="artworkSourceUrl"
-              type="url"
-              maxLength={2000}
-              defaultValue={song?.artworkSourceUrl ?? ""}
-            />
-          </label>
-          <label>
-            Artwork attribution (optional)
-            <input
-              name="artworkAttribution"
-              maxLength={1000}
-              defaultValue={song?.artworkAttribution ?? ""}
-            />
-          </label>
           {(["youtube", "spotify", "apple_music", "musicbrainz"] as const).map(
             (provider) => {
               const p = song?.providers.find((p) => p.provider === provider);

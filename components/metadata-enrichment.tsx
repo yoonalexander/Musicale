@@ -6,7 +6,6 @@ import {
   enrichSongMetadata,
   retryMetadata,
   reviewMetadata,
-  authorizeMetadataArtwork,
 } from "@/app/metadata-actions";
 import type { MetadataCandidate } from "@/lib/metadata-enrichment";
 type Job = {
@@ -15,19 +14,11 @@ type Job = {
   attempts: number;
   error: string | null;
   candidates: MetadataCandidate[];
-  artwork_permission: {
-    status?: string;
-    basis?: string;
-    evidence?: string;
-    scope?: string;
-    attribution?: string;
-  } | null;
   songs: {
     title: string;
     artist_name: string;
     album_name: string;
     release_year: number;
-    artwork_url: string | null;
   };
 };
 type Run = (action: () => Promise<unknown>) => void;
@@ -42,8 +33,6 @@ function JobReview({
   pending: boolean;
   run: Run;
 }) {
-  const cover = job.candidates[0]?.artwork;
-  const permission = job.artwork_permission;
   return (
     <details>
       <summary>
@@ -51,17 +40,9 @@ function JobReview({
       </summary>
       <p>
         Current: {job.songs.artist_name} · {job.songs.album_name} ·{" "}
-        {job.songs.release_year}. Artwork:{" "}
-        {job.songs.artwork_url ? "published" : "not published"}; rights:{" "}
-        {permission?.status ?? "pending"}.
+        {job.songs.release_year}.
       </p>
-      {job.error ? (
-        <p role="alert">
-          {job.error.startsWith("Artwork lookup failed:")
-            ? `Recording match saved. No need to review this match again. ${job.error}`
-            : job.error}
-        </p>
-      ) : null}
+      {job.error ? <p role="alert">{job.error}</p> : null}
       <button
         disabled={pending}
         onClick={() => run(() => retryMetadata(job.song_id))}
@@ -77,7 +58,7 @@ function JobReview({
           })
         }
       >
-        Refresh metadata and artwork now
+        Refresh metadata now
       </button>
       <form action={(form) => run(() => reviewMetadata(form))}>
         <input type="hidden" name="songId" value={job.song_id} />
@@ -162,94 +143,6 @@ function JobReview({
         </label>
         <button disabled={pending}>Save reviewed association</button>
       </form>
-      <h3>Artwork permission</h3>
-      <p>
-        CAA availability and its “approved” flag identify an image; they do not
-        grant reuse rights. Attribution alone is insufficient. Keep the
-        placeholder unless rights cover this exact image and Musicale’s use.
-      </p>
-      {cover ? (
-        <p>
-          <a href={cover.sourceUrl} target="_blank" rel="noopener noreferrer">
-            Review cover source
-          </a>{" "}
-          ·{" "}
-          {cover.imageId
-            ? `Image ID ${cover.imageId}`
-            : "Refresh to pin the exact image before approval."}
-        </p>
-      ) : (
-        <p>No cover found for this association.</p>
-      )}
-      {permission?.evidence ? (
-        <p>
-          Recorded evidence:{" "}
-          <a
-            href={permission.evidence}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            rights evidence
-          </a>{" "}
-          · {permission.scope}
-        </p>
-      ) : null}
-      {cover?.imageId && !job.songs.artwork_url ? (
-        <form action={(form) => run(() => authorizeMetadataArtwork(form))}>
-          <input name="songId" type="hidden" value={job.song_id} />
-          <input name="decision" type="hidden" value="authorized" />
-          <label>
-            Rights basis
-            <select name="basis" required>
-              <option value="">Choose a documented basis</option>
-              <option value="direct_permission">
-                Direct permission from the rights holder
-              </option>
-              <option value="open_license">Image-specific open license</option>
-              <option value="public_domain">Verified public domain</option>
-              <option value="owned">Artwork owned by Musicale</option>
-            </select>
-          </label>
-          <label>
-            Permission evidence URL
-            <input name="evidence" type="url" required maxLength={2000} />
-          </label>
-          <label>
-            What permits this exact image on Musicale?
-            <textarea name="scope" minLength={20} maxLength={2000} required />
-          </label>
-          <label>
-            Required attribution and license
-            <input name="attribution" required maxLength={1000} />
-          </label>
-          <label>
-            <input name="permission" type="checkbox" required />I verified this
-            evidence permits the stated use; public availability and attribution
-            are not my basis.
-          </label>
-          <button disabled={pending}>Publish permitted cover</button>
-        </form>
-      ) : null}
-      <div className="actions">
-        {["pending", "rejected"].map((decision) => (
-          <button
-            key={decision}
-            disabled={pending}
-            onClick={() =>
-              run(async () => {
-                const form = new FormData();
-                form.set("songId", job.song_id);
-                form.set("decision", decision);
-                return authorizeMetadataArtwork(form);
-              })
-            }
-          >
-            {decision === "pending"
-              ? "Leave rights pending"
-              : "Reject or withdraw cover permission"}
-          </button>
-        ))}
-      </div>
     </details>
   );
 }
@@ -280,14 +173,7 @@ export function MetadataEnrichment({
         )
           throw new Error(String(result.error));
         await reload();
-        setNotice(
-          result &&
-            typeof result === "object" &&
-            "warning" in result &&
-            result.warning
-            ? String(result.warning)
-            : "Metadata work saved.",
-        );
+        setNotice("Metadata work saved.");
       } catch (error) {
         setNotice(
           error instanceof Error ? error.message : "Metadata work failed.",
@@ -301,12 +187,7 @@ export function MetadataEnrichment({
   );
   const shown = jobs.filter(
     (job) =>
-      (filter === "all" ||
-        (filter === "artwork"
-          ? !job.songs.artwork_url &&
-            Boolean(job.candidates[0]?.artwork) &&
-            job.artwork_permission?.status !== "rejected"
-          : job.status === filter)) &&
+      (filter === "all" || job.status === filter) &&
       `${names[job.song_id]} ${job.songs.artist_name}`
         .toLowerCase()
         .includes(search.toLowerCase()),
@@ -316,8 +197,7 @@ export function MetadataEnrichment({
       <h2>Album metadata</h2>
       <p>
         Fill missing fields automatically; review conflicts before changing
-        editorial metadata. Match scores are rules, not probabilities. Artwork
-        publication requires separate image-specific rights evidence.
+        editorial metadata. Match scores are rules, not probabilities.
       </p>
       <p>
         {Object.entries(counts)
@@ -349,7 +229,6 @@ export function MetadataEnrichment({
         Review queue
         <select value={filter} onChange={(e) => setFilter(e.target.value)}>
           <option value="review">Matches needing review</option>
-          <option value="artwork">Covers awaiting permission</option>
           <option value="unmatched">Unmatched songs</option>
           <option value="failed">Failed jobs</option>
           <option value="queued">Queued jobs</option>
@@ -362,15 +241,10 @@ export function MetadataEnrichment({
         <input value={search} onChange={(e) => setSearch(e.target.value)} />
       </label>
       <details open>
-        <summary>Review matches, artwork and failures ({shown.length})</summary>
+        <summary>Review matches and failures ({shown.length})</summary>
         {shown.map((job) => (
           <JobReview
-            key={
-              job.song_id +
-              job.status +
-              JSON.stringify(job.artwork_permission) +
-              job.candidates[0]?.artwork?.imageId
-            }
+            key={job.song_id + job.status}
             job={job}
             name={names[job.song_id] ?? job.song_id}
             pending={pending}

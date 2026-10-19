@@ -265,10 +265,6 @@ export default async function Admin({
                 defaultValue={JSON.stringify(example, null, 2)}
               />
             </label>
-            <label className="checkbox-label">
-              <input name="artworkPermission" type="checkbox" />I have
-              permission to display any artwork supplied in this import.
-            </label>
             <p>
               CSV uses the same field names as JSON; the providers column
               contains a quoted JSON array.{" "}
