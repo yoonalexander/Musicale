@@ -25,6 +25,29 @@ globalThis.fetch = async (input, init) => {
       : new Response(null, { status: 404 });
   }
   if (
+    url.origin === "https://musicbrainz.org" &&
+    url.pathname.startsWith("/ws/2/release/")
+  ) {
+    const id = url.pathname.split("/").at(-1);
+    const release = records
+      .flatMap((r) => r.releases ?? [])
+      .find((r) => r.id === id);
+    if (!release)
+      throw new Error("Unknown release fixture; never call the live provider.");
+    return Response.json({
+      ...release,
+      media: [
+        {
+          tracks: records
+            .filter((r) =>
+              (r.releases ?? []).some((release) => release.id === id),
+            )
+            .map((r) => ({ recording: { id: r.id } })),
+        },
+      ],
+    });
+  }
+  if (
     url.origin === "https://www.googleapis.com" &&
     url.pathname.startsWith("/youtube/v3/")
   ) {
@@ -75,7 +98,13 @@ globalThis.fetch = async (input, init) => {
   ) {
     const id = url.pathname.split("/").at(-1);
     const record = records.find((r) => r.id === id);
-    if (record) return Response.json(record);
+    if (record)
+      return Response.json(
+        // Exercise a selected edition outside the recording lookup's 25-release window.
+        url.searchParams.get("inc")?.includes("release-groups")
+          ? { ...record, releases: [] }
+          : record,
+      );
     if (url.searchParams.get("query") === "Musicale Fixture")
       return Response.json({
         recordings: records.map(({ relations, ...r }) => r),

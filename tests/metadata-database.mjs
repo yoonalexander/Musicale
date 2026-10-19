@@ -134,9 +134,12 @@ try {
     "https://example.org/manual.jpg",
   );
   await db.sql(asUser(1, "select retry_song_metadata('respect-aretha')"));
-  await db.sql(
-    "set role service_role;select claim_song_metadata('respect-aretha');reset role;",
+  const retained = JSON.parse(
+    await db.sql(
+      "set role service_role;select claim_song_metadata('respect-aretha');reset role;",
+    ),
   );
+  assert.deepEqual(retained.candidates, [selected]);
   await db.sql(
     "update song_metadata_jobs set lease_until=now()-interval '1 second' where song_id='respect-aretha'",
   );

@@ -23,7 +23,9 @@ export async function runMetadataJob(
     }
     throw new Error("Metadata provider is busy.");
   });
-  let candidates: MetadataCandidate[] = [],
+  let candidates: MetadataCandidate[] = Array.isArray(job.candidates)
+      ? job.candidates
+      : [],
     selected: MetadataCandidate | null = null,
     failure: string | null = null;
   let status = "failed";
@@ -40,10 +42,12 @@ export async function runMetadataJob(
         selection.recordingId,
         selection.releaseId,
       );
-      if (!selected)
+      if (!selected) {
+        status = "review";
         throw new Error(
-          "Recording or edition does not match the song title and artist, or is an alternate version.",
+          "The selected recording and edition could not be verified. Choose another candidate or refresh metadata.",
         );
+      }
       Object.assign(selected, { reviewedByAdmin: true });
       candidates = [selected];
     } else if (job.song.recording_id || previous?.recordingId) {

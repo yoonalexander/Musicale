@@ -182,6 +182,59 @@ test("API reserves every MB request and caches duplicate lookups", async () => {
     globalThis.fetch = original;
   }
 });
+
+test("a selected edition omitted from a recording lookup is verified through its track list", async () => {
+  const original = globalThis.fetch;
+  let slots = 0;
+  const calls: string[] = [];
+  globalThis.fetch = async (input) => {
+    const url = new URL(String(input));
+    calls.push(url.pathname);
+    return Response.json(
+      url.pathname.includes("/release/")
+        ? {
+            ...record.releases[0],
+            media: [{ tracks: [{ recording: { id } }] }],
+          }
+        : { ...record, releases: [] },
+    );
+  };
+  try {
+    const result = await metadataApi(async () => {
+      slots++;
+    }).lookup(song, id, releaseId);
+    assert.equal(result?.recordingId, id);
+    assert.equal(result?.releaseId, releaseId);
+    assert.equal(slots, 2);
+    assert.deepEqual(calls, [
+      `/ws/2/recording/${id}`,
+      `/ws/2/release/${releaseId}`,
+    ]);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("a selected edition must actually contain the requested recording", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async (input) =>
+    Response.json(
+      String(input).includes("/release/")
+        ? {
+            ...record.releases[0],
+            media: [{ tracks: [{ recording: { id: groupId } }] }],
+          }
+        : { ...record, releases: [] },
+    );
+  try {
+    assert.equal(
+      await metadataApi(async () => {}).lookup(song, id, releaseId),
+      null,
+    );
+  } finally {
+    globalThis.fetch = original;
+  }
+});
 test("throttled requests reserve a new slot before retry", async () => {
   const original = globalThis.fetch;
   let calls = 0,

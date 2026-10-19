@@ -89,3 +89,70 @@ test("an empty queue makes no provider request", async () => {
     globalThis.fetch = original;
   }
 });
+
+test("review validation failures and provider outages retain candidates", async () => {
+  const original = globalThis.fetch;
+  const candidate = { recordingId: id, releaseId: release, title: "Africa" };
+  let saved: any;
+  const db = {
+    rpc: async (name: string, args: any) => {
+      if (name === "claim_song_metadata")
+        return {
+          data: {
+            song: {
+              id: "africa",
+              title: "Africa",
+              artist_name: "Toto",
+              album_name: "Toto IV",
+              release_year: 1982,
+              genre: "Rock",
+            },
+            candidates: [candidate],
+            lease: id,
+          },
+        };
+      if (name === "reserve_catalog_provider_call") return { data: true };
+      if (name === "finish_song_metadata") {
+        saved = args;
+        return { error: null };
+      }
+      throw new Error(`Unexpected RPC ${name}`);
+    },
+  };
+  globalThis.fetch = async () =>
+    Response.json({
+      id,
+      title: "Africa",
+      "artist-credit": [{ name: "Toto" }],
+      releases: [],
+    });
+  try {
+    assert.equal(
+      (
+        await runMetadataJob(db, "africa", {
+          recordingId: id,
+          releaseId: release,
+        })
+      ).status,
+      "review",
+    );
+    assert.deepEqual(saved.p_candidates, [candidate]);
+    assert.equal(saved.p_selected, null);
+    globalThis.fetch = async () => {
+      throw new Error("Provider connection failed");
+    };
+    assert.equal(
+      (
+        await runMetadataJob(db, "africa", {
+          recordingId: id,
+          releaseId: release,
+        })
+      ).status,
+      "failed",
+    );
+    assert.deepEqual(saved.p_candidates, [candidate]);
+    assert.equal(saved.p_selected, null);
+  } finally {
+    globalThis.fetch = original;
+  }
+});

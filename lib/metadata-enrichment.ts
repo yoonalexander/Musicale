@@ -339,11 +339,28 @@ export function metadataApi(reserve: () => Promise<void>) {
       const record = await request(
         `https://musicbrainz.org/ws/2/recording/${metadataId(id)}?fmt=json&inc=artist-credits+releases+release-groups+isrcs${song.genre ? "" : "+genres"}`,
       );
-      if (releaseId)
-        record.releases = (record.releases ?? []).filter(
-          (r: RecordData) => r.id === metadataId(releaseId),
-        );
-      const candidate = rankMetadata(song, [record])[0];
+      let releases = record.releases ?? [];
+      if (releaseId) {
+        const editionId = metadataId(releaseId);
+        let edition = releases.find((r: RecordData) => r.id === editionId);
+        // Recording lookups include only 25 releases; verify an omitted edition directly.
+        if (!edition) {
+          edition = await request(
+            `https://musicbrainz.org/ws/2/release/${editionId}?fmt=json&inc=recordings+release-groups`,
+          );
+          if (
+            edition.id !== editionId ||
+            !(edition.media ?? []).some((medium: RecordData) =>
+              (medium.tracks ?? []).some(
+                (track: RecordData) => track.recording?.id === record.id,
+              ),
+            )
+          )
+            return null;
+        }
+        releases = [edition];
+      }
+      const candidate = rankMetadata(song, [{ ...record, releases }])[0];
       if (!candidate) return null;
       return {
         ...candidate,
