@@ -3,6 +3,7 @@ import { useFormStatus } from "react-dom";
 import { useEffect, useRef } from "react";
 import { submitPlayGuess } from "@/app/play/actions";
 import { SongChoice } from "@/components/song-choice";
+import { NewPlayButton } from "@/components/play-session";
 import type { RankPair, RankSong } from "@/lib/rank";
 import type { PlayState } from "@/lib/play";
 
@@ -44,29 +45,61 @@ export function PlayPair({
 }
 export function PlayResult({
   answer,
-  earlier,
 }: {
   answer: NonNullable<PlayState["answer"]>;
-  earlier: boolean;
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus();
   }, [answer.id]);
+  if (!answer.correct) {
+    const songs = [
+      { title: answer.titleA, rating: answer.ratingA },
+      { title: answer.titleB, rating: answer.ratingB },
+    ];
+    const higherRating = Math.max(answer.ratingA, answer.ratingB);
+    return (
+      <section className="panel play-loss" aria-label="Saved answer">
+        <header>
+          <h2 ref={heading} tabIndex={-1}>
+            Run complete
+          </h2>
+          <p role="status">Your pick had the lower rating.</p>
+        </header>
+        <div className="play-loss-songs">
+          {songs.map((song, index) => {
+            const higher = song.rating === higherRating;
+            return (
+              <div
+                className={`play-loss-song${higher ? " is-higher" : ""}`}
+                key={index}
+              >
+                <p className="play-loss-label">
+                  {higher ? "Higher rated" : "Your pick"}
+                </p>
+                <h3>{song.title}</h3>
+                <p className="play-loss-rating">
+                  <strong>{song.rating}</strong> Elo
+                </p>
+              </div>
+            );
+          })}
+        </div>
+        <p className="play-loss-caption">Ratings at the start of this round.</p>
+        <NewPlayButton>
+          Play again <span aria-hidden="true">→</span>
+        </NewPlayButton>
+      </section>
+    );
+  }
   return (
     <section className="panel play-result" aria-label="Saved answer">
       <h2 ref={heading} tabIndex={-1}>
-        {earlier
-          ? "Earlier saved answer"
-          : answer.correct
-            ? "Correct!"
-            : "Run complete"}
+        Correct!
       </h2>
       <p role="status">
-        {answer.correct
-          ? "Correct guess. One point earned."
-          : "That was the lower-rated song. Your run has ended."}{" "}
-        Score after this answer: {answer.scoreAfter}.
+        Correct guess. One point earned. Score after this answer:{" "}
+        {answer.scoreAfter}.
       </p>
       <p>
         {answer.titleA}: {answer.ratingA} Elo · {answer.titleB}:{" "}

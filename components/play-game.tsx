@@ -25,6 +25,7 @@ export async function PlayGame({
     state?.run.status === "paused" || (state?.run.status === "active" && !pair);
   const emptyRun =
     !pair && state?.run.score === 0 && state.run.reason === "insufficient";
+  const answer = state?.answer?.runId === state?.run.id ? state?.answer : null;
   const Session = isDemoMode() ? PassThrough : PlaySession;
   return (
     <Session runId={state?.run.id}>
@@ -44,23 +45,11 @@ export async function PlayGame({
         {state && !emptyRun ? (
           <p className="play-score">
             <span aria-label="Run score">
-              Run score: <strong>{state.run.score}</strong>
-            </span>
-            <span className="play-round-number">
-              {state.round
-                ? `Round ${state.round.number}`
-                : state.run.status === "ended"
-                  ? "Final score"
-                  : "Final score"}
+              Run Score: <strong>{state.run.score}</strong>
             </span>
           </p>
         ) : null}
-        {state?.answer && state.answer.runId === state.run.id ? (
-          <PlayResult
-            answer={state.answer}
-            earlier={state.answer.runId !== state.run.id}
-          />
-        ) : null}
+        {answer ? <PlayResult answer={answer} /> : null}
         {isDemoMode() ? (
           <section className="panel">
             <h2>Explore the music.</h2>
@@ -71,7 +60,7 @@ export async function PlayGame({
           </section>
         ) : pair ? (
           <PlayPair key={pair.id} pair={pair} returnTo={returnTo} />
-        ) : (
+        ) : answer && !answer.correct ? null : (
           <section className="panel play-ready">
             <h2>
               {unavailable || emptyRun

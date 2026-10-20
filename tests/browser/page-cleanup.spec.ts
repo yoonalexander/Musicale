@@ -196,22 +196,22 @@ test("Play starts fresh on reload, a new tab, and restored navigation; unavailab
   const round = page.locator('input[name="roundId"]');
   const choices = page.locator('form.matchup button[name="selectedSongId"]');
   await expect(choices).toHaveCount(2);
-  await expect(page.getByLabel("Run score")).toHaveText("Run score: 0");
+  await expect(page.getByLabel("Run score")).toHaveText("Run Score: 0");
   const first = await round.inputValue();
   await choices.first().click();
-  await expect(page.getByLabel("Run score")).toHaveText("Run score: 1");
+  await expect(page.getByLabel("Run score")).toHaveText("Run Score: 1");
   await expect(round).not.toHaveValue(first);
   const scored = await round.inputValue();
   await page.reload();
   await expect(round).not.toHaveValue(scored);
-  await expect(page.getByLabel("Run score")).toHaveText("Run score: 0");
+  await expect(page.getByLabel("Run score")).toHaveText("Run Score: 0");
   const beforeClose = await round.inputValue();
   await page.close();
   const reopened = await context.newPage();
   await reopened.goto("/");
   const freshRound = reopened.locator('input[name="roundId"]');
   await expect(freshRound).not.toHaveValue(beforeClose);
-  await expect(reopened.getByLabel("Run score")).toHaveText("Run score: 0");
+  await expect(reopened.getByLabel("Run score")).toHaveText("Run Score: 0");
   const beforeRestore = await freshRound.inputValue();
   await reopened.evaluate(() =>
     window.dispatchEvent(
@@ -238,4 +238,67 @@ test("Play starts fresh on reload, a new tab, and restored navigation; unavailab
       "http://127.0.0.1:55329/__fixture/play-available?value=true",
     );
   }
+});
+
+test("Play shows one clear loss result with captured ratings and starts a new run on replay", async ({
+  page,
+}, info) => {
+  await page.goto("/");
+  const choices = page.locator('form.matchup button[name="selectedSongId"]');
+  const score = page.locator(".play-score");
+  await expect(choices).toHaveCount(2);
+  await expect(score).toHaveText("Run Score: 0");
+  await choices.first().click();
+  await expect(score).toHaveText("Run Score: 1");
+  await choices.last().click();
+  const result = page.getByRole("region", { name: "Saved answer" });
+  await expect(
+    result.getByRole("heading", { name: "Run complete", exact: true }),
+  ).toBeFocused();
+  await expect(score).toHaveText("Run Score: 1");
+  await expect(page.locator("form.matchup, .play-ready")).toHaveCount(0);
+  await expect(result).not.toContainText(/Score after|Ready for another run/);
+  await expect(result.locator(".is-higher")).toContainText("Respect");
+  await expect(result.locator(".is-higher")).toContainText("1512 Elo");
+  await expect(result.locator(".play-loss-song:not(.is-higher)")).toContainText(
+    "Your pick",
+  );
+  await expect(result.locator(".play-loss-song:not(.is-higher)")).toContainText(
+    "God Only Knows",
+  );
+  await expect(result.locator(".play-loss-song:not(.is-higher)")).toContainText(
+    "1488 Elo",
+  );
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
+  await page.screenshot({
+    path: `output/${info.project.name}-play-loss.png`,
+    fullPage: true,
+  });
+  const viewport = page.viewportSize()!;
+  await page.setViewportSize({ width: 320, height: 900 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await expect(
+    result.getByRole("button", { name: "Play again", exact: true }),
+  ).toBeInViewport();
+  await page.setViewportSize(viewport);
+  await result.getByRole("button", { name: "Play again", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect(choices).toHaveCount(2);
+  await expect(score).toHaveText("Run Score: 0");
+  await expect(result).toHaveCount(0);
+  await choices.last().click();
+  await expect(
+    result.getByRole("heading", { name: "Run complete", exact: true }),
+  ).toBeFocused();
+  await expect(score).toHaveText("Run Score: 0");
 });

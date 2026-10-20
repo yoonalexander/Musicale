@@ -112,7 +112,12 @@ const server = createServer(async (req, res) => {
     const { p_round_id, p_selected_song_id } = JSON.parse(
       Buffer.concat(chunks).toString(),
     );
-    play.run.score++;
+    const correct = p_selected_song_id === songs[0].id;
+    if (correct) play.run.score++;
+    else {
+      play.run.status = "ended";
+      play.run.reason = "wrong";
+    }
     play.answer = {
       id: p_round_id,
       runId: play.run.id,
@@ -121,12 +126,12 @@ const server = createServer(async (req, res) => {
       ratingA: 1512,
       ratingB: 1488,
       selectedSongId: p_selected_song_id,
-      correct: true,
+      correct,
       scoreAfter: play.run.score,
-      replacementSlot: 1,
+      replacementSlot: correct ? 1 : null,
     };
-    play.round = playRound();
-    return send({ correct: true });
+    play.round = correct ? playRound() : null;
+    return send({ correct });
   }
   if (url.pathname === "/realtime/v1/websocket") {
     res.statusCode = 503;
