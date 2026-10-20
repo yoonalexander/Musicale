@@ -1,7 +1,11 @@
 import recordings from "@/data/authorized-recordings.json";
 import provenance from "@/data/audio-provenance.json";
 import type { AudioPreview } from "./audio";
-export { recordings as authorizedRecordings };
+// The retired open-license pack is kept only as permission/test evidence.
+// It must not be imported or rediscovered into the active catalog.
+export const authorizedRecordings = recordings.filter(
+  (recording) => recording.artistName !== "Kevin MacLeod",
+);
 type Recording = (typeof recordings)[number];
 export interface PreviewSong {
   id: string;
@@ -92,7 +96,7 @@ export async function discoverPreviews(songs: PreviewSong[]) {
     throw new Error(
       "Preview discovery requires a complete catalog below 1000 songs; add pagination before expanding this catalog.",
     );
-  const matched = recordings.flatMap((recording) => {
+  const matched = authorizedRecordings.flatMap((recording) => {
     const matches = songs.filter((s) => previewMatches(s, recording));
     return matches.length === 1 ? [{ recording, song: matches[0] }] : [];
   });

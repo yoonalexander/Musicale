@@ -9,8 +9,8 @@ export default function NotFound() {
         <Link className="button" href="/leaderboard">
           Browse the catalog
         </Link>
-        <Link className="button secondary" href="/today">
-          Visit Daily
+        <Link className="button secondary" href="/">
+          Play
         </Link>
       </div>
     </section>

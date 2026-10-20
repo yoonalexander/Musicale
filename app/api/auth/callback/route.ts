@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       const supabase = await getSupabaseServerClient();
       const result = await supabase?.auth.exchangeCodeForSession(code);
       if (result && !result.error)
-        return NextResponse.redirect(`${getSiteUrl()}/today`);
+        return NextResponse.redirect(`${getSiteUrl()}/`);
     } catch {
       return NextResponse.redirect(
         `${getSiteUrl()}/login?message=${encodeURIComponent("Sign-in is temporarily unavailable. Please request a new link shortly.")}`,

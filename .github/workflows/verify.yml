@@ -28,6 +28,7 @@ jobs:
           pactl set-default-sink musicale_test
       - name: Start isolated local backend
         run: npm run local:start > /tmp/musicale-supabase.log 2>&1
+      - run: npm run test:ui:cleanup
       - run: npm run verify
       - run: npm audit
       - name: Browser failure evidence

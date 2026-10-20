@@ -117,7 +117,7 @@ function Video({
               target.getIframe().title = `YouTube player: ${title}`;
               target.getIframe().referrerPolicy =
                 "strict-origin-when-cross-origin";
-              setStatus("Ready. Press play in the YouTube player.");
+              setStatus("");
               if (Date.now() < trackingUntil) track("youtube_player_ready");
             },
             onStateChange({ target, data }) {
@@ -221,19 +221,6 @@ function Video({
           onClick={() => setAttempt((n) => n + 1)}
         >
           Retry YouTube player
-        </button>
-      ) : null}
-      {enabled ? (
-        <button
-          type="button"
-          className="text-button"
-          onClick={() => {
-            setEnabled(false);
-            setError("");
-            setStatus("");
-          }}
-        >
-          Unload YouTube player
         </button>
       ) : null}
     </section>

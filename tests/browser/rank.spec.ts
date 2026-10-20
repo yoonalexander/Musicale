@@ -2,7 +2,7 @@ import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import { runSql, signIn } from "../browser-helpers";
 
-test("Rank: repeated pairs, shared pending controls, live Elo, private paginated history and independent Daily", async ({
+test("Rank: repeated pairs, shared pending controls, live Elo, private paginated history", async ({
   page,
   request,
   browser,
@@ -14,15 +14,11 @@ test("Rank: repeated pairs, shared pending controls, live Elo, private paginated
   await expect(
     page.getByRole("heading", { name: "Which song do you prefer?" }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Get a pair" })).toBeEnabled();
+  await expect(page.locator("form.matchup")).toBeVisible();
   await signIn(page, request, email);
   const uid = runSql(`select id from auth.users where email='${email}'`);
   await page.getByRole("link", { name: "Rank", exact: true }).click();
   await expect(page).toHaveURL(/\/rank$/);
-  expect(
-    runSql(`select count(*) from rank_comparisons where user_id='${uid}'`),
-  ).toBe("0");
-  await page.getByRole("button", { name: "Get a pair", exact: true }).click();
   const form = page.locator("form.matchup"),
     buttons = form.locator('button[name="selectedSongId"]');
   await expect(buttons).toHaveCount(2);
@@ -86,7 +82,7 @@ test("Rank: repeated pairs, shared pending controls, live Elo, private paginated
       "Your preference is saved.",
     );
     await expect(
-      board.locator(`.leader-row[href="/songs/${picked}"]`),
+      board.locator(`.leader-row[data-song-id="${picked}"]`),
     ).toContainText(`${beforeCount + 1} votes`, { timeout: 5000 });
     console.log(`RANK LIVE ${info.project.name}: ${Date.now() - began}ms`);
     const nextSongs = await buttons.evaluateAll((nodes) =>
@@ -130,16 +126,6 @@ test("Rank: repeated pairs, shared pending controls, live Elo, private paginated
     await expect(form.locator('input[name="comparisonId"]')).not.toHaveValue(
       secondId,
     );
-    await page.goto("/today");
-    await page
-      .getByRole("button", { name: "Vote for Respect", exact: true })
-      .click();
-    await expect(page.locator(".result")).toBeVisible();
-    expect(
-      runSql(
-        `select total_votes||','||current_streak from profiles where user_id='${uid}'`,
-      ),
-    ).toBe("1,1");
     await page.goto("/profile");
     await expect(
       page.getByText("2 continuous preferences.", { exact: false }),
@@ -186,7 +172,7 @@ test("Rank: expired and unavailable pairs recover honestly; another account cann
   await signIn(page, request, email);
   const uid = runSql(`select id from auth.users where email='${email}'`);
   await page.goto("/rank");
-  await page.getByRole("button", { name: "Get a pair", exact: true }).click();
+
   const form = page.locator("form.matchup"),
     buttons = form.locator('button[name="selectedSongId"]');
   await expect(buttons).toHaveCount(2);
@@ -201,7 +187,7 @@ test("Rank: expired and unavailable pairs recover honestly; another account cann
   expect(runSql(`select count(*) from rank_votes where user_id='${uid}'`)).toBe(
     "0",
   );
-  await page.getByRole("button", { name: "Get a pair", exact: true }).click();
+
   await expect(form.locator('input[name="comparisonId"]')).not.toHaveValue(id);
   const captured = page.waitForRequest(
     (r) => r.method() === "POST" && new URL(r.url()).pathname === "/rank",
@@ -252,10 +238,6 @@ test("Rank: expired and unavailable pairs recover honestly; another account cann
   try {
     runSql("update songs set status='unavailable'");
     await page.goto("/rank");
-    await expect(
-      page.getByRole("button", { name: "Get a pair", exact: true }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Get a pair", exact: true }).click();
     await expect(page.locator("main").getByRole("alert")).toContainText(
       "No fresh pair",
     );

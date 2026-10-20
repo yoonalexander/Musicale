@@ -5,18 +5,21 @@ export const metadata = {
 };
 import Link from "next/link";
 import { getLeaderboard, isDemoMode } from "@/lib/data";
-import { leaderboardQuery } from "@/lib/leaderboard-query";
+import { leaderboardQuery, pageSizes } from "@/lib/leaderboard-query";
 import { LiveLeaderboard } from "@/components/live-leaderboard";
 export default async function Leaderboard({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const { page, sort, minimum, filters } = leaderboardQuery(await searchParams);
+  const { page, sort, minimum, filters, pageSize } = leaderboardQuery(
+    await searchParams,
+  );
   const { genre, artist } = filters;
-  const initial = await getLeaderboard(page, sort, minimum, filters);
+  const initial = await getLeaderboard(page, sort, minimum, filters, pageSize);
   const query = new URLSearchParams({
     sort,
+    pageSize: String(pageSize),
     minimum: String(minimum),
     genre,
     artist,
@@ -99,13 +102,28 @@ export default async function Leaderboard({
             ))}
           </select>
         </label>
-        <button className="button secondary">Apply</button>
-        <Link href="/leaderboard">Clear filters</Link>
+        <label>
+          Songs per page
+          <select name="pageSize" defaultValue={pageSize}>
+            {pageSizes.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="filter-actions">
+          <button className="button secondary">Apply</button>
+          <Link className="button secondary" href="/leaderboard">
+            Clear filters
+          </Link>
+        </div>
       </form>
       <LiveLeaderboard
         key={query.toString() + page}
         initial={initial}
         page={page}
+        pageSize={pageSize}
         sort={sort}
         query={query.toString()}
         live={!isDemoMode()}

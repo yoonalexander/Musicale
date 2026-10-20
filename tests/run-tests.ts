@@ -350,6 +350,11 @@ run("leaderboard queries share bounded public filters", () => {
     decade: "1991",
   });
   assert.equal(query.page, 1);
+  assert.equal(query.pageSize, 25);
+  for (const size of [25, 50, 100, 500])
+    assert.equal(leaderboardQuery({ pageSize: String(size) }).pageSize, size);
+  for (const size of ["-1", "0", "51", "10000", "50songs"])
+    assert.equal(leaderboardQuery({ pageSize: size }).pageSize, 25);
   assert.equal(query.sort, "rating");
   assert.equal(query.minimum, 100000);
   assert.equal(query.filters.genre, "Soul");

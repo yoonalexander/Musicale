@@ -40,7 +40,6 @@ test("onboarding, honest initial ratings, support, metadata and missing pages", 
   await page.keyboard.press("Enter");
   await expect(page.locator("main")).toBeFocused();
   for (const [path, title] of [
-    ["/today", "Today’s matchup"],
     ["/leaderboard", "Live leaderboard"],
     ["/login", "Sign in"],
     ["/privacy", "Privacy and analytics"],
@@ -91,55 +90,6 @@ test("onboarding, honest initial ratings, support, metadata and missing pages", 
   });
 });
 
-test("both vote controls lock while pending, then preserve saved choice and focused results", async ({
-  page,
-  request,
-}) => {
-  await signIn(
-    page,
-    request,
-    "phase5-vote-" + crypto.randomUUID() + "@example.test",
-  );
-  let release!: () => void;
-  const gate = new Promise<void>((resolve) => (release = resolve));
-  await page.route("**/today", async (route) => {
-    if (route.request().method() === "POST") await gate;
-    await route.continue();
-  });
-  try {
-    await page
-      .getByRole("button", { name: "Vote for God Only Knows", exact: true })
-      .focus();
-    await page.keyboard.press("Enter");
-    await expect(
-      page.getByRole("button", { name: "Recording…", exact: true }),
-    ).toHaveCount(2);
-    for (const button of await page
-      .getByRole("button", { name: "Recording…", exact: true })
-      .all())
-      await expect(button).toBeDisabled();
-    release();
-    await expect(
-      page.getByText("Vote recorded", { exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: /chose the same song/ }),
-    ).toBeFocused();
-    await expect(page.locator(".result-counts")).toContainText("Respect");
-    await expect(page.locator(".result-counts")).toContainText(
-      "God Only Knows",
-    );
-    await expect(page.getByText(/Voting resets at 00:00 UTC/)).toBeVisible();
-    await page.reload();
-    await expect(page.locator(".song-choice.chosen")).toContainText(
-      "God Only Knows",
-    );
-  } finally {
-    release();
-    await page.unroute("**/today");
-  }
-});
-
 test("larger ranking catalog covers every sort and filter with visible mobile statistics", async ({
   page,
 }, info) => {
@@ -158,20 +108,18 @@ test("larger ranking catalog covers every sort and filter with visible mobile st
     for (const sort of ["rating", "wins", "votes", "movement"]) {
       await page.goto("/leaderboard?artist=" + prefix + "&sort=" + sort);
       await expect(page.locator(".leader-row")).toHaveCount(25);
-      await expect(page.locator(".leader-row").first()).toHaveAttribute(
-        "href",
-        "/songs/" + prefix + "-60",
-      );
+      await expect(
+        page.locator(".leader-row").first().locator(".leader-song-title"),
+      ).toHaveAttribute("href", "/songs/" + prefix + "-60");
       await expect(page.getByLabel("Sort by")).toHaveValue(sort);
     }
     await page.getByRole("link", { name: "Next", exact: true }).click();
     await expect(page.locator(".pagination")).toContainText(
       "Page 2 · 60 songs",
     );
-    await expect(page.locator(".leader-row").first()).toHaveAttribute(
-      "href",
-      "/songs/" + prefix + "-35",
-    );
+    await expect(
+      page.locator(".leader-row").first().locator(".leader-song-title"),
+    ).toHaveAttribute("href", "/songs/" + prefix + "-35");
     await page.getByRole("link", { name: "Next", exact: true }).click();
     await expect(page.locator(".leader-row")).toHaveCount(10);
     await page.getByRole("link", { name: "Previous", exact: true }).click();

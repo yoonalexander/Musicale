@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     siteName: "Musicale",
     title: "Musicale — Two songs. One good instinct.",
     description:
-      "Guess the higher-rated song, rank your favorites, or join the Daily vote. Play without signing up.",
+      "Guess the higher-rated song or rank your favorites. Play without signing up.",
     url: "/",
   },
   twitter: {

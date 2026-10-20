@@ -2,18 +2,20 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useState } from "react";
-import { pageSize, type LeaderSort } from "@/lib/leaderboard-query";
+import { type LeaderSort } from "@/lib/leaderboard-query";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Song } from "@/types/domain";
 export function LiveLeaderboard({
   initial,
   page,
+  pageSize,
   sort,
   query,
   live,
 }: {
   initial: { songs: Song[]; total: number };
   page: number;
+  pageSize: number;
   sort: LeaderSort;
   query: string;
   live: boolean;
@@ -140,14 +142,32 @@ export function LiveLeaderboard({
           <span>Rating</span>
         </div>
         {songs.map((s, i) => (
-          <Link className="leader-row" href={`/songs/${s.id}`} key={s.id}>
-            <b>{s.matchupCount ? (page - 1) * pageSize + i + 1 : "—"}</b>
+          <div className="leader-row" key={s.id} data-song-id={s.id}>
+            <b className={s.matchupCount ? undefined : "unranked"}>
+              {s.matchupCount ? (page - 1) * pageSize + i + 1 : "unranked"}
+            </b>
             <div className="leader-song">
               <div>
-                <strong>{s.title}</strong>
+                <Link href={`/songs/${s.id}`} className="leader-song-title">
+                  <strong>{s.title}</strong>
+                </Link>
                 <small>
                   {s.artistName} · {s.releaseYear}
                 </small>
+                <a
+                  className="leader-listen"
+                  href={
+                    s.providers.find(
+                      (provider) => provider.provider === "youtube",
+                    )?.externalUrl ??
+                    `https://www.youtube.com/results?search_query=${encodeURIComponent(`${s.artistName} ${s.title}`)}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Listen on YouTube: ${s.title} by ${s.artistName}`}
+                >
+                  Listen on YouTube <span aria-hidden="true">↗</span>
+                </a>
               </div>
             </div>
             <span>
@@ -174,7 +194,7 @@ export function LiveLeaderboard({
                 </small>
               ) : null}
             </b>
-          </Link>
+          </div>
         ))}
       </div>
       {!songs.length ? <p>No songs match these filters.</p> : null}

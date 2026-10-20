@@ -29,14 +29,11 @@ export async function PlayGame({
   return (
     <section className="today game-stage play-stage">
       <div className="play-toolbar">
-        <p className="kicker">
-          Play <span>Unlimited runs</span>
-        </p>
+        <p className="kicker">Play</p>
         <HowToPlay autoOpen={Boolean(pair)} />
       </div>
       <header className="game-question">
         <h1>Which song is higher rated?</h1>
-        <p>Trust your instinct. Choose one.</p>
       </header>
       {params.error ? (
         <p className="notice" role="alert">
@@ -72,16 +69,7 @@ export async function PlayGame({
           </Link>
         </section>
       ) : pair ? (
-        <>
-          <PlayPair key={pair.id} pair={pair} returnTo={returnTo} />
-          <p className="round-expiry">
-            Ratings are locked for this round. Choose before{" "}
-            <time dateTime={pair.expiresAt}>
-              {new Date(pair.expiresAt).toISOString().slice(11, 16)} UTC
-            </time>
-            . Expiry preserves your points.
-          </p>
-        </>
+        <PlayPair key={pair.id} pair={pair} returnTo={returnTo} />
       ) : (
         <section className="panel play-ready">
           <h2>
@@ -132,13 +120,6 @@ export async function PlayGame({
           and account details.
         </p>
       ) : null}
-      <p className="mode-switch">
-        <Link href="/rank">Rank music</Link>
-        <span aria-hidden="true">·</span>
-        <Link href="/today">Visit Daily</Link>
-        <span aria-hidden="true">·</span>
-        <Link href="/leaderboard">Leaderboard</Link>
-      </p>
     </section>
   );
 }

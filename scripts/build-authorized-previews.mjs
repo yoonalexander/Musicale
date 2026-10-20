@@ -5,7 +5,11 @@ import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 const recordings = JSON.parse(
   readFileSync("data/authorized-recordings.json", "utf8"),
-);
+).filter((recording) => recording.artistName !== "Kevin MacLeod");
+if (!recordings.length) {
+  console.log("No active open-license recordings are configured.");
+  process.exit(0);
+}
 const converter = process.env.MUSICALE_FFMPEG;
 if (!converter)
   throw new Error(

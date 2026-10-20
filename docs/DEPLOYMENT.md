@@ -82,3 +82,29 @@ The production deployment is Ready and `/api/health` returns `{"status":"ready"}
 Hosted email delivery, a real authenticated vote, persistence after reload, streak changes and owner administration remain unverified until SMTP and an owner app account are available. No synthetic accounts or votes were created in production.
 
 Keep the editorial queue supplied, expand the catalog as desired, and use `/api/health` for a hosting monitor. No separate Render server is required by this Next.js/Supabase architecture. No paid plan or add-on was enabled during this setup.
+
+## October 20 Play, Rank, and leaderboard cleanup
+
+Production migration `20261020073710_retire_kevin_macleod.sql` was applied on
+October 20 before deploying this UI update.
+It disables the four Kevin MacLeod recordings and invalidates pending Rank pairs
+containing disabled songs, preserving votes, ratings and run history. The retired
+preview files now live under `tests/fixtures/retired-audio/`, outside public assets;
+the open-pack import and preview builder no longer publish them.
+
+Daily is retired: `/today` permanently redirects to Play. Authentication returns
+to Play. Rank prepares a standard pair on entry, after the welcome gate, and
+retains the issued pair on refresh. Leaderboard page sizes are validated against
+25, 50, 100 and 500 and are retained by live updates and pagination.
+
+`npm run test:ui:cleanup` exercises the UI with a local HTTP rendering fixture and
+no hosted writes. It checks desktop/mobile layout, automatic Rank loading,
+refresh and vote navigation, dialogs, reduced motion, all page sizes, YouTube
+links, filter geometry, footer alignment, and the Daily redirect. It does not
+replace `npm run test:db` or the full local-Supabase browser suite. On October 20,
+Docker Desktop could not start because its local socket files were inaccessible;
+database-backed checks must run in CI instead. Production verification after the
+migration confirmed 60 active songs, all four retired songs disabled, no pending
+Rank pairs containing them, and unchanged totals of 1 Daily vote, 18 Rank votes,
+and 19 rating events. Application deployment is tracked by the corresponding
+`main` commit and Vercel deployment check.

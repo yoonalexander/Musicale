@@ -3,9 +3,10 @@ import {
   previewMatches,
   normalizeCommonsPreview,
   discoverPreviews,
-  authorizedRecordings,
+  authorizedRecordings as activeRecordings,
 } from "../lib/preview-discovery";
 import commons from "./fixtures/commons-previews.json";
+import authorizedRecordings from "../data/authorized-recordings.json";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import provenance from "../data/audio-provenance.json";
@@ -160,7 +161,9 @@ await test("audio needs separate explicit authorization, availability, attributi
 });
 await test("reviewed open recordings match exact identities, reject ambiguous metadata and require current license evidence", async () => {
   for (const asset of provenance) {
-    const bytes = readFileSync(`public${asset.asset}`);
+    const bytes = readFileSync(
+      `tests/fixtures/retired-audio/${asset.providerRecordingId}.mp3`,
+    );
     assert.equal(
       createHash("sha256").update(bytes).digest("hex"),
       asset.assetSha256,
@@ -278,19 +281,20 @@ await test("reviewed open recordings match exact identities, reject ambiguous me
           })
         : Response.json(commons);
     };
-    assert.equal((await discoverPreviews([song])).length, 1);
-    assert.equal(calls, 1);
+    assert.equal(activeRecordings.length, 0);
+    assert.equal((await discoverPreviews([song])).length, 0);
+    assert.equal(calls, 0);
     assert.equal(
       (await discoverPreviews([song, { ...song, id: "duplicate" }])).length,
       0,
     );
-    assert.equal(calls, 1);
+    assert.equal(calls, 0);
     globalThis.fetch = async () => new Response(null, { status: 503 });
     await assert.rejects(
       discoverPreviews(Array(1000).fill(song)),
       /complete catalog/,
     );
-    await assert.rejects(discoverPreviews([song]), /unavailable/);
+    assert.deepEqual(await discoverPreviews([song]), []);
   } finally {
     globalThis.fetch = original;
   }

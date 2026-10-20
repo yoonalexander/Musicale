@@ -4,7 +4,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { isAuthSessionMissingError } from "@supabase/supabase-js";
 
 let starting: Promise<void> | null = null;
-async function guestSession() {
+export async function guestSession() {
   if (!starting)
     starting = (async () => {
       const db = getSupabaseBrowserClient();

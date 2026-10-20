@@ -6,7 +6,7 @@ import { runSql, signIn } from "../browser-helpers";
 import { localSettings } from "../local-env.mjs";
 const settings = localSettings();
 const row = (page: Page, id = "respect-aretha") =>
-  page.locator('.leader-row[href="/songs/' + id + '"]');
+  page.locator('.leader-row[data-song-id="' + id + '"]');
 async function ready(page: Page) {
   await expect(page.getByRole("status")).toContainText(
     "Live rankings connected",
@@ -212,10 +212,9 @@ test("live catalog imports, availability and rebuild retain filters, sort and pa
     await expect(page.locator(".pagination")).toContainText(
       "Page 2 · 30 songs",
     );
-    await expect(page.locator(".leader-row").first()).toHaveAttribute(
-      "href",
-      "/songs/" + songs[25].id,
-    );
+    await expect(
+      page.locator(".leader-row").first().locator(".leader-song-title"),
+    ).toHaveAttribute("href", "/songs/" + songs[25].id);
     await expect(page.getByLabel("Sort by")).toHaveValue("votes");
     const edit = await db.rpc("save_catalog", {
       p_songs: [{ ...songs[25], title: "Live edited title" }],
@@ -319,10 +318,7 @@ test("offline recovery, visible-tab refresh, failed reads and subscription clean
   await expect(row(page)).toContainText(initial + 2 + " votes");
   // Severed offline sockets need server-side cleanup; still require zero rows and one subscription after rejoining.
   for (let n = 0; n < 3; n++) {
-    await page
-      .getByRole("link", { name: "Daily", exact: true })
-      .first()
-      .click();
+    await page.getByRole("link", { name: "Play", exact: true }).first().click();
     await expect
       .poll(
         () =>

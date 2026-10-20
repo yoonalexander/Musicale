@@ -7,10 +7,11 @@ import {
   user,
 } from "./database-harness.mjs";
 import { validateSong } from "../lib/validation.ts";
-import {
-  normalizeCommonsPreview,
-  authorizedRecordings,
-} from "../lib/preview-discovery.ts";
+import { normalizeCommonsPreview } from "../lib/preview-discovery.ts";
+// Retired recordings are used only as isolated database permission fixtures.
+const authorizedRecordings = JSON.parse(
+  readFileSync("data/authorized-recordings.json", "utf8"),
+);
 const metadata = JSON.parse(
   readFileSync("tests/fixtures/commons-previews.json", "utf8"),
 );
@@ -44,7 +45,9 @@ try {
   await db.migrate(migrations().slice(audioIndex));
   await test("audio migration preserves all twenty catalog records, ratings and existing provider links", async () => {
     assert.equal(
-      await sql("select jsonb_agg(to_jsonb(s)-'metadata_details' order by id) from songs s"),
+      await sql(
+        "select jsonb_agg(to_jsonb(s)-'metadata_details' order by id) from songs s",
+      ),
       before,
     );
     assert.equal(await sql("select count(*) from song_providers"), "20");
@@ -214,6 +217,39 @@ try {
     assert.equal(
       await sql("select jsonb_agg(to_jsonb(s) order by id) from songs s"),
       before,
+    );
+  });
+  await test("retiring the open catalog preserves ratings and votes and invalidates pending pairs", async () => {
+    const history = await sql(
+      "select jsonb_build_object('votes',(select count(*) from votes),'rankVotes',(select count(*) from rank_votes),'events',(select count(*) from rating_events),'ratings',(select jsonb_object_agg(id,elo_rating) from songs))",
+    );
+    await sql(
+      "update rank_comparisons set status='expired' where status='pending'",
+    );
+    await sql(
+      `insert into rank_comparisons(user_id,song_a_id,song_b_id) values('${user(2)}','open-gymnopedie-1','open-gymnopedie-3')`,
+    );
+    await sql(
+      readFileSync(
+        "supabase/migrations/20261020073710_retire_kevin_macleod.sql",
+        "utf8",
+      ),
+    );
+    assert.equal(
+      await sql(
+        "select count(*) from songs where artist_name='Kevin MacLeod' and status='disabled'",
+      ),
+      "4",
+    );
+    assert.equal(
+      await sql("select count(*) from rank_comparisons where status='pending'"),
+      "0",
+    );
+    assert.equal(
+      await sql(
+        "select jsonb_build_object('votes',(select count(*) from votes),'rankVotes',(select count(*) from rank_votes),'events',(select count(*) from rating_events),'ratings',(select jsonb_object_agg(id,elo_rating) from songs))",
+      ),
+      history,
     );
   });
 } finally {

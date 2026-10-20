@@ -22,7 +22,6 @@ export function AppShell({
         <nav aria-label="Main navigation">
           <Link href="/">Play</Link>
           <Link href="/rank">Rank</Link>
-          <Link href="/today">Daily</Link>
           <Link href="/leaderboard">Leaderboard</Link>
           {viewer.user && !viewer.user.isAnonymous ? (
             <Link href="/profile">Profile</Link>
@@ -49,10 +48,12 @@ export function AppShell({
       </main>
       <footer>
         <span>Musicale</span>
-        <Link href="/help#music-credits">Music credits & licenses</Link>
-        <Link href="/archive">Featured matchups</Link>
-        <Link href="/privacy">Privacy & analytics</Link>
-        <Link href="/help">Help & contact</Link>
+        <nav aria-label="Footer navigation">
+          <Link href="/help#music-credits">Music credits & licenses</Link>
+          <Link href="/archive">Featured matchups</Link>
+          <Link href="/privacy">Privacy & analytics</Link>
+          <Link href="/help">Help & contact</Link>
+        </nav>
       </footer>
     </>
   );

@@ -7,7 +7,6 @@ for (const path of [
   "/",
   "/play",
   "/rank",
-  "/today",
   "/songs/dynamite-bts",
   "/leaderboard",
   "/archive",
@@ -89,7 +88,7 @@ test("Privacy stays accessible before entry, and opting out survives Play on a d
     youtube++;
     return route.abort();
   });
-  await page.goto("/today");
+  await page.goto("/rank");
   await page.getByRole("link", { name: "Privacy & preferences" }).click();
   await expect(page).toHaveURL("/privacy");
   expect(youtube).toBe(0);
@@ -99,8 +98,8 @@ test("Privacy stays accessible before entry, and opting out survives Play on a d
   });
   await preference.check();
   await preference.uncheck();
-  await page.getByRole("link", { name: "Daily", exact: true }).click();
-  await expect(page).toHaveURL(/\/today$/);
+  await page.getByRole("link", { name: "Rank", exact: true }).click();
+  await expect(page).toHaveURL("/rank");
   await expect(page.getByRole("dialog", { name: "Musicale" })).toBeVisible();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(
@@ -135,8 +134,8 @@ test("blocked session storage keeps entry for navigation but asks again after a 
   );
   await page.goto("/rank");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.getByRole("link", { name: "Daily", exact: true }).click();
-  await expect(page).toHaveURL(/\/today$/);
+  await page.getByRole("link", { name: "Rank", exact: true }).click();
+  await expect(page).toHaveURL("/rank");
   await expect(page.getByRole("dialog", { name: "Musicale" })).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole("dialog", { name: "Musicale" })).toBeVisible();

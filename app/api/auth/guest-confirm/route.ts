@@ -24,7 +24,7 @@ export async function GET() {
       refreshed.data.user.is_anonymous
     )
       return failure();
-    return NextResponse.redirect(`${getSiteUrl()}/today`);
+    return NextResponse.redirect(`${getSiteUrl()}/`);
   } catch {
     return failure();
   }

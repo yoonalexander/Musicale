@@ -79,9 +79,6 @@ it("welcome Play remembers YouTube consent across every mode and Privacy can rev
   ).toBeNull();
 
   await page.getByRole("link", { name: "Rank", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Listen and rank", exact: true })
-    .click();
   await expect(page.locator(".video-preview iframe")).toHaveCount(2);
   const pair = await page.locator('input[name="comparisonId"]').inputValue();
   const oldPlayers = await page.evaluate("window.__youtubePlayers.length");
@@ -106,21 +103,14 @@ it("welcome Play remembers YouTube consent across every mode and Privacy can rev
     ),
   ).toBe(true);
 
-  await page.getByRole("link", { name: "Daily", exact: true }).click();
-  await expect(page).toHaveURL(/\/today$/);
-  await expect(page.locator('input[name="matchupId"]')).toHaveCount(1);
+  await page.getByRole("link", { name: "Rank", exact: true }).click();
+  await expect(page).toHaveURL("/rank");
+  await expect(page.locator('input[name="comparisonId"]')).toHaveCount(1);
   await expect(page.locator(".video-preview iframe")).toHaveCount(2);
   await page.reload();
   await expect(page.locator(".video-preview iframe")).toHaveCount(2);
   await page.goto("/songs/dynamite-bts");
   await expect(page.locator(".video-preview iframe")).toHaveCount(1);
-  await page
-    .getByRole("button", { name: "Unload YouTube player", exact: true })
-    .click();
-  await expect(page.locator(".video-preview iframe")).toHaveCount(0);
-  await page.reload();
-  await expect(page.locator(".video-preview iframe")).toHaveCount(1);
-
   const privacy = await context.newPage();
   await privacy.goto("/privacy");
   const choice = privacy.getByRole("checkbox", {
@@ -190,9 +180,9 @@ it("YouTube consent works for the current visit when browser storage is blocked"
   await expect(page.locator("form.matchup, .play-ready").first()).toBeVisible();
   await expect(page).toHaveURL("/");
   await dismissPlayTutorial(page);
-  await page.getByRole("link", { name: "Daily", exact: true }).click();
-  await expect(page).toHaveURL(/\/today$/);
-  await expect(page.locator('input[name="matchupId"]')).toHaveCount(1);
+  await page.getByRole("link", { name: "Rank", exact: true }).click();
+  await expect(page).toHaveURL("/rank");
+  await expect(page.locator('input[name="comparisonId"]')).toHaveCount(1);
   await expect(page.locator(".video-preview iframe")).toHaveCount(2);
   await page.reload();
   await expect(
@@ -226,9 +216,9 @@ test("YouTube permission can be revoked for this visit even if storage becomes r
       "Preference changed for this visit. This browser could not save it.",
     ),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Daily", exact: true }).click();
-  await expect(page).toHaveURL(/\/today$/);
-  await expect(page.locator('input[name="matchupId"]')).toHaveCount(1);
+  await page.getByRole("link", { name: "Rank", exact: true }).click();
+  await expect(page).toHaveURL("/rank");
+  await expect(page.locator('input[name="comparisonId"]')).toHaveCount(1);
   await expect(
     page.getByRole("button", { name: "Load YouTube player", exact: true }),
   ).toHaveCount(2);
@@ -251,7 +241,7 @@ test("revoking YouTube consent cancels players still waiting for the API", async
     await route.fulfill({ contentType: "text/javascript", body: api });
   });
   try {
-    await page.goto("/today", { waitUntil: "domcontentloaded" });
+    await page.goto("/rank", { waitUntil: "domcontentloaded" });
     await expect(
       page.getByText("Loading YouTube player…", { exact: true }),
     ).toHaveCount(2);
@@ -277,7 +267,7 @@ test("revoking YouTube consent cancels players still waiting for the API", async
   }
 });
 
-test("saved-video validation is reused after a Daily vote revalidates the page", async ({
+test("saved-video validation is reused when the Rank page refreshes", async ({
   page,
   request,
 }, info) => {
@@ -293,13 +283,11 @@ test("saved-video validation is reused after a Daily vote revalidates the page",
     request,
     `youtube-quota-${Date.now()}-${info.project.name}@example.test`,
   );
+  await page.goto("/rank");
+  await expect(page.locator("form.matchup")).toBeVisible();
   await page.reload();
   const before = requests();
-  await page
-    .locator('form.matchup button[name="selectedSongId"]')
-    .first()
-    .click();
-  await expect(page.getByText("Vote recorded", { exact: true })).toBeVisible();
+  await page.reload();
   await page.waitForTimeout(1000);
   expect(requests()).toBe(before);
 });
@@ -327,7 +315,7 @@ it("current welcome keeps Play and access to Privacy and Help", async ({
   });
 });
 
-test("Listen and rank includes YouTube songs rather than the audio-only subset", async ({
+test("Rank automatically includes YouTube songs", async ({
   page,
   request,
 }, info) => {
@@ -337,9 +325,6 @@ test("Listen and rank includes YouTube songs rather than the audio-only subset",
     `youtube-listen-${Date.now()}-${info.project.name}@example.test`,
   );
   await page.goto("/rank");
-  await page
-    .getByRole("button", { name: "Listen and rank", exact: true })
-    .click();
   await expect(
     page.getByRole("button", { name: "Load YouTube player", exact: true }),
   ).toHaveCount(2);
@@ -349,7 +334,7 @@ test("Listen and rank includes YouTube songs rather than the audio-only subset",
   ).toBe("f");
 });
 
-for (const mode of ["today", "rank", "play"] as const) {
+for (const mode of ["rank", "play"] as const) {
   test(`YouTube in ${mode}: controls never submit votes and saved progression disposes players`, async ({
     page,
     request,
@@ -363,17 +348,17 @@ for (const mode of ["today", "rank", "play"] as const) {
     const uid = runSql(`select id from auth.users where email='${email}'`);
     if (mode === "play") seedRankEvidence(uid);
     await page.goto(`/${mode}`);
-    if (mode !== "today")
+    if (mode === "play")
       await page
         .getByRole("button", {
-          name: mode === "rank" ? "Get a pair" : "Start a run",
+          name: "Start a run",
           exact: true,
         })
         .click();
     if (mode === "play") await dismissPlayTutorial(page);
     const form = page.locator("form.matchup"),
       identity = form.locator(
-        `input[name="${mode === "today" ? "matchupId" : mode === "rank" ? "comparisonId" : "roundId"}"]`,
+        `input[name="${mode === "rank" ? "comparisonId" : "roundId"}"]`,
       ),
       pair = await identity.inputValue();
     let submissions = 0;
@@ -411,15 +396,8 @@ for (const mode of ["today", "rank", "play"] as const) {
     );
     await page.getByRole("button", { name: "Retry YouTube player" }).click();
     await expect(form.locator(".video-preview iframe")).toHaveCount(1);
-    await page.getByRole("button", { name: "Unload YouTube player" }).click();
-    await expect(form.locator(".video-preview iframe")).toHaveCount(0);
     expect(submissions).toBe(0);
     await expect(identity).toHaveValue(pair);
-    await form
-      .getByRole("button", { name: "Load YouTube player", exact: true })
-      .first()
-      .click();
-    await expect(form.locator(".video-preview iframe")).toHaveCount(1);
     if (mode === "play") {
       const selected = runSql(
         `select case when rating_a>rating_b then song_a_id else song_b_id end from play_rounds where id='${pair}'`,
@@ -441,7 +419,7 @@ for (const mode of ["today", "rank", "play"] as const) {
           page.getByText("Vote recorded", { exact: true }),
         ).toBeVisible();
     }
-    if (mode !== "today") {
+    {
       await expect(identity).not.toHaveValue(pair);
       await expect
         .poll(() =>
@@ -520,75 +498,10 @@ test("YouTube discovery preserves unsaved catalog edits, recovers quota errors a
   ).toBe("JzqGZjFnYnA");
 });
 
-test("YouTube and authorized audio previews pause each other", async ({
-  page,
-  request,
-}, info) => {
-  test.setTimeout(90000);
-  await page.route("https://www.youtube.com/iframe_api", (route) =>
-    route.fulfill({ contentType: "text/javascript", body: api }),
-  );
-  const email = `youtube-audio-${Date.now()}-${info.project.name}@example.test`;
-  await signIn(page, request, email);
-  const uid = runSql(`select id from auth.users where email='${email}'`);
-  runSql(`update profiles set role='admin' where user_id='${uid}'`);
-  const previous = runSql(
-    "select coalesce(jsonb_object_agg(id,status),'{}') from songs where id like 'open-%'",
-  );
-  try {
-    await page.goto("/admin");
-    await page
-      .getByRole("button", {
-        name: "Import four open-license recordings",
-        exact: true,
-      })
-      .click();
-    await expect(
-      page.getByText("4 authorized previews connected", { exact: false }),
-    ).toBeVisible();
-    runSql(
-      "update songs set status='active' where id='open-gymnopedie-1'; insert into song_providers(song_id,provider,provider_song_id,external_url) values('open-gymnopedie-1','youtube','fixture0001','https://www.youtube.com/watch?v=fixture0001')",
-    );
-    await page.goto("/songs/open-gymnopedie-1");
-    await page
-      .getByRole("button", { name: "Load YouTube player", exact: true })
-      .click();
-    await expect(page.locator(".video-preview iframe")).toHaveCount(1);
-    const audio = page.locator(".audio-preview");
-    await audio.getByRole("button").click();
-    if (await page.evaluate(() => typeof AudioContext === "undefined")) {
-      // Windows WebKit lacks Web Audio; YouTube must remain usable after that fallback.
-      await expect(audio).toHaveAttribute("data-state", "error");
-      await page.evaluate("window.__youtubePlayers[0].emit(1)");
-      await expect(
-        page.getByText("Playing on YouTube. Ads may play before the song."),
-      ).toBeVisible();
-      return;
-    }
-    await expect(audio).toHaveAttribute("data-state", "playing");
-    const pauses = await page.evaluate<number>(
-      "window.__youtubePlayers[0].pauses || 0",
-    );
-    expect(pauses).toBeGreaterThan(0);
-    await page.evaluate("window.__youtubePlayers[0].emit(1)");
-    await expect(audio).toHaveAttribute("data-state", "paused");
-    await audio.getByRole("button").click();
-    await expect(audio).toHaveAttribute("data-state", "playing");
-    expect(
-      await page.evaluate("window.__youtubePlayers[0].pauses"),
-    ).toBeGreaterThan(pauses);
-    await expect(page.getByText("Paused.", { exact: true })).toBeVisible();
-  } finally {
-    runSql(
-      `delete from song_providers where song_id='open-gymnopedie-1' and provider='youtube'; update songs s set status=coalesce('${previous.replaceAll("'", "''")}'::jsonb->>s.id,'disabled')::song_status where s.id like 'open-%'`,
-    );
-  }
-});
-
 test("saved YouTube songs offer in-card playback without loading third parties first", async ({
   page,
 }) => {
-  await page.goto("/today");
+  await page.goto("/rank");
   await expect(
     page.getByRole("button", { name: "Load YouTube player" }),
   ).toHaveCount(2);
@@ -609,14 +522,12 @@ test("players share one API, pause each other, recover errors and dispose on nav
     scripts++;
     return route.fulfill({ contentType: "text/javascript", body: api });
   });
-  await page.goto("/today");
+  await page.goto("/rank");
   await page
     .getByRole("button", { name: "Load YouTube player", exact: true })
     .first()
     .click();
-  await expect(
-    page.getByText("Ready. Press play in the YouTube player."),
-  ).toHaveCount(1);
+  await expect(page.locator(".video-preview iframe")).toHaveCount(1);
   expect(
     await page.evaluate(
       "window.__youtubePlayers[0].options.playerVars.autoplay",
@@ -670,7 +581,7 @@ test("a blocked API can retry and unloading cancels a pending initialization", a
   await page.route("https://www.youtube.com/iframe_api", (route) =>
     route.abort(),
   );
-  await page.goto("/today");
+  await page.goto("/rank");
   await page
     .getByRole("button", { name: "Load YouTube player", exact: true })
     .first()
@@ -691,12 +602,13 @@ test("a blocked API can retry and unloading cancels a pending initialization", a
   });
   await page.getByRole("button", { name: "Retry YouTube player" }).click();
   await expect(page.getByText("Loading YouTube player…")).toBeVisible();
-  await page.getByRole("button", { name: "Unload YouTube player" }).click();
+  await page.getByRole("link", { name: "Leaderboard", exact: true }).click();
   release();
   await expect
     .poll(() => page.evaluate("Boolean(window.YT?.Player)"))
     .toBe(true);
   await expect(page.locator(".video-preview iframe")).toHaveCount(0);
+  await page.getByRole("link", { name: "Rank", exact: true }).click();
   await page
     .getByRole("button", { name: "Load YouTube player", exact: true })
     .first()
@@ -718,9 +630,9 @@ test("real catalog video reaches YouTube PLAYING after a native play gesture", a
     .getByRole("button", { name: "Load YouTube player", exact: true })
     .first()
     .click();
-  await expect(
-    page.getByText("Ready. Press play in the YouTube player."),
-  ).toBeVisible({ timeout: 35000 });
+  await expect(page.locator(".video-preview iframe")).toBeVisible({
+    timeout: 35000,
+  });
   const iframe = page.frameLocator(".video-preview iframe").first();
   await iframe.getByRole("button", { name: /play/i }).first().click();
   await expect(
@@ -755,9 +667,9 @@ test("Made for Kids players send no YouTube analytics even when product analytic
     .getByRole("button", { name: "Load YouTube player", exact: true })
     .first()
     .click();
-  await expect(
-    page.getByText("Ready. Press play in the YouTube player."),
-  ).toBeVisible();
+  await expect(page.locator(".video-preview iframe")).toBeVisible({
+    timeout: 35000,
+  });
   await page.evaluate("window.__youtubePlayers[0].emit(1)");
   await expect(
     page.getByText("Playing on YouTube. Ads may play before the song."),
@@ -794,9 +706,9 @@ test("fresh non-kids metadata enables opted-in player events without exposing th
   await page
     .getByRole("button", { name: "Load YouTube player", exact: true })
     .click();
-  await expect(
-    page.getByText("Ready. Press play in the YouTube player."),
-  ).toBeVisible();
+  await expect(page.locator(".video-preview iframe")).toBeVisible({
+    timeout: 35000,
+  });
   await page.evaluate("window.__youtubePlayers[0].emit(1)");
   await expect
     .poll(() => page.evaluate("window.__analyticsEvents"))

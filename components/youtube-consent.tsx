@@ -57,10 +57,9 @@ export function YouTubePreference() {
     <section className="panel">
       <h2>YouTube player preference</h2>
       <p>
-        Save time by loading players automatically in Play, Rank, Daily and song
-        pages. Videos still wait for you to press play. Turning this off unloads
-        open players in your Musicale tabs; you can still load a player
-        manually.
+        Save time by loading players automatically in Play, Rank and song pages.
+        Videos still wait for you to press play. Turning this off unloads open
+        players in your Musicale tabs; you can still load a player manually.
       </p>
       <label className="checkbox-label">
         <input

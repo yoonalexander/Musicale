@@ -31,14 +31,6 @@ export function RankPairCards({ pair }: { pair: RankPair }) {
         </div>
         <Choice key={pair.songB.id} song={pair.songB} />
       </form>
-      <p>
-        This pair expires at{" "}
-        <time dateTime={pair.expiresAt}>
-          {new Date(pair.expiresAt).toISOString().slice(11, 16)} UTC
-        </time>
-        . If it expires, request a new pair. Saved preferences stay in your
-        history.
-      </p>
     </>
   );
 }

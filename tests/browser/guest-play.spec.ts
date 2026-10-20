@@ -174,13 +174,12 @@ it("guest welcome: first-visit tutorial, compact cards, keyboard, scoring, persi
   ).toBe("0,0");
 });
 
-test("guests rank and vote Daily, then a verified new email preserves their activity and unlocks history", async ({
+test("guests rank, then a verified new email preserves their activity and unlocks history", async ({
   page,
   request,
 }, info) => {
   test.setTimeout(150000);
   await page.goto("/rank");
-  await page.getByRole("button", { name: "Get a pair", exact: true }).click();
   const buttons = page.locator('form.matchup button[name="selectedSongId"]');
   await expect(buttons).toHaveCount(2);
   const uid = latestGuest();
@@ -191,20 +190,6 @@ test("guests rank and vote Daily, then a verified new email preserves their acti
   expect(runSql(`select count(*) from rank_votes where user_id='${uid}'`)).toBe(
     "1",
   );
-  await page.goto("/today");
-  await page
-    .getByRole("button", { name: "Vote for Respect", exact: true })
-    .click();
-  await expect(page.locator(".result")).toBeVisible();
-  await page.reload();
-  await expect(
-    page.getByRole("button", { name: "Vote for Respect", exact: true }),
-  ).toBeDisabled();
-  expect(
-    runSql(
-      `select total_votes||','||current_streak from profiles where user_id='${uid}'`,
-    ),
-  ).toBe("1,1");
   const email = `guest-upgrade-${Date.now()}-${info.project.name}@example.test`;
   await signIn(page, request, email);
   expect(
@@ -216,17 +201,6 @@ test("guests rank and vote Daily, then a verified new email preserves their acti
   await expect(
     page.getByText("1 continuous preferences.", { exact: false }),
   ).toBeVisible();
-  await expect(
-    page
-      .locator("section.panel")
-      .filter({
-        has: page.getByRole("heading", {
-          name: "Recent Daily votes",
-          exact: true,
-        }),
-      })
-      .locator(".vote-history"),
-  ).toContainText("Respect");
 });
 
 it("guest signup failure is honest and retryable; guest metadata never grants admin or exposes another run", async ({
@@ -340,9 +314,6 @@ test("signing into an existing account preserves its history without silently me
       sessionStorage.setItem("musicale-entry-session-v1", "yes"),
     );
     await guest.goto("/rank");
-    await guest
-      .getByRole("button", { name: "Get a pair", exact: true })
-      .click();
     const choices = guest.locator('form.matchup button[name="selectedSongId"]');
     await expect(choices).toHaveCount(2);
     const uid = latestGuest();
@@ -364,26 +335,4 @@ test("signing into an existing account preserves its history without silently me
   } finally {
     await other.close();
   }
-});
-
-test("Daily is available without an account and preserves one vote for the guest session", async ({
-  page,
-}) => {
-  await page.goto("/today");
-  const vote = page.getByRole("button", {
-    name: "Vote for Respect",
-    exact: true,
-  });
-  await expect(vote).toBeEnabled();
-  await vote.click();
-  await expect(page.locator(".result")).toBeVisible();
-  const uid = latestGuest();
-  expect(runSql(`select count(*) from votes where user_id='${uid}'`)).toBe("1");
-  await page.reload();
-  await expect(vote).toBeDisabled();
-  await expect(
-    page
-      .locator(".site-header")
-      .getByRole("link", { name: "Profile", exact: true }),
-  ).toHaveCount(0);
 });

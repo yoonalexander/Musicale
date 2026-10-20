@@ -1,4 +1,5 @@
 export const pageSize = 25;
+export const pageSizes = [25, 50, 100, 500] as const;
 export type LeaderSort = "rating" | "wins" | "votes" | "movement";
 export type LeaderFilters = {
   genre?: string;
@@ -7,6 +8,8 @@ export type LeaderFilters = {
   decade?: number;
 };
 export function leaderboardQuery(params: Record<string, string | undefined>) {
+  const requestedSize = Number(params.pageSize);
+  const perPage = pageSizes.find((size) => size === requestedSize) ?? pageSize;
   const page = Math.min(
     10000,
     Math.max(1, Number.parseInt(params.page ?? "1") || 1),
@@ -38,5 +41,5 @@ export function leaderboardQuery(params: Record<string, string | undefined>) {
         : undefined,
   };
 
-  return { page, sort, minimum, filters };
+  return { page, sort, minimum, filters, pageSize: perPage };
 }

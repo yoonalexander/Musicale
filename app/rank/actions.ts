@@ -19,6 +19,20 @@ function fail(message: string): never {
 export async function startRank() {
   return prepare(false);
 }
+export async function prepareRank(): Promise<{ error: string | null }> {
+  const db = await client();
+  const { data, error } = await db.rpc("start_rank_pair");
+  if (error || data?.error)
+    return {
+      error: data?.error ?? "Could not load your songs. Please try again.",
+    };
+  if (!data?.comparisonId)
+    return {
+      error: "No fresh pair is available right now. Try again shortly.",
+    };
+  revalidatePath("/rank");
+  return { error: null };
+}
 export async function startPreviewRank() {
   return prepare(true);
 }

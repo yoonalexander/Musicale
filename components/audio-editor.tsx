@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import {
   saveAudioSource,
   discoverAuthorizedAudio,
-  importOpenMusic,
 } from "@/app/catalog-actions";
 import type { AudioPreview } from "@/lib/audio";
 import type { Song } from "@/types/domain";
@@ -54,27 +53,6 @@ export function AudioEditor({
           }}
         >
           Discover authorized previews
-        </button>
-        <button
-          type="button"
-          className="button secondary"
-          disabled={pending}
-          onClick={async () => {
-            setPending(true);
-            try {
-              const r = await importOpenMusic();
-              setMessage(r.error ?? r.message);
-              router.refresh();
-            } catch {
-              setMessage(
-                "Import could not be confirmed. Retry the same pack safely.",
-              );
-            } finally {
-              setPending(false);
-            }
-          }}
-        >
-          Import four open-license recordings
         </button>
       </div>
       <p role="status">{message}</p>

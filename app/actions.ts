@@ -141,7 +141,7 @@ export async function confirmEmailSignIn(fd: FormData) {
       "message",
       "Sign-in link expired or was already used. Request a new link.",
     );
-  redirect("/today");
+  redirect("/");
 }
 export async function submitDailyVote(fd: FormData) {
   if (!isSupabaseConfigured())

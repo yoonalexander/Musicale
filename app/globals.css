@@ -1,7 +1,7 @@
 :root {
   --paper: #f5eedb;
   --ink: #211d35;
-  --muted: #716b79;
+  --muted: #686271;
   --line: #d9cfb9;
   --accent: #de583e;
   --serif: Georgia, "Times New Roman", serif;
@@ -569,11 +569,33 @@ textarea:focus-visible {
 }
 
 .leader-filters {
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  gap: 22px 20px;
 }
 .leader-filters label {
-  min-width: 140px;
-  flex: 1 1 160px;
+  min-width: 0;
+}
+.leader-filters input,
+.leader-filters select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+}
+.leader-filters input:focus-visible,
+.leader-filters select:focus-visible {
+  outline-offset: -3px;
+}
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.filter-actions .button {
+  min-height: 44px;
+  white-space: nowrap;
+  padding-inline: 14px;
 }
 .checkbox-label {
   display: flex;
@@ -954,9 +976,11 @@ body:has(.welcome-overlay) {
   position: absolute;
   transform: translate(-50%, -50%);
   margin: 0;
-  width: 34px;
-  height: 34px;
-  font-size: 0.65rem;
+  width: 64px;
+  height: 64px;
+  font:
+    900 1.35rem ui-monospace,
+    monospace;
   top: 34%;
   z-index: 1;
 }
@@ -1027,17 +1051,17 @@ body:has(.welcome-overlay) {
   font-size: 0.9rem;
 }
 .tutorial-dialog {
-  border: 0;
-  border-radius: 20px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
   width: min(520px, calc(100% - 28px));
   max-height: calc(100svh - 40px);
   padding: 34px;
   color: var(--ink);
-  background: #fffefa;
-  box-shadow: 0 24px 90px #17241733;
+  background: #fffaf0;
+  box-shadow: 7px 7px 0 var(--ink);
 }
 .tutorial-dialog::backdrop {
-  background: #17241755;
+  background: #211d3577;
   backdrop-filter: blur(4px);
 }
 .dialog-close {
@@ -1054,12 +1078,14 @@ body:has(.welcome-overlay) {
 }
 .tutorial-dialog .kicker {
   font-size: 0.6rem;
-  color: #405744;
+  color: #b43f29;
   margin: 12px 0;
 }
 .tutorial-dialog h2 {
-  font: 600 2.5rem var(--serif);
-  letter-spacing: -0.04em;
+  font:
+    850 clamp(1.8rem, 5vw, 2.5rem) ui-monospace,
+    monospace;
+  letter-spacing: -0.075em;
   margin: 0 0 10px;
 }
 .tutorial-body > p {
@@ -1075,7 +1101,8 @@ body:has(.welcome-overlay) {
 .tutorial-example > div {
   padding: 15px;
   border-radius: 10px;
-  background: #e3e9dc;
+  background: #f4cd58;
+  border: 2px solid var(--ink);
   display: grid;
   grid-template-columns: 35px 1fr;
   gap: 4px 8px;
@@ -1083,15 +1110,17 @@ body:has(.welcome-overlay) {
   font-size: 0.8rem;
 }
 .tutorial-example > div:nth-child(2) {
-  background: #ede3d6;
+  background: var(--paper);
 }
 .tutorial-example span {
   grid-row: span 2;
-  font: 600 2.3rem var(--serif);
+  font:
+    850 2.3rem ui-monospace,
+    monospace;
 }
 .tutorial-example b {
   font-variant-numeric: tabular-nums;
-  color: #405744;
+  color: var(--ink);
 }
 .tutorial-dialog .tutorial-answer {
   font-size: 0.73rem;
@@ -1116,10 +1145,11 @@ body:has(.welcome-overlay) {
   height: 23px;
   display: grid;
   place-items: center;
-  background: #edf1e9;
-  border-radius: 50%;
+  background: #f4cd58;
+  border: 1px solid var(--ink);
+  border-radius: 5px;
   font-size: 0.75rem;
-  color: #254d3d;
+  color: var(--ink);
 }
 .tutorial-steps strong {
   font-size: 0.87rem;
@@ -1137,9 +1167,9 @@ body:has(.welcome-overlay) {
 }
 .tutorial-dialog > .button {
   width: 100%;
-  border-radius: 999px;
-  background: #254d3d;
-  border-color: #254d3d;
+  border-radius: 8px;
+  background: var(--accent);
+  border-color: var(--ink);
 }
 .welcome-alternatives a:hover,
 .mode-switch a:hover {
@@ -1170,8 +1200,9 @@ body:has(.welcome-overlay) {
   .game-stage .versus {
     left: 50%;
     top: 28%;
-    width: 28px;
-    height: 28px;
+    width: 46px;
+    height: 46px;
+    font-size: 1rem;
   }
   .play-toolbar .kicker span {
     display: none;
@@ -1203,6 +1234,24 @@ body:has(.game-stage) .site-header {
 .tutorial-dialog[open] {
   display: flex;
   flex-direction: column;
+  animation: tutorial-fade-in 200ms ease-out;
+}
+.tutorial-dialog[open]::backdrop {
+  animation: tutorial-fade-in 200ms ease-out;
+}
+@keyframes tutorial-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-dialog[open],
+  .tutorial-dialog[open]::backdrop {
+    animation: none;
+  }
 }
 .tutorial-body {
   overflow: auto;
@@ -1314,8 +1363,10 @@ body {
 }
 .site-header .wordmark {
   color: #f4cd58;
-  font: 900 1.55rem ui-monospace, monospace;
-  letter-spacing: -.09em;
+  font:
+    900 1.55rem ui-monospace,
+    monospace;
+  letter-spacing: -0.09em;
 }
 .site-header nav {
   justify-content: center;
@@ -1341,7 +1392,7 @@ main > .notice[role="status"] {
   background: #f4cd58;
   color: #211d35;
   text-align: center;
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 650;
 }
 .today,
@@ -1359,10 +1410,10 @@ main > .notice[role="status"] {
   color: #211d35;
   font-family: ui-monospace, monospace;
   font-weight: 850;
-  letter-spacing: -.075em;
+  letter-spacing: -0.075em;
 }
 .kicker {
-  color: #de583e;
+  color: #b43f29;
 }
 .button {
   border-radius: 8px;
@@ -1403,10 +1454,10 @@ main > .notice[role="status"] {
   color: #211d35;
   font-family: ui-monospace, monospace;
   font-weight: 800;
-  letter-spacing: -.055em;
+  letter-spacing: -0.055em;
 }
 .game-stage .card-actions > .button:not(.secondary) {
-  background: #de583e;
+  background: #c44730;
   border-color: #211d35;
   box-shadow: 3px 3px 0 #211d35;
 }
@@ -1446,6 +1497,48 @@ footer {
   background: #211d35;
   color: #e8dcbf;
   border: 0;
+  align-items: center;
+  gap: 24px;
+}
+footer nav {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 16px 28px;
+}
+.leader-listen {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.leader-song-title:hover {
+  text-decoration: underline;
+}
+.leader-row .unranked {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+@media (max-width: 760px) {
+  .leader-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .leader-row {
+    grid-template-columns: 54px minmax(0, 1fr) 65px;
+    gap: 12px;
+  }
+  .filter-actions {
+    grid-column: 1 / -1;
+  }
+  footer {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  footer nav {
+    flex: 1;
+  }
 }
 footer a:hover {
   color: #f4cd58;
@@ -1465,7 +1558,7 @@ footer a:hover {
   color: #211d35;
   font-family: ui-monospace, monospace;
   font-weight: 900;
-  letter-spacing: -.1em;
+  letter-spacing: -0.1em;
 }
 .welcome-overlay .welcome-promise {
   color: #de583e;

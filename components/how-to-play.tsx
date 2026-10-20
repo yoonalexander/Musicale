@@ -2,7 +2,15 @@
 import { useEffect, useRef } from "react";
 import { useSiteEntry } from "@/lib/site-entry";
 
-export function HowToPlay({ autoOpen = false }: { autoOpen?: boolean }) {
+export function HowToPlay({
+  autoOpen = false,
+  mode = "play",
+}: {
+  autoOpen?: boolean;
+  mode?: "play" | "rank";
+}) {
+  const ranking = mode === "rank";
+  const title = ranking ? "How ranking works" : "How to play";
   const dialog = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLButtonElement>(null);
   const entered = useSiteEntry();
@@ -26,13 +34,13 @@ export function HowToPlay({ autoOpen = false }: { autoOpen?: boolean }) {
         onClick={() => dialog.current?.showModal()}
         aria-haspopup="dialog"
       >
-        <span aria-hidden="true">?</span> How to play
+        <span aria-hidden="true">?</span> {title}
       </button>
       <dialog
         ref={dialog}
         className="tutorial-dialog"
-        aria-labelledby="tutorial-title"
-        aria-describedby="tutorial-description"
+        aria-labelledby={`${mode}-tutorial-title`}
+        aria-describedby={`${mode}-tutorial-description`}
         onKeyDown={(event) => {
           if (event.key !== "Tab") return;
           const buttons = event.currentTarget.querySelectorAll("button");
@@ -57,64 +65,95 @@ export function HowToPlay({ autoOpen = false }: { autoOpen?: boolean }) {
           type="button"
           className="dialog-close"
           onClick={close}
-          aria-label="Close how to play"
+          aria-label={`Close ${title.toLowerCase()}`}
         >
           ×
         </button>
         <div className="tutorial-body" tabIndex={0}>
-          <p className="kicker">A little instinct. A lot of music.</p>
-          <h2 id="tutorial-title">How to play</h2>
-          <p id="tutorial-description">
-            Two songs. Which one has the higher community rating?
+          <p className="kicker">
+            {ranking
+              ? "Your taste sets the tone."
+              : "A little instinct. A lot of music."}
           </p>
-          <div
-            className="tutorial-example"
-            aria-label="Example ratings, not the current round"
-          >
-            <div>
-              <span aria-hidden="true">A</span>
-              <strong>Song A</strong>
-              <b>1,580</b>
-            </div>
-            <div>
-              <span aria-hidden="true">B</span>
-              <strong>Song B</strong>
-              <b>1,490</b>
-            </div>
-          </div>
-          <p className="tutorial-answer">
-            In this example, Song A is higher rated.
+          <h2 id={`${mode}-tutorial-title`}>{title}</h2>
+          <p id={`${mode}-tutorial-description`}>
+            {ranking
+              ? "Two songs. One favorite. Help shape the community rankings."
+              : "Two songs. Which one has the higher community rating?"}
           </p>
-          <ol className="tutorial-steps">
-            <li>
-              <strong>Listen, then trust your instinct.</strong>
-              <p>
-                Play a 15-second preview when available, use a listening link,
-                or make your pick straight away.
+          {ranking ? (
+            <ol className="tutorial-steps">
+              <li>
+                <strong>Listen to the pair.</strong>
+                <p>Use the YouTube players or open a listening link.</p>
+              </li>
+              <li>
+                <strong>Choose your favorite.</strong>
+                <p>
+                  There is no right answer. Your vote updates both songs’ Elo
+                  ratings on the leaderboard.
+                </p>
+              </li>
+              <li>
+                <strong>Keep discovering.</strong>
+                <p>
+                  Both songs change after your vote. Your preferences stay saved
+                  to your guest session or account.
+                </p>
+              </li>
+            </ol>
+          ) : (
+            <>
+              <div
+                className="tutorial-example"
+                aria-label="Example ratings, not the current round"
+              >
+                <div>
+                  <span aria-hidden="true">A</span>
+                  <strong>Song A</strong>
+                  <b>1,580</b>
+                </div>
+                <div>
+                  <span aria-hidden="true">B</span>
+                  <strong>Song B</strong>
+                  <b>1,490</b>
+                </div>
+              </div>
+              <p className="tutorial-answer">
+                In this example, Song A is higher rated.
               </p>
-            </li>
-            <li>
-              <strong>Get it right. Keep going.</strong>
-              <p>
-                Earn one point. Either song is randomly replaced, and you choose
-                again.
+              <ol className="tutorial-steps">
+                <li>
+                  <strong>Listen, then trust your instinct.</strong>
+                  <p>
+                    Play a song on YouTube, use a listening link, or make your
+                    pick straight away.
+                  </p>
+                </li>
+                <li>
+                  <strong>Get it right. Keep going.</strong>
+                  <p>
+                    Earn one point. Either song is randomly replaced, and you
+                    choose again.
+                  </p>
+                </li>
+                <li>
+                  <strong>One wrong guess ends the run.</strong>
+                  <p>
+                    Your final score stays saved. Start another run whenever you
+                    like.
+                  </p>
+                </li>
+              </ol>
+              <p className="tutorial-footnote">
+                Listener votes in Rank set the ratings. Each round locks its
+                answer when it starts.
               </p>
-            </li>
-            <li>
-              <strong>One wrong guess ends the run.</strong>
-              <p>
-                Your final score stays saved. Start another run whenever you
-                like.
-              </p>
-            </li>
-          </ol>
-          <p className="tutorial-footnote">
-            Listener votes in Rank and Daily set the ratings. Each round locks
-            its answer when it starts.
-          </p>
+            </>
+          )}
         </div>
         <button type="button" className="button" onClick={close}>
-          Let’s play
+          {ranking ? "Let’s rank" : "Let’s play"}
         </button>
       </dialog>
     </>

@@ -4,6 +4,7 @@ import { localAppEnv } from "./tests/local-env.mjs";
 
 export default defineConfig({
   testDir: "./tests/browser",
+  testIgnore: "page-cleanup.spec.ts",
   fullyParallel: false,
   workers: 1,
   timeout: 45000,

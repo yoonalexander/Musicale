@@ -37,8 +37,8 @@ export default async function Archive() {
           wait.
         </p>
       )}
-      <Link className="button" href="/today">
-        Visit Daily
+      <Link className="button" href="/">
+        Play
       </Link>
     </section>
   );

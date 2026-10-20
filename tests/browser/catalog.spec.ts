@@ -219,7 +219,7 @@ test("catalog discovery, reviewed batch import, protected refresh, audio rights 
         headers: { "Access-Control-Allow-Origin": "*" },
       });
     });
-    await page.goto("/today");
+    await page.goto("/songs/respect-aretha");
     await expect(
       page.getByRole("region", {
         name: "15-second preview of Respect",

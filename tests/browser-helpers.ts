@@ -66,7 +66,7 @@ export async function signIn(
   await page.goto(link);
   if (new URL(link).searchParams.has("token_hash"))
     await page.getByRole("button", { name: "Confirm sign-in" }).click();
-  await expect(page).toHaveURL(/\/today$/);
+  await expect(page).toHaveURL("/");
   return link;
 }
 

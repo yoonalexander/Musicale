@@ -144,6 +144,7 @@ export async function fetchLeaderboard(
   sort: LeaderSort = "rating",
   minimum = 0,
   filters: LeaderFilters = {},
+  perPage = pageSize,
 ) {
   if (!isSupabaseConfigured()) {
     const filtered = [...demoSongs].filter(
@@ -165,7 +166,7 @@ export async function fetchLeaderboard(
             : b.eloRating - a.eloRating) || a.id.localeCompare(b.id),
     );
     return {
-      songs: filtered.slice((page - 1) * pageSize, page * pageSize),
+      songs: filtered.slice((page - 1) * perPage, page * perPage),
       total: filtered.length,
     };
   }
@@ -201,7 +202,7 @@ export async function fetchLeaderboard(
   const { data, error, count } = await query
     .order(column, { ascending: false })
     .order("id")
-    .range((page - 1) * pageSize, page * pageSize - 1);
+    .range((page - 1) * perPage, page * perPage - 1);
   if (error?.code === "PGRST103") {
     // A live removal can leave the requested page beyond the filtered catalog.
     const first = await query.range(0, 0);
