@@ -1,5 +1,6 @@
 "use client";
 import { useFormStatus } from "react-dom";
+import { MusicLoading } from "@/components/music-loading";
 export function SubmitButton({
   children,
   busyText = "Saving…",
@@ -21,7 +22,7 @@ export function SubmitButton({
       aria-busy={pending}
       aria-describedby={describedBy}
     >
-      {pending ? busyText : children}
+      {pending ? <MusicLoading compact label={busyText} /> : children}
     </button>
   );
 }

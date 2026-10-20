@@ -83,6 +83,10 @@ const server = createServer(async (req, res) => {
   if (req.method === "OPTIONS") return res.end();
   const url = new URL(req.url, "http://127.0.0.1:55329");
   const send = (value) => res.end(JSON.stringify(value));
+  if (url.pathname === "/__fixture/rank-reset") {
+    pair = null;
+    return send({});
+  }
   if (url.pathname === "/__fixture/play-available") {
     playAvailable = url.searchParams.get("value") !== "false";
     return send({});

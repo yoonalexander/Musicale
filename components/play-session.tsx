@@ -10,10 +10,10 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import { guestSession } from "@/components/guest-form";
 import { prepareFreshPlay } from "@/app/play/actions";
 import { useSiteEntry } from "@/lib/site-entry";
+import { MusicLoading } from "@/components/music-loading";
 
 const SessionContext = createContext<{
   start: () => void;
@@ -32,30 +32,25 @@ export function PlaySession({
   const [requested, setRequested] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
-  const router = useRouter();
 
-  const prepare = useCallback(
-    (id: string) => {
-      visit.current = id;
-      setRequested(id);
-      setError("");
-      startTransition(async () => {
-        try {
-          await guestSession();
-          const result = await prepareFreshPlay(id);
-          if (result.error) setError(result.error);
-          else router.refresh();
-        } catch (cause) {
-          setError(
-            cause instanceof Error
-              ? cause.message
-              : "Could not start your run. Please try again.",
-          );
-        }
-      });
-    },
-    [router],
-  );
+  const prepare = useCallback((id: string) => {
+    visit.current = id;
+    setRequested(id);
+    setError("");
+    startTransition(async () => {
+      try {
+        await guestSession();
+        const result = await prepareFreshPlay(id);
+        if (result.error) setError(result.error);
+      } catch (cause) {
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Could not start your run. Please try again.",
+        );
+      }
+    });
+  }, []);
   const start = useCallback(() => prepare(crypto.randomUUID()), [prepare]);
 
   useEffect(() => {
@@ -81,12 +76,14 @@ export function PlaySession({
             Try again
           </button>
         </section>
-      ) : requested === runId ? (
+      ) : requested === runId && !pending ? (
         children
       ) : (
-        <section className="today game-stage" aria-busy="true">
-          <h1>Which song is higher rated?</h1>
-          <p role="status">Getting your songs…</p>
+        <section className="today game-stage">
+          <header className="game-question">
+            <h1>Which song is higher rated?</h1>
+          </header>
+          <MusicLoading label="Getting your songs…" />
         </section>
       )}
     </SessionContext.Provider>
@@ -99,9 +96,14 @@ export function NewPlayButton({ children }: { children: ReactNode }) {
     <button
       className="button"
       disabled={!session || session.pending}
+      aria-busy={session?.pending}
       onClick={session?.start}
     >
-      {session?.pending ? "Getting your songs…" : children}
+      {session?.pending ? (
+        <MusicLoading compact label="Getting your songs…" />
+      ) : (
+        children
+      )}
     </button>
   );
 }

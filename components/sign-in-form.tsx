@@ -2,6 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 import { confirmEmailSignIn, requestMagicLinkAction } from "@/app/actions";
+import { MusicLoading } from "@/components/music-loading";
 
 function SubmitButton({
   disabled = false,
@@ -19,7 +20,7 @@ function SubmitButton({
       disabled={disabled || pending}
       aria-busy={pending}
     >
-      {pending ? pendingLabel : label}
+      {pending ? <MusicLoading compact label={pendingLabel} /> : label}
     </button>
   );
 }

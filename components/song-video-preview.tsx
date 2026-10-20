@@ -6,6 +6,7 @@ import { track } from "@/lib/analytics";
 import { pauseAudioPreview } from "@/components/audio-preview-player";
 import { useYouTubeConsent } from "@/lib/youtube-consent";
 import { useSiteEntry } from "@/lib/site-entry";
+import { MusicLoading } from "@/components/music-loading";
 import {
   loadYouTubeAPI,
   pauseOtherYouTubePlayers,
@@ -212,7 +213,13 @@ function Video({
         hidden={!enabled || Boolean(error)}
       />
       <p aria-live="polite" role={error || status ? "status" : undefined}>
-        {error || status}
+        {!error &&
+        (status === "Loading YouTube player…" ||
+          status === "Buffering on YouTube…") ? (
+          <MusicLoading compact label={status} />
+        ) : (
+          error || status
+        )}
       </p>
       {error ? (
         <button

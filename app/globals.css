@@ -1418,6 +1418,104 @@ body:has(.game-stage) .site-header {
   margin: 8px 0 0;
 }
 
+/* Shared loading states: a vinyl record, with a static label for reduced motion. */
+.music-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  width: 100%;
+  min-height: 280px;
+  padding: 40px 20px;
+  margin: 28px 0;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: #fffaf0;
+  color: var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+  text-align: center;
+}
+.music-loading-disc {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 88px;
+  height: 88px;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle,
+    #211d35 0 5px,
+    #443d5d 6px 7px,
+    #211d35 8px 10px
+  );
+  animation: record-spin 1.8s linear infinite;
+}
+.music-loading-disc::before,
+.music-loading-disc::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+.music-loading-disc::before {
+  width: 38%;
+  height: 38%;
+  background: conic-gradient(#f4cd58 0deg 290deg, #de583e 290deg);
+}
+.music-loading-disc::after {
+  width: 7%;
+  height: 7%;
+  background: var(--ink);
+}
+.music-loading-label {
+  font:
+    750 1rem/1.5 ui-monospace,
+    monospace;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+.music-loading--compact {
+  display: inline-flex;
+  flex-direction: row;
+  gap: 8px;
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  box-shadow: none;
+}
+.music-loading--compact .music-loading-disc {
+  width: 20px;
+  height: 20px;
+  border-width: 1px;
+  border-color: currentColor;
+}
+.music-loading--compact .music-loading-label {
+  font: inherit;
+  letter-spacing: inherit;
+}
+.button[aria-busy="true"] {
+  opacity: 1;
+  cursor: progress;
+}
+@keyframes record-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .music-loading-disc {
+    animation: none;
+  }
+}
+
 /* Indie Record Shop visual system */
 html {
   background: var(--paper);

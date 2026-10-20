@@ -10,6 +10,140 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
+test("shared record loader covers Play, Rank, voting and player loading, with reduced motion", async ({
+  page,
+  request,
+}, info) => {
+  let held: Promise<void> | undefined;
+  let release = () => {};
+  const holdNextAction = () => {
+    held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+  };
+  await page.route("http://127.0.0.1:3101/**", async (route) => {
+    if (
+      route.request().method() === "POST" &&
+      route.request().headers()["next-action"] &&
+      held
+    ) {
+      const pending = held;
+      held = undefined;
+      await pending;
+    }
+    await route.continue();
+  });
+  holdNextAction();
+  try {
+    await page.goto("/");
+    const loader = page
+      .getByRole("status")
+      .filter({ hasText: "Getting your songs…" });
+    await expect(loader).toBeVisible();
+    const disc = loader.locator(".music-loading-disc");
+    await expect(disc).toHaveCSS("animation-name", "record-spin");
+    const transform = await disc.evaluate(
+      (node) => getComputedStyle(node).transform,
+    );
+    await expect
+      .poll(() => disc.evaluate((node) => getComputedStyle(node).transform))
+      .not.toBe(transform);
+    await expect(page.locator("form.matchup")).toHaveCount(0);
+    expect(
+      (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
+        .violations,
+    ).toEqual([]);
+    await page.screenshot({
+      path: `output/${info.project.name}-play-loading.png`,
+      fullPage: true,
+    });
+    const viewport = page.viewportSize()!;
+    await page.setViewportSize({ width: 320, height: 900 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.setViewportSize(viewport);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(disc).toHaveCSS("animation-name", "none");
+    await expect(loader).toHaveText("Getting your songs…");
+    release();
+    const choices = page.locator('form.matchup button[name="selectedSongId"]');
+    await expect(choices).toHaveCount(2);
+    await expect(loader).toHaveCount(0);
+    holdNextAction();
+    const vote = choices.first().click();
+    await expect(choices.first()).toBeDisabled();
+    await expect(choices.locator(".music-loading--compact")).toHaveCount(2);
+    await expect(choices.first().locator(".music-loading-disc")).toHaveCSS(
+      "animation-name",
+      "none",
+    );
+    release();
+    await vote;
+    await expect(page.getByLabel("Run score")).toHaveText("Run Score: 1");
+    await request.get("http://127.0.0.1:55329/__fixture/rank-reset");
+    holdNextAction();
+    await page.goto("/rank");
+    const rankingLoader = page
+      .getByRole("status")
+      .filter({ hasText: "Finding your songs…" });
+    await expect(rankingLoader).toBeVisible();
+    await expect(rankingLoader.locator(".music-loading-disc")).toHaveCSS(
+      "animation-name",
+      "none",
+    );
+    release();
+    await expect(choices).toHaveCount(2);
+    await expect(rankingLoader).toHaveCount(0);
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    const comparison = page.locator('input[name="comparisonId"]');
+    const previous = await comparison.inputValue();
+    holdNextAction();
+    const rankVote = choices.first().click();
+    await expect(choices.first()).toBeDisabled();
+    await expect(choices.locator(".music-loading--compact")).toHaveCount(2);
+    await expect(choices.first().locator(".music-loading-disc")).toHaveCSS(
+      "animation-name",
+      "record-spin",
+    );
+    release();
+    await rankVote;
+    await expect(comparison).not.toHaveValue(previous);
+    let releasePlayer!: () => void;
+    const playerHeld = new Promise<void>((resolve) => {
+      releasePlayer = resolve;
+    });
+    await page.unroute("https://www.youtube.com/iframe_api");
+    await page.route("https://www.youtube.com/iframe_api", async (route) => {
+      await playerHeld;
+      await route.abort();
+    });
+    try {
+      await page
+        .getByRole("button", { name: "Load YouTube player", exact: true })
+        .first()
+        .click();
+      const playerStatus = page.locator(
+        ".video-preview .music-loading--compact",
+      );
+      await expect(playerStatus).toHaveText("Loading YouTube player…");
+      await expect(playerStatus.locator(".music-loading-disc")).toHaveCSS(
+        "animation-name",
+        "record-spin",
+      );
+    } finally {
+      releasePlayer();
+    }
+    await expect(
+      page.getByRole("button", { name: "Retry YouTube player" }),
+    ).toBeVisible();
+  } finally {
+    release();
+  }
+});
+
 test("Rank loads a pair without a start button, keeps it on refresh and explains ranking in a themed dialog", async ({
   page,
 }, info) => {

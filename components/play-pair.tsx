@@ -1,14 +1,18 @@
 "use client";
-import { useFormStatus } from "react-dom";
-import { useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { submitPlayGuess } from "@/app/play/actions";
 import { SongChoice } from "@/components/song-choice";
 import { NewPlayButton } from "@/components/play-session";
+import { MusicLoading } from "@/components/music-loading";
 import type { RankPair, RankSong } from "@/lib/rank";
 import type { PlayState } from "@/lib/play";
 
-function Choice({ song }: { song: RankSong }) {
-  const { pending } = useFormStatus();
+async function guess(_previous: null, form: FormData) {
+  await submitPlayGuess(form);
+  return null;
+}
+
+function Choice({ song, pending }: { song: RankSong; pending: boolean }) {
   return (
     <SongChoice song={song}>
       <button
@@ -19,7 +23,11 @@ function Choice({ song }: { song: RankSong }) {
         aria-busy={pending}
         aria-label={`Higher: ${song.title}`}
       >
-        {pending ? "Checking…" : "Higher rated ↑"}
+        {pending ? (
+          <MusicLoading compact label="Checking…" />
+        ) : (
+          "Higher rated ↑"
+        )}
       </button>
     </SongChoice>
   );
@@ -31,15 +39,16 @@ export function PlayPair({
   pair: RankPair;
   returnTo: "/" | "/play";
 }) {
+  const [, action, pending] = useActionState(guess, null);
   return (
-    <form className="matchup" action={submitPlayGuess}>
+    <form className="matchup" action={action}>
       <input type="hidden" name="returnTo" value={returnTo} />
       <input type="hidden" name="roundId" value={pair.id} />
-      <Choice key={pair.songA.id} song={pair.songA} />
+      <Choice key={pair.songA.id} song={pair.songA} pending={pending} />
       <div className="versus" aria-hidden="true">
         VS
       </div>
-      <Choice key={pair.songB.id} song={pair.songB} />
+      <Choice key={pair.songB.id} song={pair.songB} pending={pending} />
     </form>
   );
 }
