@@ -108,3 +108,25 @@ migration confirmed 60 active songs, all four retired songs disabled, no pending
 Rank pairs containing them, and unchanged totals of 1 Daily vote, 18 Rank votes,
 and 19 rating events. Application deployment is tracked by the corresponding
 `main` commit and Vercel deployment check.
+
+## October 20 fresh Play visits
+
+Production migration `20261020080217_fresh_play_visits.sql` adds the authenticated,
+owner-scoped `start_fresh_play` RPC. Each client Play mount gets a new UUID, closes
+that user's prior open run and starts at score zero. Repeating the UUID is safe
+for retries. Reloads, reopened tabs, return navigation and restored browser pages
+create new runs; guess submissions within the same mounted visit keep its score.
+The welcome screen grants entry, and the Play session then prepares the game.
+No paused-run or resume controls are exposed. An unavailable initial pair ends
+cleanly and offers Try again. Existing run records and scores remain in history.
+
+Eight isolated desktop/mobile checks pass, including score progression followed
+by reload, tab reopening, browser restoration and no-pair recovery. Unit tests,
+TypeScript and the production build pass. Local database checks remain unavailable
+because Docker is not running; the added database regressions run in GitHub CI.
+The hosted RPC was applied before the app deployment, and its anon execute grant
+is revoked while authenticated execution is allowed.
+Targeted hosted database verification also passed inside a rolled-back
+subtransaction: fresh score zero with a playable pair, idempotent action retries,
+and closure of the previous run on the next visit. No test runs, scores or votes
+were retained by that verification.

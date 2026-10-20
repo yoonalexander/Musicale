@@ -2,6 +2,7 @@
 // model voting correctness; the SQL suites remain the authority for that.
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 
 const catalog = JSON.parse(readFileSync("data/songs.json", "utf8"));
 const songs = Array.from({ length: 540 }, (_, i) => {
@@ -60,6 +61,19 @@ const nextPair = () => {
     expires_at: new Date(Date.now() + 1800000).toISOString(),
   };
 };
+let playAvailable = true;
+let play = {
+  run: { id: uid, score: 1, status: "paused", reason: "insufficient" },
+  round: null,
+  answer: null,
+};
+const playRound = () => ({
+  id: randomUUID(),
+  number: play.run.score + 1,
+  songAId: songs[0].id,
+  songBId: songs[1].id,
+  expiresAt: new Date(Date.now() + 1800000).toISOString(),
+});
 const server = createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:3101");
   res.setHeader("Access-Control-Allow-Headers", "*");
@@ -69,6 +83,51 @@ const server = createServer(async (req, res) => {
   if (req.method === "OPTIONS") return res.end();
   const url = new URL(req.url, "http://127.0.0.1:55329");
   const send = (value) => res.end(JSON.stringify(value));
+  if (url.pathname === "/__fixture/play-available") {
+    playAvailable = url.searchParams.get("value") !== "false";
+    return send({});
+  }
+  if (url.pathname === "/rest/v1/rpc/start_fresh_play") {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const { p_run_id } = JSON.parse(Buffer.concat(chunks).toString());
+    if (play.run.id !== p_run_id) {
+      play = {
+        run: {
+          id: p_run_id,
+          score: 0,
+          status: playAvailable ? "active" : "ended",
+          reason: playAvailable ? null : "insufficient",
+        },
+        round: null,
+        answer: null,
+      };
+      if (playAvailable) play.round = playRound();
+    }
+    return send({ runId: p_run_id });
+  }
+  if (url.pathname === "/rest/v1/rpc/submit_play_guess") {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const { p_round_id, p_selected_song_id } = JSON.parse(
+      Buffer.concat(chunks).toString(),
+    );
+    play.run.score++;
+    play.answer = {
+      id: p_round_id,
+      runId: play.run.id,
+      titleA: songs[0].title,
+      titleB: songs[1].title,
+      ratingA: 1512,
+      ratingB: 1488,
+      selectedSongId: p_selected_song_id,
+      correct: true,
+      scoreAfter: play.run.score,
+      replacementSlot: 1,
+    };
+    play.round = playRound();
+    return send({ correct: true });
+  }
   if (url.pathname === "/realtime/v1/websocket") {
     res.statusCode = 503;
     return send({});
@@ -102,18 +161,7 @@ const server = createServer(async (req, res) => {
   }
   if (url.pathname === "/rest/v1/rank_votes")
     return send({ id: "fixture-vote" });
-  if (url.pathname === "/rest/v1/rpc/get_play_state")
-    return send({
-      run: { id: uid, score: 1, status: "active", reason: null },
-      round: {
-        id: uid,
-        number: 2,
-        songAId: songs[0].id,
-        songBId: songs[1].id,
-        expiresAt: new Date(Date.now() + 1800000).toISOString(),
-      },
-      answer: null,
-    });
+  if (url.pathname === "/rest/v1/rpc/get_play_state") return send(play);
   if (url.pathname === "/rest/v1/song_catalog") {
     const id = url.searchParams.get("id");
     if (id?.startsWith("eq."))

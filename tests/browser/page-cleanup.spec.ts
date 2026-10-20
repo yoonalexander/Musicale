@@ -156,7 +156,7 @@ test("leaderboard page sizes, YouTube links, filter geometry, unranked labels an
 test("Play has a larger VS and fading tutorial, and Daily redirects to Play", async ({
   page,
 }, info) => {
-  // Rank creates a guest session so Play can resume the rendering fixture run.
+  // Rank creates a guest session; Play must replace any existing run on entry.
   await page.goto("/rank");
   await expect(page.locator("form.matchup")).toBeVisible();
   await page.goto("/");
@@ -185,4 +185,57 @@ test("Play has a larger VS and fading tutorial, and Daily redirects to Play", as
   expect((await page.request.get("/audio/64738758.mp3")).status()).toBe(404);
   await page.goto("/today");
   await expect(page).toHaveURL("/");
+});
+
+test("Play starts fresh on reload, a new tab, and restored navigation; unavailable pairs never offer resume", async ({
+  page,
+  context,
+  request,
+}) => {
+  await page.goto("/");
+  const round = page.locator('input[name="roundId"]');
+  const choices = page.locator('form.matchup button[name="selectedSongId"]');
+  await expect(choices).toHaveCount(2);
+  await expect(page.getByLabel("Run score")).toHaveText("Run score: 0");
+  const first = await round.inputValue();
+  await choices.first().click();
+  await expect(page.getByLabel("Run score")).toHaveText("Run score: 1");
+  await expect(round).not.toHaveValue(first);
+  const scored = await round.inputValue();
+  await page.reload();
+  await expect(round).not.toHaveValue(scored);
+  await expect(page.getByLabel("Run score")).toHaveText("Run score: 0");
+  const beforeClose = await round.inputValue();
+  await page.close();
+  const reopened = await context.newPage();
+  await reopened.goto("/");
+  const freshRound = reopened.locator('input[name="roundId"]');
+  await expect(freshRound).not.toHaveValue(beforeClose);
+  await expect(reopened.getByLabel("Run score")).toHaveText("Run score: 0");
+  const beforeRestore = await freshRound.inputValue();
+  await reopened.evaluate(() =>
+    window.dispatchEvent(
+      new PageTransitionEvent("pageshow", { persisted: true }),
+    ),
+  );
+  await expect(freshRound).not.toHaveValue(beforeRestore);
+  try {
+    await request.get(
+      "http://127.0.0.1:55329/__fixture/play-available?value=false",
+    );
+    await reopened.reload();
+    await expect(
+      reopened.getByRole("heading", { name: "No matchup available right now" }),
+    ).toBeVisible();
+    await expect(reopened.locator("main")).not.toContainText(
+      /Resume run|Run paused|Points preserved|End this run and start over/,
+    );
+    await expect(
+      reopened.getByRole("button", { name: "Try again", exact: true }),
+    ).toBeVisible();
+  } finally {
+    await request.get(
+      "http://127.0.0.1:55329/__fixture/play-available?value=true",
+    );
+  }
 });

@@ -63,7 +63,7 @@ it("welcome Play remembers YouTube consent across every mode and Privacy can rev
   );
   seedRankEvidence(uid);
   if (!(await page.locator('input[name="roundId"]').count()))
-    await page.getByRole("button", { name: "Resume run", exact: true }).click();
+    await page.getByRole("button", { name: "Try again", exact: true }).click();
   await dismissPlayTutorial(page);
   await expect(page.locator(".video-preview iframe")).toHaveCount(2);
   await expect(
@@ -348,13 +348,7 @@ for (const mode of ["rank", "play"] as const) {
     const uid = runSql(`select id from auth.users where email='${email}'`);
     if (mode === "play") seedRankEvidence(uid);
     await page.goto(`/${mode}`);
-    if (mode === "play")
-      await page
-        .getByRole("button", {
-          name: "Start a run",
-          exact: true,
-        })
-        .click();
+
     if (mode === "play") await dismissPlayTutorial(page);
     const form = page.locator("form.matchup"),
       identity = form.locator(

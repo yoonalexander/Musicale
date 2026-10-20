@@ -22,21 +22,21 @@ function fail(
     `${returnTo}?error=${encodeURIComponent(message)}${answered ? `&answered=${answered}` : ""}` as Route,
   );
 }
-export async function startPlay(form: FormData) {
-  const returnTo = form.get("returnTo") === "/" ? "/" : "/play";
-  const db = await client(returnTo);
-  const restart = String(form.get("restartRunId") ?? "");
-  if (restart && !roundIdPattern.test(restart))
-    fail(returnTo, "Invalid run. Reload Play.");
-  const { data, error } = await db.rpc("start_play", {
-    p_restart_run_id: restart || null,
-  });
-  if (error || data?.error)
-    fail(returnTo, data?.error ?? "Could not prepare your run. Please retry.");
+export async function prepareFreshPlay(
+  runId: string,
+): Promise<{ error: string | null }> {
+  if (!roundIdPattern.test(runId))
+    return { error: "Invalid run. Reload Play." };
+  const db = await client("/");
+  const { data, error } = await db.rpc("start_fresh_play", { p_run_id: runId });
+  if (error || data?.error || data?.runId !== runId)
+    return {
+      error: data?.error ?? "Could not start your run. Please try again.",
+    };
   revalidatePath("/");
   revalidatePath("/play");
   revalidatePath("/profile");
-  redirect(returnTo);
+  return { error: null };
 }
 export async function submitPlayGuess(form: FormData) {
   const returnTo = form.get("returnTo") === "/" ? "/" : "/play";
@@ -62,7 +62,14 @@ export async function submitPlayGuess(form: FormData) {
         id,
       );
   }
-  if (data?.error) fail(returnTo, data.error, id);
+  if (data?.error)
+    fail(
+      returnTo,
+      /resume|preserved/i.test(data.error)
+        ? "That round is no longer available. Start a new run."
+        : data.error,
+      id,
+    );
   revalidatePath("/");
   revalidatePath("/play");
   revalidatePath("/profile");

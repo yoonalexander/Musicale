@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { startPlay } from "@/app/play/actions";
 import { YouTubePlayEntry } from "@/components/youtube-consent";
 import { SiteEntryContext } from "@/lib/site-entry";
 
@@ -150,13 +149,7 @@ function WelcomeOverlay({
         <YouTubePlayEntry
           startRun={startRun}
           returnTo={returnTo}
-          action={async (form) => {
-            try {
-              if (startRun) await startPlay(form);
-            } finally {
-              enter();
-            }
-          }}
+          action={async () => enter()}
         />
         <noscript>
           Enable JavaScript to enter Musicale and use its players.

@@ -523,6 +523,66 @@ try {
       );
     }
   });
+  await test("fresh visits end previous active and paused runs while retries keep the same new game", async () => {
+    const firstId = "61000000-0000-4000-8000-000000000001";
+    const secondId = "61000000-0000-4000-8000-000000000002";
+    await rpc(61, `start_fresh_play('${firstId}')`);
+    let r = await round(61);
+    await guess(61, r, higher(r));
+    assert.equal((await state(61)).run.score, 1);
+    await Promise.all([
+      rpc(61, `start_fresh_play('${secondId}')`),
+      rpc(61, `start_fresh_play('${secondId}')`),
+    ]);
+    const fresh = await state(61);
+    assert.equal(fresh.run.id, secondId);
+    assert.equal(fresh.run.score, 0);
+    assert.equal(fresh.round.number, 1);
+    assert.equal(
+      await sql(
+        `select status||','||score from play_runs where id='${firstId}'`,
+      ),
+      "ended,1",
+    );
+    const before = await state(61);
+    await rpc(61, `start_fresh_play('${secondId}')`);
+    assert.deepEqual(await state(61), before);
+    const stolen = await rpc(62, `start_fresh_play('${secondId}')`);
+    assert.equal(stolen.error, "Run unavailable.");
+    assert.deepEqual(await state(61), before);
+    r = await round(61);
+    await expire(r);
+    await rpc(61, "start_fresh_play('61000000-0000-4000-8000-000000000003')");
+    assert.equal((await state(61)).run.score, 0);
+    assert.notEqual((await state(61)).run.id, secondId);
+    assert.equal(
+      await sql(
+        `select count(*) from play_runs where user_id='${user(61)}' and status<>'ended'`,
+      ),
+      "1",
+    );
+  });
+  await test("a fresh visit without eligible songs ends cleanly instead of creating a resumable run", async () => {
+    const statuses = await sql("select jsonb_object_agg(id,status) from songs");
+    try {
+      await sql("update songs set status='unavailable'");
+      await rpc(63, "start_fresh_play('63000000-0000-4000-8000-000000000001')");
+      const unavailable = await state(63);
+      assert.equal(unavailable.run.status, "ended");
+      assert.equal(unavailable.run.reason, "insufficient");
+      assert.equal(unavailable.round, null);
+      assert.equal(
+        await sql(
+          `select count(*) from play_runs where user_id='${user(63)}' and status='paused'`,
+        ),
+        "0",
+      );
+    } finally {
+      await sql(
+        `update songs s set status=r.value::song_status from jsonb_each_text('${statuses}'::jsonb) r where id=r.key`,
+      );
+    }
+  });
   console.log(`${passed} Play database checks passed`);
 } finally {
   db.close();

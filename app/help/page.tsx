@@ -38,8 +38,9 @@ export default function Help() {
           correct guess earns one point and replaces either card with a
           different song. A wrong guess ends your run. Each round locks its
           answer when it starts. Ties and songs without a recorded preference
-          are excluded. Refreshing resumes your round; expired rounds preserve
-          your points. Play does not change song ratings.
+          are excluded. Each visit or reload starts a fresh run. Closing the tab
+          ends that visit; previous runs cannot be resumed. Play does not change
+          song ratings.
         </p>
         <h2>How ranking works</h2>
         <p>

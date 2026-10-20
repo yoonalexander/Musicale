@@ -66,7 +66,7 @@ it("guest welcome: first-visit tutorial, compact cards, keyboard, scoring, persi
       `select count(*) from play_rounds c join play_runs r on r.id=c.run_id where r.user_id='${uid}' and c.status='pending'`,
     ) !== "1"
   )
-    await page.getByRole("button", { name: "Resume run", exact: true }).click();
+    await page.getByRole("button", { name: "Try again", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "How to play" });
   await expect(dialog).toBeVisible();
   await expect(
@@ -138,7 +138,8 @@ it("guest welcome: first-visit tutorial, compact cards, keyboard, scoring, persi
   ).toBeFocused();
   const next = latestRound(uid);
   await page.reload();
-  await expect(form.locator('input[name="roundId"]')).toHaveValue(next.id);
+  await expect(form.locator('input[name="roundId"]')).not.toHaveValue(next.id);
+  await expect(page.getByLabel("Run score")).toContainText("0");
   await expect(dialog).not.toBeVisible();
   await page.getByRole("button", { name: "How to play", exact: true }).click();
   await expect(dialog).toBeVisible();

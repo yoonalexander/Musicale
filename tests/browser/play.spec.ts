@@ -20,7 +20,7 @@ const core = () =>
     `select jsonb_build_object('songs',(select jsonb_agg(to_jsonb(s) order by id) from songs s),'votes',(select jsonb_agg(to_jsonb(v) order by id) from votes v),'rank',(select jsonb_agg(to_jsonb(v) order by id) from rank_votes v),'events',(select jsonb_agg(to_jsonb(e) order by event_order) from rating_events e),'profiles',(select jsonb_agg(to_jsonb(p) order by user_id) from profiles p),'days',(select jsonb_agg(to_jsonb(d) order by id) from daily_matchups d))`,
   );
 
-test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, wrong/restart, mobile accessibility and zero ranking effects", async ({
+test("Play: fresh visits, pending buttons, one-card progression, keyboard reveal, wrong/restart, mobile accessibility and zero ranking effects", async ({
   page,
   request,
 }, info) => {
@@ -29,19 +29,13 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
   await expect(
     page.getByRole("heading", { name: "Which song is higher rated?" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Start a run", exact: true }),
-  ).toBeEnabled();
+  await expect(page.locator("form.matchup, .play-ready").first()).toBeVisible();
   const email = `play-browser-${Date.now()}-${info.project.name}@example.test`;
   await signIn(page, request, email);
   const uid = runSql(`select id from auth.users where email='${email}'`);
   seedRankEvidence(uid);
   const before = core();
-  await page.getByRole("link", { name: "Play", exact: true }).click();
-  expect(runSql(`select count(*) from play_runs where user_id='${uid}'`)).toBe(
-    "0",
-  );
-  await page.getByRole("button", { name: "Start a run", exact: true }).click();
+  await page.goto("/play");
   const form = page.locator("form.matchup"),
     buttons = form.locator('button[name="selectedSongId"]');
   await expect(buttons).toHaveCount(2);
@@ -53,12 +47,11 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
   expect(await (await page.request.get("/play")).text()).not.toMatch(
     /rating_a|rating_b|ratingA|ratingB|replacementSlot/,
   );
-  await page.reload();
   await expect(form.locator('input[name="roundId"]')).toHaveValue(id);
   let release!: () => void, observed!: () => void;
   const held = new Promise<void>((resolve) => (release = resolve)),
     intercepted = new Promise<void>((resolve) => (observed = resolve));
-  await page.route("**/", async (route) => {
+  await page.route("**/play", async (route) => {
     if (route.request().method() === "POST") {
       observed();
       await held;
@@ -71,7 +64,7 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
   await expect(buttons.nth(1)).toBeDisabled();
   release();
   await click;
-  await page.unroute("**/");
+  await page.unroute("**/play");
   await expect(
     page.getByRole("heading", { name: "Correct!", exact: true }),
   ).toBeFocused();
@@ -103,7 +96,6 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
     path: `output/${info.project.name}-play-correct.png`,
     fullPage: true,
   });
-  await page.reload();
   await expect(form.locator('input[name="roundId"]')).toHaveValue(next.id);
   await form.locator(`button[value="${higher(next)}"]`).focus();
   await page.keyboard.press("Enter");
@@ -128,15 +120,12 @@ test("Play: saved runs, pending buttons, one-card progression, keyboard reveal, 
   await page
     .getByRole("link", { name: "Play higher rated", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Start a new run", exact: true })
-    .click();
   await expect(page.getByLabel("Run score")).toContainText("0");
   expect(latest(uid).run_id).not.toBe(r.run_id);
   expect(core()).toBe(before);
 });
 
-test("Play: expiry/unavailability preserves points; server-action retries and other accounts cannot forge a score", async ({
+test("Play: expiry/unavailability starts fresh; server-action retries and other accounts cannot forge a score", async ({
   page,
   request,
   browser,
@@ -148,7 +137,7 @@ test("Play: expiry/unavailability preserves points; server-action retries and ot
   const uid = runSql(`select id from auth.users where email='${email}'`);
   seedRankEvidence(uid);
   await page.goto("/play");
-  await page.getByRole("button", { name: "Start a run", exact: true }).click();
+
   const form = page.locator("form.matchup");
   await expect(form.locator('button[name="selectedSongId"]')).toHaveCount(2);
   await dismissPlayTutorial(page);
@@ -217,19 +206,16 @@ test("Play: expiry/unavailability preserves points; server-action retries and ot
     `update play_rounds set created_at=now()-interval '1 hour',expires_at=now()-interval '1 second' where id='${r.id}'`,
   );
   await page.reload();
-  await expect(
-    page.getByRole("heading", { name: "Run paused", exact: true }),
-  ).toBeVisible();
-  await expect(page.getByLabel("Run score")).toContainText("1");
-  await expect(form).toHaveCount(0);
-  await page.getByRole("button", { name: "Resume run", exact: true }).click();
   await expect(form.locator('button[name="selectedSongId"]')).toHaveCount(2);
+  await expect(page.getByLabel("Run score")).toContainText("0");
+  await expect(
+    page.getByRole("button", { name: "Resume run", exact: true }),
+  ).toHaveCount(0);
   const fresh = latest(uid);
-  expect(fresh.id).not.toBe(r.id);
-  expect([fresh.song_a_id, fresh.song_b_id]).toEqual([
-    r.song_a_id,
-    r.song_b_id,
-  ]);
+  expect(fresh.run_id).not.toBe(r.run_id);
+  expect(runSql(`select status from play_runs where id='${r.run_id}'`)).toBe(
+    "ended",
+  );
   const originalStatus = runSql(
     `select status from songs where id='${fresh.song_a_id}'`,
   );
@@ -238,24 +224,15 @@ test("Play: expiry/unavailability preserves points; server-action retries and ot
       `update songs set status='unavailable' where id='${fresh.song_a_id}'`,
     );
     await page.reload();
+    await expect(form.locator('button[name="selectedSongId"]')).toHaveCount(2);
+    await expect(page.getByLabel("Run score")).toContainText("0");
     await expect(
       page.getByRole("heading", { name: "Run paused", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText("A song is temporarily unavailable.", { exact: false }),
-    ).toBeVisible();
-    await expect(page.getByLabel("Run score")).toContainText("1");
-    await expect(form).toHaveCount(0);
-    await page.screenshot({
-      path: `output/${info.project.name}-play-paused.png`,
-      fullPage: true,
-    });
+    ).toHaveCount(0);
+    expect(latest(uid).run_id).not.toBe(fresh.run_id);
   } finally {
     runSql(
       `update songs set status='${originalStatus}' where id='${fresh.song_a_id}'`,
     );
   }
-  await page.getByRole("button", { name: "Resume run", exact: true }).click();
-  await expect(form.locator('input[name="roundId"]')).toHaveValue(fresh.id);
-  await expect(page.getByLabel("Run score")).toContainText("1");
 });

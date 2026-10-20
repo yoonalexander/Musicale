@@ -30,9 +30,7 @@ test("onboarding, honest initial ratings, support, metadata and missing pages", 
   await expect(
     page.getByRole("heading", { name: "Which song is higher rated?" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Start a run", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator("form.matchup, .play-ready").first()).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("link", { name: "Skip to content" }),
