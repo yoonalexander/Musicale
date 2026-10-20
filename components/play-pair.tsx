@@ -92,19 +92,40 @@ export function PlayResult({
       </section>
     );
   }
+  const higherRating = Math.max(answer.ratingA, answer.ratingB);
   return (
     <section className="panel play-result" aria-label="Saved answer">
-      <h2 ref={heading} tabIndex={-1}>
-        Correct!
-      </h2>
-      <p role="status">
-        Correct guess. One point earned. Score after this answer:{" "}
-        {answer.scoreAfter}.
-      </p>
-      <p>
-        {answer.titleA}: {answer.ratingA} Elo · {answer.titleB}:{" "}
-        {answer.ratingB} Elo. These were the ratings captured for that round.
-      </p>
+      <header className="play-result-header">
+        <h2 ref={heading} tabIndex={-1}>
+          <span className="play-result-check" aria-hidden="true">
+            ✓
+          </span>
+          Correct!
+        </h2>
+        <p className="play-result-points" role="status">
+          +1 point
+        </p>
+      </header>
+      <div className="play-result-ratings">
+        {[
+          { title: answer.titleA, rating: answer.ratingA },
+          { title: answer.titleB, rating: answer.ratingB },
+        ].map((song, index) => (
+          <div className="play-result-song" key={index}>
+            <div>
+              <p className="play-result-label">
+                {song.rating === higherRating
+                  ? "Your pick · Higher rated"
+                  : "Other song"}
+              </p>
+              <h3>{song.title}</h3>
+            </div>
+            <p className="play-result-rating">
+              <strong>{song.rating}</strong> Elo
+            </p>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

@@ -240,7 +240,7 @@ test("Play starts fresh on reload, a new tab, and restored navigation; unavailab
   }
 });
 
-test("Play shows one clear loss result with captured ratings and starts a new run on replay", async ({
+test("Play shows themed correct and loss results with captured ratings and starts a new run on replay", async ({
   page,
 }, info) => {
   await page.goto("/");
@@ -250,6 +250,39 @@ test("Play shows one clear loss result with captured ratings and starts a new ru
   await expect(score).toHaveText("Run Score: 0");
   await choices.first().click();
   await expect(score).toHaveText("Run Score: 1");
+  const correct = page.locator(".play-result");
+  await expect(
+    correct.getByRole("heading", { name: "Correct!", exact: true }),
+  ).toBeFocused();
+  await expect(correct.getByRole("status")).toHaveText("+1 point");
+  await expect(correct).not.toContainText(/Score after|These were the ratings/);
+  await expect(correct.locator(".play-result-song").first()).toContainText(
+    "Your pick · Higher rated",
+  );
+  await expect(correct.locator(".play-result-song").first()).toContainText(
+    "Respect",
+  );
+  await expect(correct).toContainText("1512 Elo");
+  await expect(correct).toContainText("1488 Elo");
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
+  await page.screenshot({
+    path: `output/${info.project.name}-play-correct.png`,
+    fullPage: true,
+  });
+  const originalViewport = page.viewportSize()!;
+  await page.setViewportSize({ width: 320, height: 900 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.setViewportSize(originalViewport);
   await choices.last().click();
   const result = page.getByRole("region", { name: "Saved answer" });
   await expect(

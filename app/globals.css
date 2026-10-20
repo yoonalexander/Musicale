@@ -1011,20 +1011,100 @@ body:has(.welcome-overlay) {
   color: var(--muted);
 }
 .game-stage .play-result {
-  padding: 12px 16px;
-  margin: 15px 0;
-  border-radius: 10px;
-  background: #edf1e9;
-  border-color: #d6ded1;
+  padding: 20px;
+  margin: 22px 0;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: #fffaf0;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.play-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 .play-result h2 {
-  font-size: 1.1rem;
-  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font:
+    850 1.35rem ui-monospace,
+    monospace;
+  letter-spacing: -0.055em;
+  margin: 0;
 }
-.play-result p {
-  font-size: 0.78rem;
-  line-height: 1.5;
-  margin: 5px 0;
+.play-result-check {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: #f4cd58;
+}
+.play-result .play-result-points {
+  margin: 0;
+  padding: 6px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: #f4cd58;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.play-result-ratings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.play-result-song {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+}
+.play-result-label {
+  margin: 0 0 5px;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.play-result-song h3 {
+  margin: 0;
+  font:
+    800 0.95rem/1.35 ui-monospace,
+    monospace;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+.play-result-song > div {
+  min-width: 0;
+}
+.play-result-rating {
+  margin: 0;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.play-result-rating strong {
+  font:
+    800 1.2rem ui-monospace,
+    monospace;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 480px) {
+  .game-stage .play-result {
+    padding: 16px;
+  }
+  .play-result-ratings {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 .play-ready {
   text-align: center;
