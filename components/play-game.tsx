@@ -45,11 +45,14 @@ export async function PlayGame({
         {state && !emptyRun ? (
           <p className="play-score">
             <span aria-label="Run score">
-              Run Score: <strong>{state.run.score}</strong>
+              Run Score:{" "}
+              <strong key={state.run.score} className="score-update">
+                {state.run.score}
+              </strong>
             </span>
           </p>
         ) : null}
-        {answer ? <PlayResult answer={answer} /> : null}
+        {answer ? <PlayResult key={answer.id} answer={answer} /> : null}
         {isDemoMode() ? (
           <section className="panel">
             <h2>Explore the music.</h2>

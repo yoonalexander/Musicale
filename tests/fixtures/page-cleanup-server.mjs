@@ -70,7 +70,7 @@ let play = {
 const playRound = () => ({
   id: randomUUID(),
   number: play.run.score + 1,
-  songAId: songs[0].id,
+  songAId: songs[(play.run.score * 2) % songs.length].id,
   songBId: songs[1].id,
   expiresAt: new Date(Date.now() + 1800000).toISOString(),
 });
@@ -116,7 +116,9 @@ const server = createServer(async (req, res) => {
     const { p_round_id, p_selected_song_id } = JSON.parse(
       Buffer.concat(chunks).toString(),
     );
-    const correct = p_selected_song_id === songs[0].id;
+    const songA = songs.find((song) => song.id === play.round.songAId);
+    const songB = songs.find((song) => song.id === play.round.songBId);
+    const correct = p_selected_song_id === songA.id;
     if (correct) play.run.score++;
     else {
       play.run.status = "ended";
@@ -125,8 +127,8 @@ const server = createServer(async (req, res) => {
     play.answer = {
       id: p_round_id,
       runId: play.run.id,
-      titleA: songs[0].title,
-      titleB: songs[1].title,
+      titleA: songA.title,
+      titleB: songB.title,
       ratingA: 1512,
       ratingB: 1488,
       selectedSongId: p_selected_song_id,

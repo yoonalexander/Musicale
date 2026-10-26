@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { YouTubePlayEntry } from "@/components/youtube-consent";
 import { SiteEntryContext } from "@/lib/site-entry";
+import { fadeIn, fadeOut } from "@/lib/motion";
 
 const entryKey = "musicale-entry-session-v1";
 let enteredThisVisit = false;
@@ -17,6 +18,8 @@ export function WelcomeGate({
   demo: boolean;
 }) {
   const pathname = usePathname();
+  const content = useRef<HTMLDivElement>(null);
+  const previousPath = useRef(pathname);
   const [entered, setEntered] = useState(false);
   const [checked, setChecked] = useState(false);
   useEffect(() => {
@@ -26,6 +29,13 @@ export function WelcomeGate({
     setEntered(enteredThisVisit);
     setChecked(true);
   }, []);
+  useEffect(() => {
+    if (previousPath.current === pathname) return;
+    previousPath.current = pathname;
+    if (!content.current) return;
+    const animation = fadeIn(content.current);
+    return () => animation?.cancel();
+  }, [pathname]);
   const musicPage =
     pathname === "/" ||
     ["/play", "/rank", "/today", "/songs", "/leaderboard", "/archive"].some(
@@ -35,7 +45,12 @@ export function WelcomeGate({
   return (
     <SiteEntryContext.Provider value={entered}>
       {/* Preserve server responses and form state while music is inaccessible. */}
-      <div hidden={blocked} inert={blocked}>
+      <div
+        ref={content}
+        className="page-transition"
+        hidden={blocked}
+        inert={blocked}
+      >
         {children}
       </div>
       {blocked ? (
@@ -149,7 +164,10 @@ function WelcomeOverlay({
         <YouTubePlayEntry
           startRun={startRun}
           returnTo={returnTo}
-          action={async () => enter()}
+          action={async () => {
+            if (dialog.current) await fadeOut(dialog.current);
+            enter();
+          }}
         />
         <noscript>
           Enable JavaScript to enter Musicale and use its players.

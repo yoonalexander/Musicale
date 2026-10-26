@@ -1516,6 +1516,95 @@ body:has(.game-stage) .site-header {
   }
 }
 
+/* Short arrivals keep view changes legible without delaying any interaction. */
+.page-transition,
+.music-loading:not(.music-loading--compact),
+.leaderboard,
+.notice[role="status"],
+.welcome-overlay[open] {
+  animation: view-arrive 220ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.play-stage .song-choice,
+.rank-stage .song-choice {
+  animation: card-arrive 280ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.play-stage .song-choice:last-child,
+.rank-stage .song-choice:last-child {
+  animation-delay: 35ms;
+}
+.play-result,
+.play-loss,
+.play-ready {
+  animation: feedback-arrive 260ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.score-update {
+  display: inline-block;
+  animation: score-bump 280ms ease-out;
+}
+.tutorial-dialog[data-closing]::backdrop {
+  animation: tutorial-fade-out 160ms ease-in forwards;
+}
+@keyframes view-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes card-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes feedback-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes score-bump {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.15);
+  }
+}
+@keyframes tutorial-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition,
+  .music-loading:not(.music-loading--compact),
+  .leaderboard,
+  .notice[role="status"],
+  .welcome-overlay[open],
+  .play-stage .song-choice,
+  .rank-stage .song-choice,
+  .play-result,
+  .play-loss,
+  .play-ready,
+  .score-update,
+  .tutorial-dialog[data-closing]::backdrop {
+    animation: none;
+  }
+}
+
 /* Indie Record Shop visual system */
 html {
   background: var(--paper);

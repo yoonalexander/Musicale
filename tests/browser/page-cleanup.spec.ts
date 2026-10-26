@@ -1,5 +1,23 @@
-import { test, expect } from "./fixtures";
+import { test, expect, type Page } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
+
+async function settleMotion(page: Page) {
+  await page.evaluate(async () => {
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter(
+          (animation) => animation.effect?.getTiming().iterations !== Infinity,
+        )
+        .map((animation) => animation.finished.catch(() => {})),
+    );
+  });
+}
+
+async function audit(page: Page, tags = ["wcag2a", "wcag2aa"]) {
+  await settleMotion(page);
+  return (await new AxeBuilder({ page }).withTags(tags).analyze()).violations;
+}
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() =>
@@ -8,6 +26,138 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://www.youtube.com/iframe_api", (route) =>
     route.abort(),
   );
+});
+
+test("view changes animate while Play advances rounds and retains the other song; reduced motion stays immediate", async ({
+  page,
+}, info) => {
+  await page.addInitScript(() => {
+    const events: string[] = [];
+    Object.assign(window, { musicaleMotionEvents: events });
+    document.addEventListener("animationstart", (event) =>
+      events.push(event.animationName),
+    );
+  });
+  await page.goto("/");
+  const cards = page.locator(".song-choice");
+  const choices = page.locator('form.matchup button[name="selectedSongId"]');
+  await expect(choices).toHaveCount(2);
+  await expect(cards.first()).toHaveCSS("animation-name", "card-arrive");
+  await settleMotion(page);
+  const retainedSongId = await choices.last().getAttribute("value");
+  const replaced = await cards.first().elementHandle();
+  const count = () =>
+    page.evaluate(
+      () =>
+        (
+          window as unknown as { musicaleMotionEvents: string[] }
+        ).musicaleMotionEvents.filter((name) => name === "feedback-arrive")
+          .length,
+    );
+  const before = await count();
+  await choices.first().click();
+  await expect(page.getByLabel("Run score")).toHaveText("Run Score: 1");
+  // Each round remounts the form to reset its action state.
+  await expect(choices.last()).toHaveAttribute("value", retainedSongId!);
+  expect(await replaced!.evaluate((node) => node.isConnected)).toBe(false);
+  await expect(
+    cards.first().getByRole("heading", { name: "Dreams", exact: true }),
+  ).toBeVisible();
+  await expect.poll(count).toBe(before + 1);
+  await choices.first().click();
+  await expect(page.getByLabel("Run score")).toHaveText("Run Score: 2");
+  await expect.poll(count).toBe(before + 2);
+  await expect(
+    page.getByRole("heading", { name: "Correct!", exact: true }),
+  ).toBeFocused();
+  await choices.last().click();
+  await expect(page.locator(".play-loss")).toHaveCSS(
+    "animation-name",
+    "feedback-arrive",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Run complete", exact: true }),
+  ).toBeFocused();
+  await settleMotion(page);
+  await page.screenshot({
+    path: `output/${info.project.name}-motion-result.png`,
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Play again", exact: true }).click();
+  await expect(choices).toHaveCount(2);
+  await expect(page.getByLabel("Run score")).toHaveText("Run Score: 0");
+  const previousPage = await page.locator(".page-transition").elementHandle();
+  await page.getByRole("link", { name: "Rank", exact: true }).click();
+  await expect(page).toHaveURL("/rank");
+  await expect(choices).toHaveCount(2);
+  expect(await previousPage!.evaluate((node) => node.isConnected)).toBe(true);
+  await expect(page.locator(".page-transition")).toHaveCSS(
+    "animation-name",
+    "view-arrive",
+  );
+  const pair = page.locator('input[name="comparisonId"]');
+  const previousPair = await pair.inputValue();
+  await choices.first().click();
+  await expect(pair).not.toHaveValue(previousPair);
+  await expect(cards.first()).toHaveCSS("animation-name", "card-arrive");
+  await page
+    .getByRole("button", { name: "How ranking works", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "How ranking works" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "How ranking works", exact: true }),
+  ).toBeFocused();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.getByRole("link", { name: "Play", exact: true }).click();
+  await expect(page).toHaveURL("/");
+  await expect(
+    page.locator('form.matchup input[name="roundId"]'),
+  ).toBeAttached();
+  await expect(choices).toHaveCount(2);
+  await expect(cards.first()).toHaveCSS("animation-name", "none");
+  await expect(page.locator(".page-transition")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await choices.first().click();
+  await expect(page.getByLabel("Run score")).toHaveText("Run Score: 1");
+  await expect(page.locator(".play-result")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await expect(page.locator(".score-update")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  expect(await audit(page)).toEqual([]);
+});
+
+test.describe("welcome transition", () => {
+  test.use({ entryAcknowledged: false });
+  test("entry fades into the game and still works with reduced motion", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const welcome = page.getByRole("dialog", { name: "Musicale" });
+    await expect(welcome).toBeVisible();
+    await expect(welcome).toHaveCSS("animation-name", "view-arrive");
+    await welcome.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(welcome).toHaveCount(0);
+    await expect(page.locator("form.matchup")).toBeVisible();
+    await page.evaluate(() =>
+      sessionStorage.removeItem("musicale-entry-session-v1"),
+    );
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.reload();
+    await expect(welcome).toBeVisible();
+    await expect(welcome).toHaveCSS("animation-name", "none");
+    await welcome.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(welcome).toHaveCount(0);
+    await expect(page.locator("form.matchup")).toBeVisible();
+  });
 });
 
 test("shared record loader covers Play, Rank, voting and player loading, with reduced motion", async ({
@@ -49,10 +199,7 @@ test("shared record loader covers Play, Rank, voting and player loading, with re
       .poll(() => disc.evaluate((node) => getComputedStyle(node).transform))
       .not.toBe(transform);
     await expect(page.locator("form.matchup")).toHaveCount(0);
-    expect(
-      (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
-        .violations,
-    ).toEqual([]);
+    expect(await audit(page)).toEqual([]);
     await page.screenshot({
       path: `output/${info.project.name}-play-loading.png`,
       fullPage: true,
@@ -166,10 +313,7 @@ test("Rank loads a pair without a start button, keeps it on refresh and explains
   await expect(page.locator('input[name="comparisonId"]')).not.toHaveValue(
     pair,
   );
-  expect(
-    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
-      .violations,
-  ).toEqual([]);
+  expect(await audit(page)).toEqual([]);
   const trigger = page.getByRole("button", {
     name: "How ranking works",
     exact: true,
@@ -186,10 +330,7 @@ test("Rank loads a pair without a start button, keeps it on refresh and explains
   await expect(
     dialog.getByRole("button", { name: "Let’s rank" }),
   ).toBeInViewport();
-  expect(
-    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
-      .violations,
-  ).toEqual([]);
+  expect(await audit(page)).toEqual([]);
   await page.screenshot({
     path: `output/${info.project.name}-ranking-dialog.png`,
   });
@@ -205,10 +346,7 @@ test("leaderboard page sizes, YouTube links, filter geometry, unranked labels an
   page,
 }, info) => {
   await page.goto("/leaderboard");
-  expect(
-    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
-      .violations,
-  ).toEqual([]);
+  expect(await audit(page)).toEqual([]);
   const size = page.getByRole("combobox", {
     name: "Songs per page",
     exact: true,
@@ -298,10 +436,7 @@ test("Play has a larger VS and fading tutorial, and Daily redirects to Play", as
   await expect(page.locator("main")).not.toContainText(
     /Unlimited runs|Trust your instinct\. Choose one\.|Ratings are locked|Expiry preserves|Unload YouTube player|Ready\. Press play/,
   );
-  expect(
-    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
-      .violations,
-  ).toEqual([]);
+  expect(await audit(page)).toEqual([]);
   await expect(page.locator(".mode-switch")).toHaveCount(0);
   const versus = await page.locator(".versus").boundingBox();
   expect(versus!.width).toBeGreaterThanOrEqual(46);
@@ -398,13 +533,7 @@ test("Play shows themed correct and loss results with captured ratings and start
   );
   await expect(correct).toContainText("1512 Elo");
   await expect(correct).toContainText("1488 Elo");
-  expect(
-    (
-      await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-        .analyze()
-    ).violations,
-  ).toEqual([]);
+  expect(await audit(page, ["wcag2a", "wcag2aa", "wcag21aa"])).toEqual([]);
   await page.screenshot({
     path: `output/${info.project.name}-play-correct.png`,
     fullPage: true,
@@ -425,7 +554,7 @@ test("Play shows themed correct and loss results with captured ratings and start
   await expect(score).toHaveText("Run Score: 1");
   await expect(page.locator("form.matchup, .play-ready")).toHaveCount(0);
   await expect(result).not.toContainText(/Score after|Ready for another run/);
-  await expect(result.locator(".is-higher")).toContainText("Respect");
+  await expect(result.locator(".is-higher")).toContainText("Dreams");
   await expect(result.locator(".is-higher")).toContainText("1512 Elo");
   await expect(result.locator(".play-loss-song:not(.is-higher)")).toContainText(
     "Your pick",
@@ -436,13 +565,7 @@ test("Play shows themed correct and loss results with captured ratings and start
   await expect(result.locator(".play-loss-song:not(.is-higher)")).toContainText(
     "1488 Elo",
   );
-  expect(
-    (
-      await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-        .analyze()
-    ).violations,
-  ).toEqual([]);
+  expect(await audit(page, ["wcag2a", "wcag2aa", "wcag21aa"])).toEqual([]);
   await page.screenshot({
     path: `output/${info.project.name}-play-loss.png`,
     fullPage: true,

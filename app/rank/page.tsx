@@ -50,7 +50,7 @@ export default async function Rank({
           </p>
         ) : null}
         {saved ? (
-          <p className="notice" role="status">
+          <p key={params.saved} className="notice" role="status">
             Your preference is saved.{" "}
             {pair
               ? "Here are two new songs."

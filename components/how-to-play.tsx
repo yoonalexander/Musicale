@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { useSiteEntry } from "@/lib/site-entry";
+import { fadeOut } from "@/lib/motion";
 
 export function HowToPlay({
   autoOpen = false,
@@ -22,8 +23,14 @@ export function HowToPlay({
     } catch {}
     if (!seen && !dialog.current?.open) dialog.current?.showModal();
   }, [autoOpen, entered]);
-  function close() {
-    dialog.current?.close();
+  async function close() {
+    const modal = dialog.current;
+    if (!modal?.open || modal.dataset.closing) return;
+    modal.dataset.closing = "true";
+    const animation = await fadeOut(modal);
+    modal.close();
+    animation?.cancel();
+    delete modal.dataset.closing;
   }
   return (
     <>
@@ -41,6 +48,10 @@ export function HowToPlay({
         className="tutorial-dialog"
         aria-labelledby={`${mode}-tutorial-title`}
         aria-describedby={`${mode}-tutorial-description`}
+        onCancel={(event) => {
+          event.preventDefault();
+          void close();
+        }}
         onKeyDown={(event) => {
           if (event.key !== "Tab") return;
           const buttons = event.currentTarget.querySelectorAll("button");
